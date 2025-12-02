@@ -32,7 +32,7 @@ const rotation = m(45, "deg"); // equivalent to a dedicated helper like mDeg(45)
 const margins = paddingBase.add(4);
 const offset = paddingBase.add(margins).multiply(2).substract(1);
 
-// Emit only at the end in CSS
+// Emit only at the end in CSS (at runtime or in a build step)
 const style = {
   padding: paddingBase.css(),
   transform: `rotate(${rotation.double().css()})`, // 90deg
@@ -64,11 +64,27 @@ Non-scalar CSS values don’t live inside css-calipers. Keywords like `auto`,
 types in your app or styling layer. Css-calipers focuses on the numeric,
 unit-bearing parts of your styles; everything else stays as plain CSS.
 
-Css-calipers focuses on the numeric, unit-bearing parts of your styles; everything else stays as plain CSS (see ‘Philosophy & Boundaries’ below for more detail).”
+Css-calipers focuses on the numeric, unit-bearing parts of your styles; everything else stays as plain CSS (see “Philosophy & Boundaries” below for more detail).
 
 ---
 
-### Messy example
+## Should I use this?
+
+CSS-Calipers is a good fit if:
+
+- You already use TypeScript (or plan to) and want compile-time guarantees around CSS units.
+- You have a design system or token layer where layout math and unit conversions matter.
+- You care about catching unit mismatches and layout invariants early, in dev or tests.
+
+It’s probably overkill if:
+
+- Your project has minimal custom layout math or relies mostly on utility classes/framework CSS.
+- You don’t use TypeScript and aren’t looking for stronger typing around CSS values.
+- You’re comfortable relying on manual discipline instead of typed measurements for units.
+
+---
+
+### Layout tokens example
 
 ```ts
 import { m, mPercent, mVw, mVh, mFr, assertCondition } from "css-calipers";
@@ -229,6 +245,9 @@ keywords for symbolic CSS values — without reintroducing vague unions like
   never a generic string.
 - **Pre-emission transforms:** Compose all math in CSS-Calipers, emit once at
   the style boundary.
+- **Build-time pipelines:** Run measurement math in Node or a build step
+  (scripts, codegen, or bundler plugins) and emit plain CSS or tokens for your
+  existing styling system so runtime only sees static values.
 - **Unit guards in debug:** Use `assertUnit()` in dev-only blocks to confirm
   consistency between related measurements.
 - **CSS variables:** Pass CSS-Calipers scalars into style layers that
