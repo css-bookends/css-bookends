@@ -9,17 +9,9 @@ development.
 
 ### Source-only tests (day-to-day development)
 
-- The main entrypoint for local development is:
-
-  ```bash
-  npm test
-  ```
-
-- This runs `tests/core.test.ts` against the source in `src/` and is intended
-  to be:
-  - Fast.
-  - Watch-friendly.
-  - Independent of any built artifacts in `dist/`.
+- The main entrypoint for local development is `npm test`, which runs
+  `tests/core.test.ts` against the source in `src/` in a watch-friendly mode.
+- To run the core suite once in non-watch mode, use `npm run test:core`.
 
 ### Build artifact tests (pre-main / pre-release)
 
@@ -29,13 +21,18 @@ development.
   npm run test:cjs   # core suite against dist/cjs/index.js
   npm run test:esm   # core suite against dist/esm/index.js
   npm run test:build # runs both test:cjs and test:esm
+  npm run build:test # build then run test:build
+  npm run test:all   # test:core, then build:test
   ```
 
 - These commands expect the corresponding `dist` entrypoints to exist. If a
   build artifact is missing or invalid, they will fail quickly when importing
   from `dist/`.
 - `npm run test:build` is the single “did both builds pass?” signal and is what
-  automation and release flows should gate on.
+  CI and release flows gate on:
+  - CI for `main` runs `npm test`, `npm run build`, and `npm run test:build`.
+  - `npm run release` also runs `npm test`, `npm run build`, and `npm run test:build`
+    before publishing.
 
 ## What tests cover
 

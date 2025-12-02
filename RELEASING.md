@@ -22,9 +22,10 @@ Releases should be performed via the `release` script rather than calling
 3. The script will:
    - Verify that the current branch is `main` (abort otherwise).
    - Warn if there are uncommitted changes and ask whether to continue.
-   - Run the unit tests (`npm test`).
+   - Run the source tests (`npm test`).
    - Run the build (`npm run build`) to produce `dist/cjs` and `dist/esm`.
    - Check that the expected build outputs exist.
+   - Run the build artifact tests (`npm run test:build`) against both CJS and ESM outputs.
    - Prompt you to choose the version bump (`patch`, `minor`, or `major`).
    - Run `npm version <type>` to bump the version and create a tag.
    - Show the new version and ask for final confirmation before publishing.

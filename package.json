@@ -26,17 +26,20 @@
   "module": "dist/esm/index.js",
   "types": "dist/esm/index.d.ts",
   "scripts": {
+    "build": "npm run build:cjs && npm run build:esm",
     "build:cjs": "tsc -p tsconfig.build.cjs.json",
     "build:esm": "tsc -p tsconfig.build.esm.json",
-    "build": "npm run build:cjs && npm run build:esm",
-    "clean:dist": "node -e \"const { existsSync, rmSync } = require('fs'); const paths = ['dist/cjs', 'dist/esm']; for (const p of paths) { console.log('Scanning', p + '...'); if (existsSync(p)) { console.log('Found', p + ', deleting...'); rmSync(p, { recursive: true, force: true }); console.log('Deleted', p); } else { console.log(p + ' not found, skipping.'); } }\"",
+    "build:test": "npm run build && npm run test:build",
+    "build:delete": "node -e \"const { existsSync, rmSync } = require('fs'); const paths = ['dist/cjs', 'dist/esm']; for (const p of paths) { console.log('Scanning', p + '...'); if (existsSync(p)) { console.log('Found', p + ', deleting...'); rmSync(p, { recursive: true, force: true }); console.log('Deleted', p); } else { console.log(p + ' not found, skipping.'); } }\"",
     "prepublishOnly": "node -e \"if (!process.env.CSS_CALIPERS_RELEASE) { console.error('Direct npm publish is disabled; use \\\"npm run release\\\" instead.'); process.exit(1); }\" && npm test && npm run build",
     "release": "node scripts/release.mjs",
     "release:dry": "node scripts/release.mjs --dry-run",
     "test": "vitest tests/core.test.ts",
+    "test:core": "vitest run tests/core.test.ts",
     "test:cjs": "vitest run tests/core.cjs.test.ts",
     "test:esm": "vitest run tests/core.esm.test.ts",
-    "test:build": "npm run test:cjs && npm run test:esm"
+    "test:build": "npm run test:cjs && npm run test:esm",
+    "test:all": "npm run test:core && npm run build:test"
   },
   "devDependencies": {
     "@vitest/coverage-v8": "^4.0.14",
