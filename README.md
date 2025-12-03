@@ -1,12 +1,18 @@
 # CSS-Calipers
 
 **CSS is code. Measure it like one.**  
-Compile-time unit safety for CSS values — no surprises at runtime.
+Compile-time unit safety for CSS values, no surprises at runtime.
 
-CSS-Calipers provides a type-safe measurement layer for CSS logic.  
-Define, validate, and compose unit-aware values (`px`, `%`, `deg`, `ms`, …) at
-build time to eliminate silent math errors and improve maintainability in
-design-system code.
+CSS-Calipers is a tiny layer for typed CSS measurements. Instead of shuffling
+strings like "10px" around, you work with real "value + unit" objects, do
+unit-safe math in code, and call css once at the edge to get the final scalar
+string.
+
+At a glance:
+
+- Create measurements with `m` from a number and a unit (defaults to `px`).
+- Do unit-safe math with methods like `add` and `multiply`, then call `.css()`
+  at the edge to get a scalar string (for example `"10px"`).
 
 ## Install
 
@@ -14,8 +20,13 @@ design-system code.
 npm install css-calipers
 ```
 
+### Status & support
+
 > 🚧 Work in progress.  
-> API surface and docs may change before the first stable release.
+> API surface and docs may change between `0.x` releases until the first stable version.
+
+- Status: early `0.x` release. Backwards compatibility is not guaranteed until `1.0.0`.
+- Questions or bugs: open an issue on GitHub (see the repository link at the top of this page or in `package.json`).
 
 ---
 
@@ -30,7 +41,7 @@ const rotation = m(45, "deg"); // equivalent to a dedicated helper like mDeg(45)
 
 // Do safe arithmetic
 const margins = paddingBase.add(4);
-const offset = paddingBase.add(margins).multiply(2).substract(1);
+const offset = paddingBase.add(margins).multiply(2).subtract(1);
 
 // Emit only at the end in CSS (at runtime or in a build step)
 const style = {
@@ -62,9 +73,8 @@ Non-scalar CSS values don’t live inside css-calipers. Keywords like `auto`,
 `fit-content`, or `max-content`, full shorthand strings, `var(--token)`, or
 `calc(...)` expressions should remain explicit strings or dedicated keyword
 types in your app or styling layer. Css-calipers focuses on the numeric,
-unit-bearing parts of your styles; everything else stays as plain CSS.
-
-Css-calipers focuses on the numeric, unit-bearing parts of your styles; everything else stays as plain CSS (see “Philosophy & Boundaries” below for more detail).
+unit-bearing parts of your styles; everything else stays as plain CSS (see
+“Philosophy & Boundaries” below for more detail).
 
 ---
 
@@ -153,8 +163,9 @@ const cardGridStyles = {
 ## Do custom checks your way
 
 CSS-Calipers will happily enforce units anywhere you choose, but it stays
-unopinionated about where those guards live. Drop assertions in a component, in a theme overwrite, hardcode a debug routine, or wire a global invariant—the structure is up to
-you:
+unopinionated about where those guards live. Drop assertions in a component, in
+a theme overwrite, hardcode a debug routine, or wire a global invariant; the
+structure is up to you:
 
 ```ts
 import { assertMatchingUnits } from "css-calipers";
@@ -224,19 +235,22 @@ toSpacingCss(m(12, "px"));
 ### String Literal Type Exclusion
 
 When helpers must _exclude_ CSS-Calipers–emitted scalars from a keyword union,
-use the exported `MeasurementString` type:
+use the exported `MeasurementString` type together with your existing CSS
+property typings (for example, the `Property` types from the `csstype`
+package):
 
 ```ts
 import type { MeasurementString } from "css-calipers";
+import type { Property } from "csstype";
 
 type SpacingKeyword = Exclude<
-  Extract<CSS_TYPES.Property.Margin, string>,
+  Extract<Property.Margin, string>,
   MeasurementString
 >;
 ```
 
-This lets helpers stay strict — `IMeasurement` for scalars; targeted string
-keywords for symbolic CSS values — without reintroducing vague unions like
+This lets helpers stay strict: `IMeasurement` for scalars; targeted string
+keywords for symbolic CSS values, without reintroducing vague unions like
 `MeasurementLike`.
 
 ### Integration Patterns
@@ -270,8 +284,8 @@ keywords for symbolic CSS values — without reintroducing vague unions like
   You cannot create a CSS-Calipers value without a unit. Pass plain numbers as
   operands (`add`, `subtract`, `multiply`, `divide`) or combine with another
   `IMeasurement`, but never store bare numbers inside library state. If a value
-  lacks both number and unit, CSS-Calipers won’t track it—you own whatever logic
-  wraps it.
+  lacks both number and unit, CSS-Calipers won’t track it; you own whatever
+  logic wraps it.
 
 - **Model keywords explicitly (not “escape hatches”).**  
   If a helper needs symbolic CSS (e.g., `'auto'`, `'fit-content'`), define a
@@ -281,5 +295,5 @@ keywords for symbolic CSS values — without reintroducing vague unions like
 - **CSS custom properties coexist; they don’t mix.**  
   Third-party primitives exposing `var(--token)` should keep those values as raw
   CSS strings. Feed CSS-Calipers scalars into them where possible, but don’t
-  wrap CSS variables inside the library — treat them as parallel pipes that meet
+  wrap CSS variables inside the library; treat them as parallel pipes that meet
   in the style layer.

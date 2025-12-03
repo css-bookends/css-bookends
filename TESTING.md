@@ -20,19 +20,34 @@ development.
   ```bash
   npm run test:cjs   # core suite against dist/cjs/index.js
   npm run test:esm   # core suite against dist/esm/index.js
-  npm run test:build # runs both test:cjs and test:esm
-  npm run build:test # build then run test:build
-  npm run test:all   # test:core, then build:test
+  npm run test:dist  # runs both test:cjs and test:esm against dist
+  npm run build:test # build, then run test:core and test:dist
   ```
 
 - These commands expect the corresponding `dist` entrypoints to exist. If a
   build artifact is missing or invalid, they will fail quickly when importing
   from `dist/`.
-- `npm run test:build` is the single “did both builds pass?” signal and is what
-  CI and release flows gate on:
-  - CI for `main` runs `npm test`, `npm run build`, and `npm run test:build`.
-  - `npm run release` also runs `npm test`, `npm run build`, and `npm run test:build`
-    before publishing.
+- CI for `main` runs `npm run test:core`, `npm run build`, `npm run test:dist`,
+  and `npm run test:types` as part of the pipeline.
+- The release script (`npm run release`) runs the same sequence (core tests,
+  build, dist tests, and type tests) before publishing.
+
+### Type-level tests (tsd)
+
+- Type-level tests use [tsd](https://github.com/tsdjs/tsd) to verify the public
+  type surface:
+  - Constructor `m` and `IMeasurement` unit branding.
+  - Unit helpers (for example, `mPx`, `mPercent`) and their branded
+    measurement types.
+  - `MeasurementString` and the string literal types used to exclude
+    css-calipers-emitted scalars from keyword unions.
+  - Guard and assertion helpers (for example, `isMeasurement`,
+    `isPercentMeasurement`, `assertPercentMeasurement`).
+- To run the type tests locally, use:
+
+  ```bash
+  npm run test:types
+  ```
 
 ## What tests cover
 
@@ -44,6 +59,8 @@ development.
 - Build artifact tests reuse the same shared core suite from `tests/core.shared.ts`
   but import from the compiled `dist/cjs` and `dist/esm` entrypoints instead of
   from `../src`.
+- Type-level tests cover the type contracts for `IMeasurement`, unit helpers,
+  `MeasurementString`, and core guard/assert helpers.
 
 ## Conventions
 
