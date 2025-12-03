@@ -31,8 +31,9 @@ Releases should be performed via the `release` script rather than calling
    - Prompt you to choose the version bump (`patch`, `minor`, or `major`).
    - Run `npm version <type>` to bump the version and create a tag.
    - Show the new version and ask for final confirmation before publishing.
-   - On confirmation, run `npm publish`, which also triggers the
-     `prepublishOnly` hook and publishes under the default `latest` dist-tag.
+   - On confirmation, run `npm publish` (with a special environment variable
+     set), which also triggers the `prepublishOnly` hook and publishes under
+     the default `latest` dist-tag.
 
 If any step fails (tests, build, or publish), the script will exit with a
 non-zero status and print an error message.
@@ -40,11 +41,11 @@ non-zero status and print an error message.
 ## prepublishOnly safety net
 
 The `prepublishOnly` npm script is configured to refuse direct `npm publish`
-unless the `CSS_CALIPERS_RELEASE` environment variable is set, then run the
-core tests and build.
+unless the `CSS_CALIPERS_RELEASE` environment variable is set. It does not
+re-run tests or builds; those are handled by the release script.
 
 The `prepublishOnly` hook runs automatically on every `npm publish` and will
-block publishing if these checks fail.
+block publishing if the environment guard fails.
 
 ## Dist-tag strategy
 
