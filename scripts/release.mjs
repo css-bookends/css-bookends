@@ -17,6 +17,23 @@ const runStep = (label, command, args, options = {}) => {
   }
 };
 
+const ensureNpmLogin = () => {
+  const result = spawnSync('npm', ['whoami'], {
+    encoding: 'utf8',
+    stdio: ['ignore', 'pipe', 'pipe'],
+    shell: process.platform === 'win32',
+  });
+
+  if (result.status !== 0) {
+    console.error(
+      '\n✖ Unable to determine npm user (`npm whoami` failed). ' +
+        'You are likely not logged in or your auth token has expired.\n' +
+        '  Run `npm login` to authenticate, then re-run this release script.',
+    );
+    process.exit(result.status ?? 1);
+  }
+};
+
 const getPublishedVersions = (packageName) => {
   try {
     const output = execSync(
@@ -129,6 +146,8 @@ const main = async () => {
     process.exit(1);
   }
 
+  ensureNpmLogin();
+
   if (hasUncommittedChanges()) {
     console.warn(
       '\n! Warning: working tree has uncommitted or staged changes.\n' +
@@ -164,18 +183,8 @@ const main = async () => {
     }
   }
 
-  const simulatedNewVersion = bumpSemver(currentVersion, bumpType);
+  const newVersion = bumpSemver(currentVersion, bumpType);
 
-  if (isDryRun) {
-    console.log(
-      `\nDry run: would bump version ${currentVersion} -> ${simulatedNewVersion} (${bumpType}) and publish css-calipers@${simulatedNewVersion} to npm with dist-tag "${DIST_TAG}".`,
-    );
-    process.exit(0);
-  }
-
-  runStep(`Bumping version (${bumpType})`, 'npm', ['version', bumpType]);
-
-  const newVersion = readPackageVersion();
   const publishedVersions = getPublishedVersions('css-calipers');
 
   if (publishedVersions && publishedVersions.length > 0) {
@@ -198,26 +207,88 @@ const main = async () => {
     }
   }
 
+  if (isDryRun) {
+    console.log(
+      `\nDry run: would bump version ${currentVersion} -> ${newVersion} (${bumpType}), publish css-calipers@${newVersion} to npm with dist-tag "${DIST_TAG}", then commit, tag, and push the release.`,
+    );
+    process.exit(0);
+  }
+
   const confirm = await prompt(
     `Publish version ${newVersion} to npm? (y/N)`,
     'n',
   );
   if (!/^y(es)?$/i.test(confirm)) {
     console.log(
-      `Release flow completed up to version bump. Skipping npm publish for ${newVersion}.`,
+      `Release cancelled before publishing. Keeping version at ${currentVersion}.`,
     );
     process.exit(0);
   }
 
   runStep(
-    `Publishing ${newVersion} to npm (tag: ${DIST_TAG})`,
+    `Bumping version to ${newVersion} (${bumpType})`,
     'npm',
-    ['publish'],
+    ['version', bumpType, '--no-git-tag-version'],
+  );
+
+  const updatedVersion = readPackageVersion();
+  if (updatedVersion !== newVersion) {
+    console.error(
+      `\n✖ Version mismatch after bump. Expected ${newVersion}, found ${updatedVersion}. Aborting release.`,
+    );
+    process.exit(1);
+  }
+
+  console.log(
+    `\n> Publishing ${newVersion} to npm (tag: ${DIST_TAG})`,
+  );
+  const publishResult = spawnSync(
+    'npm',
+    ['publish', '--tag', DIST_TAG],
     {
-    env: { ...process.env, CSS_CALIPERS_RELEASE: '1' },
+      stdio: 'inherit',
+      shell: process.platform === 'win32',
+      env: { ...process.env, CSS_CALIPERS_RELEASE: '1' },
     },
   );
+  if (publishResult.status !== 0) {
+    console.error(
+      `\n✖ Publishing ${newVersion} to npm (tag: ${DIST_TAG}) failed (exit code ${publishResult.status ?? 1}). Rolling back version to ${currentVersion}.`,
+    );
+    runStep(
+      `Reverting version back to ${currentVersion}`,
+      'npm',
+      ['version', currentVersion, '--no-git-tag-version'],
+    );
+    process.exit(publishResult.status ?? 1);
+  }
   console.log(`\n✓ Published css-calipers@${newVersion} to npm.`);
+
+  const filesToStage = ['package.json'];
+  if (existsSync('package-lock.json')) {
+    filesToStage.push('package-lock.json');
+  }
+
+  runStep(
+    `Staging release files for ${newVersion}`,
+    'git',
+    ['add', ...filesToStage],
+  );
+  runStep(
+    `Committing release ${newVersion}`,
+    'git',
+    ['commit', '-m', `Release ${newVersion}`],
+  );
+  runStep(
+    `Tagging release v${newVersion}`,
+    'git',
+    ['tag', `v${newVersion}`],
+  );
+  runStep(
+    `Pushing main branch and tags`,
+    'git',
+    ['push', 'origin', 'main', '--follow-tags'],
+  );
 };
 
 main().catch((error) => {
