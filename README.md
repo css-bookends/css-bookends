@@ -9,7 +9,7 @@ compile-time unit safety, and output CSS only at the edges.
 
 At a glance:
 
-- Create measurements with `m` from a number and a unit (defaults to `px`).
+- Create measurements with `m` from a number and a unit; if you omit the unit, it defaults to `px` and is typed as the px measurement type.
 - Do unit-safe math with methods like `add` and `multiply`, then call `.css()`
   at the edge to get a CSS string (for example "10px").
 
@@ -36,7 +36,7 @@ npm install css-calipers
 import { m } from "css-calipers";
 
 // Declare vars
-const paddingBase = m(4); // defaults to "px" with no unit specified
+const paddingBase = m(4); // defaults to px (and is typed as a px measurement) when no unit is specified
 const rotation = m(45, "deg"); // equivalent to a dedicated helper: mDeg(45)
 
 // Do safe arithmetic
@@ -105,7 +105,7 @@ It’s probably overkill if:
 import { m, mPercent, mVw, mVh, assertCondition } from "css-calipers";
 
 // Token-style measurements (px by default)
-const spacing = m(8); // Defaults to px; equivalent to mPx(8)
+const spacing = m(8); // Defaults to px and is typed as a PxMeasurement; equivalent to mPx(8)
 const cardPadding = spacing.multiply(2); // 16px
 const gutter = spacing.multiply(1.5); // 12px
 

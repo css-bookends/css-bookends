@@ -321,11 +321,20 @@ export const isMeasurement = (
   x: unknown,
 ): x is IMeasurement<string> => x instanceof Measurement;
 
-export const m = <Unit extends string>(
+export function m(value: number): BrandedMeasurement<'px'>;
+export function m<Unit extends string>(
+  value: number,
+  unit: Unit,
+): IMeasurement<Lowercase<Unit>> & UnitBrand<Lowercase<Unit>>;
+export function m<Unit extends string>(
   value: number,
   unit: Unit = 'px' as Unit,
-): IMeasurement<Lowercase<Unit>> & UnitBrand<Lowercase<Unit>> =>
-  createMeasurement(value, unit.toLowerCase() as Lowercase<Unit>);
+): IMeasurement<Lowercase<Unit>> & UnitBrand<Lowercase<Unit>> {
+  return createMeasurement(
+    value,
+    unit.toLowerCase() as Lowercase<Unit>,
+  );
+}
 
 export type BrandedMeasurement<Unit extends string> = IMeasurement<Unit> &
   UnitBrand<Unit>;

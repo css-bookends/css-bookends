@@ -151,15 +151,15 @@ const main = async () => {
       'p',
     );
     const normalized = choice.toLowerCase();
-    if (normalized === 'p' || normalized === 'patch') {
+    if (choice === 'M' || normalized === 'major') {
+      bumpType = 'major';
+    } else if (normalized === 'p' || normalized === 'patch') {
       bumpType = 'patch';
     } else if (normalized === 'm' || normalized === 'minor') {
       bumpType = 'minor';
-    } else if (normalized === 'major') {
-      bumpType = 'major';
     } else {
       console.log(
-        'Unrecognized choice. Please enter "p", "m", "major", or press Enter for patch.',
+        'Unrecognized choice. Please enter "p", "m", "M", "minor", "major", or press Enter for patch.',
       );
     }
   }

@@ -137,6 +137,12 @@ export const runCoreTests = (label: string, api: CoreApi): void => {
       expect(measurement.toString()).toBe('12.5px');
     });
 
+    it('defaults shorthand measurements to px', () => {
+      const measurement = m(10);
+      expect(measurement.getUnit()).toBe('px');
+      expect(measurement.css()).toBe('10px');
+    });
+
     it('rejects non-finite values at construction time', () => {
       expect(() => m(Number.NaN, 'px')).toThrow(
         'css-calipers.Measurement.constructor: Non-finite measurement value: NaN',

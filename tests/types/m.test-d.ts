@@ -18,6 +18,7 @@ import {
 
 const implicit = m(10);
 expectAssignable<IMeasurement<string>>(implicit);
+expectAssignable<PxMeasurement>(implicit);
 
 const explicitPx = m(10, 'px');
 expectAssignable<IMeasurement<'px'>>(explicitPx);
