@@ -76,7 +76,7 @@
   "scripts": {
     "build": "npm run build:cjs && npm run build:esm",
     "build:cjs": "echo \"🛠️  Building CommonJS (cjs) bundle...\" && tsc -p tsconfig.build.cjs.json",
-    "build:esm": "echo \"🛠️  Building ES module (esm) bundle...\" && tsc -p tsconfig.build.esm.json",
+    "build:esm": "echo \"🛠️  Building ES module (esm) bundle...\" && tsc -p tsconfig.build.esm.json && node scripts/emit-esm-package.mjs",
     "build:test": "npm run build && npm run test",
     "build:delete": "node -e \"const { existsSync, rmSync } = require('fs'); const paths = ['dist/cjs', 'dist/esm']; for (const p of paths) { console.log('Scanning', p + '...'); if (existsSync(p)) { console.log('Found', p + ', deleting...'); rmSync(p, { recursive: true, force: true }); console.log('Deleted', p); } else { console.log(p + ' not found, skipping.'); } }\"",
     "prepublishOnly": "node -e \"if (!process.env.CSS_CALIPERS_RELEASE) { console.error('Direct npm publish is disabled; use \\\"npm run release\\\" instead.'); process.exit(1); }\"",
