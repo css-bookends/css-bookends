@@ -33,6 +33,9 @@ import {
   type DpiMeasurement,
   type FrMeasurement,
 } from '../../dist/esm';
+import type { ComplexStyleRule } from '../../dist/esm/mediaQueries/types';
+import { mediaQueryOutputVanillaExtract } from '../../dist/esm';
+import { mediaQueryOutputVanillaExtract as mediaQueryOutputVanillaExtractSubpath } from '../../dist/esm/libraryHelpers/vanilla-extract';
 
 import * as Units from '../../dist/esm/units';
 import * as PercentUnits from '../../dist/esm/units/percent';
@@ -175,6 +178,13 @@ expectAssignable<IMeasurement<'dpi'>>(resolution);
 
 const grid = GridUnits.mFr(2);
 expectAssignable<IMeasurement<'fr'>>(grid);
+
+expectAssignable<(media: ComplexStyleRule) => Record<string, unknown>>(
+  mediaQueryOutputVanillaExtract,
+);
+expectAssignable<(media: ComplexStyleRule) => Record<string, unknown>>(
+  mediaQueryOutputVanillaExtractSubpath,
+);
 
 // Alias types are consistent with their underlying measurement units
 expectAssignable<IMeasurement<'em'>>({} as EmMeasurement);
