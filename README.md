@@ -7,6 +7,13 @@ CSS-Calipers is a tiny layer for typed CSS measurements. Stop parsing CSS
 strings and concatenating units. Do your math on real numbers, get
 compile-time unit safety, and output CSS only at the edges.
 
+This README is a general overview. Deeper module guides live in their own files.
+
+Module guides:
+
+- Measurements core: README_MEASUREMENT.md
+- Media queries: README_MEDIAQUERIES.md
+
 At a glance:
 
 - Create measurements with `m` from a number and a unit; if you omit the unit, it defaults to `px` and is typed as the px measurement type.
@@ -334,13 +341,3 @@ The `examples/` folder contains a few non-published usage sketches:
 - [examples/validation-and-runtime-checks.example.ts](examples/validation-and-runtime-checks.example.ts) &mdash;
   dev-only validation around shared tokens in two different consumers (HTML
   string and style object) using the same line-height measurement.
-
-## Modules
-
-CSS-Calipers is expanding into a modular library. The first module is Media
-Queries, which builds typed, unit-safe media query strings on top of the
-measurements core.
-
-Read the module guide:
-
-- [README_MEDIAQUERIES.md](README_MEDIAQUERIES.md)
