@@ -136,7 +136,7 @@ export const applyMediaQueryValidation = <TConfig>(
   const normalized = normalizeValidationResult(validator(config));
   if (normalized.valid) return true;
 
-  const mode = helpers.config.errorHandling?.invalidValueMode ?? 'allow';
+  const mode = helpers.config.errorHandling?.invalidValueMode ?? 'throw';
   if (mode === 'log') {
     const suffix = normalized.message ? `: ${normalized.message}` : '';
     const prefix = context

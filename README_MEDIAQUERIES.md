@@ -39,6 +39,12 @@ The media queries module ships as a separate entrypoint so it can be
 tree-shaken when unused. It aims to cover the CSS media feature set through
 typed configuration and a set of composable emitters.
 
+## Defaults at a glance
+
+- Media type defaults to `screen`.
+- Validation defaults to `invalidValueMode: "throw"`.
+- Linting defaults to `lintingMode: "throw"`.
+
 ## Core concepts
 
 Media queries are built from a single config object that aggregates feature
@@ -161,7 +167,7 @@ Validation uses `invalidValueMode`:
 - `log`: log a warning and continue.
 - `throw`: throw an error.
 
-Defaults: `invalidValueMode` is `allow`.
+Defaults: `invalidValueMode` is `throw`.
 The default validators cover basic guards like min/max comparisons, positive
 values, and a few redundancy checks.
 
@@ -320,3 +326,13 @@ Functions:
 - Raw string queries are best handled by passing a prebuilt string to your
   styling layer. The module is optimized for typed, structured input.
 - Media type defaults to `screen` when omitted.
+
+## Gotchas and FAQ
+
+- **Why not accept raw query strings?** You can, but the module is optimized
+  for typed, structured input. If you already have a raw query string, keep
+  it as-is in your styling layer.
+- **Why log in tests?** Log mode is meant to surface issues without failing
+  builds.
+- **Can I extend the feature set?** Yes. Use `customFeatures` or custom
+  emitters with your own validation rules.
