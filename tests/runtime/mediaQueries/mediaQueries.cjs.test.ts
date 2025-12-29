@@ -1,0 +1,27 @@
+import { runMediaQueryTests } from './mediaQueries.shared';
+
+const mediaQueriesModule = await import(
+  '../../../dist/cjs/mediaQueries/index.js'
+);
+const coreModule = await import('../../../dist/cjs/index.js');
+
+const {
+  buildMediaQueryFromFeatures,
+  buildMediaQueryString,
+  createMediaQueryBuilder,
+  emitCustomFeatures,
+  emitDimensionsFeatures,
+  emitResolutionFeatures,
+} = mediaQueriesModule;
+const { mDpi, mPx } = coreModule;
+
+runMediaQueryTests('cjs', {
+  buildMediaQueryString,
+  buildMediaQueryFromFeatures,
+  createMediaQueryBuilder,
+  emitCustomFeatures,
+  emitDimensionsFeatures,
+  emitResolutionFeatures,
+  mDpi,
+  mPx,
+});
