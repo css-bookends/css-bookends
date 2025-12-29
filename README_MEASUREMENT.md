@@ -1,41 +1,13 @@
-# CSS-Calipers
+# Measurements Core
 
-**CSS is code. Measure it like one.**  
-Compile-time unit safety for numeric, unit-bearing CSS values, no surprises at runtime.
-
-CSS-Calipers is a tiny layer for typed CSS measurements. Stop parsing CSS
-strings and concatenating units. Do your math on real numbers, get
-compile-time unit safety, and output CSS only at the edges.
-
-This README is a general overview. Deeper module guides live in their own files.
-
-Module guides:
-
-- Measurements core: README_MEASUREMENT.md
-- Media queries: README_MEDIAQUERIES.md
+This is the core measurements module for CSS-Calipers. Everything else in the
+library builds on these unit-safe measurement types and helpers.
 
 At a glance:
 
 - Create measurements with `m` from a number and a unit; if you omit the unit, it defaults to `px` and is typed as the px measurement type.
 - Do unit-safe math with methods like `add` and `multiply`, then call `.css()`
   at the edge to get a CSS string (for example "10px").
-
-## Install
-
-```bash
-npm install css-calipers
-```
-
-### Status & support
-
-> 🚧 Work in progress.  
-> API surface and docs may change between `0.x` releases until the first stable version.
-
-- Status: early `0.x` release. Backwards compatibility is not guaranteed until `1.0.0`.
-- Questions or bugs: open an issue on GitHub (see the repository link at the top of this page or in `package.json`).
-- Tooling: tested primarily with TypeScript 5.6+ on Node 18+.
-
----
 
 ## Quick start
 

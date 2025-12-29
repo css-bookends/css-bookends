@@ -42,6 +42,11 @@
       "import": "./dist/esm/index.js",
       "require": "./dist/cjs/index.js"
     },
+    "./mediaQueries": {
+      "types": "./dist/esm/mediaQueries/index.d.ts",
+      "import": "./dist/esm/mediaQueries/index.js",
+      "require": "./dist/cjs/mediaQueries/index.js"
+    },
     "./units": {
       "types": "./dist/esm/units/index.d.ts",
       "import": "./dist/esm/units/index.js",
@@ -54,10 +59,12 @@
     },
     "./package.json": "./package.json"
   },
+  "dependencies": {
+    "csstype": "^3.1.3"
+  },
   "devDependencies": {
     "@types/node": "^24.10.1",
     "@vitest/coverage-v8": "^4.0.14",
-    "csstype": "^3.1.3",
     "tsd": "^0.31.0",
     "typescript": "^5.6.3",
     "vitest": "^4.0.14"
@@ -66,17 +73,25 @@
     "build": "npm run build:cjs && npm run build:esm",
     "build:cjs": "echo \"🛠️  Building CommonJS (cjs) bundle...\" && tsc -p tsconfig.build.cjs.json",
     "build:esm": "echo \"🛠️  Building ES module (esm) bundle...\" && tsc -p tsconfig.build.esm.json",
-    "build:test": "npm run build && npm run test:all",
+    "build:test": "npm run build && npm run test",
     "build:delete": "node -e \"const { existsSync, rmSync } = require('fs'); const paths = ['dist/cjs', 'dist/esm']; for (const p of paths) { console.log('Scanning', p + '...'); if (existsSync(p)) { console.log('Found', p + ', deleting...'); rmSync(p, { recursive: true, force: true }); console.log('Deleted', p); } else { console.log(p + ' not found, skipping.'); } }\"",
     "prepublishOnly": "node -e \"if (!process.env.CSS_CALIPERS_RELEASE) { console.error('Direct npm publish is disabled; use \\\"npm run release\\\" instead.'); process.exit(1); }\"",
     "release": "node scripts/release.mjs",
     "release:dry": "node scripts/release.mjs --dry-run",
-    "test": "vitest tests/runtime/core/core.src.test.ts",
+    
+    "test": "npm run test:core && npm run test:mediaQueries && npm run test:dist && npm run test:types",
+    
+    "test:mediaQueries": "vitest run tests/runtime/mediaQueries/mediaQueries.src.test.ts",
+    "test:mediaQueries:cjs": "vitest run tests/runtime/mediaQueries/mediaQueries.cjs.test.ts tests/runtime/api-surface/mediaQueries.api-surface.cjs.test.ts",
+    "test:mediaQueries:esm": "vitest run tests/runtime/mediaQueries/mediaQueries.esm.test.ts tests/runtime/api-surface/mediaQueries.api-surface.esm.test.ts",
+    "test:mediaQueries:dist": "npm run test:mediaQueries:cjs && npm run test:mediaQueries:esm",
+    
     "test:core": "vitest run tests/runtime/core/core.src.test.ts",
-    "test:cjs": "vitest run tests/runtime/core/core.cjs.test.ts tests/runtime/api-surface/api-surface.cjs.test.ts",
-    "test:esm": "vitest run tests/runtime/core/core.esm.test.ts tests/runtime/api-surface/api-surface.esm.test.ts",
-    "test:dist": "npm run test:cjs && npm run test:esm",
-    "test:all": "npm run test:core && npm run test:dist && npm run test:types",
-    "test:types": "echo \"\n 🧪 Starting tsd type checks...\n\" && tsd --files tests/types/**/*.test-d.ts && echo \"✅ tsd type checks passed!\n\""
+    "test:core:cjs": "vitest run tests/runtime/core/core.cjs.test.ts tests/runtime/api-surface/api-surface.cjs.test.ts",
+    "test:core:esm": "vitest run tests/runtime/core/core.esm.test.ts tests/runtime/api-surface/api-surface.esm.test.ts",
+    "test:core:dist": "npm run test:core:cjs && npm run test:core:esm",
+
+    "test:types": "echo \"\n 🧪 Starting tsd type checks...\n\" && tsd --files tests/types/**/*.test-d.ts && echo \"✅ tsd type checks passed!\n\"",
+    "test:dist": "npm run test:core:dist && npm run test:mediaQueries:dist"
   }
 }
