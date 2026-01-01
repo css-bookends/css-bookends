@@ -24,6 +24,11 @@ export interface ErrorConfig {
   stackHints?: StackHintMode;
 }
 
+export type ErrorConfigStore = {
+  getErrorConfig: () => Required<ErrorConfig>;
+  setErrorConfig: (next: ErrorConfig) => void;
+};
+
 export interface MeasurementMethodErrorContext {
   /** Operation name (for example, "add", "divide", "clamp"). */
   operation: string;
@@ -62,11 +67,64 @@ const DEFAULT_ERROR_CONFIG: Required<ErrorConfig> = {
 
 let errorConfig: Required<ErrorConfig> = { ...DEFAULT_ERROR_CONFIG };
 
+export const createErrorConfigStore = (
+  initial: ErrorConfig = {},
+): ErrorConfigStore => {
+  let config: Required<ErrorConfig> = {
+    ...DEFAULT_ERROR_CONFIG,
+    ...initial,
+  };
+  return {
+    getErrorConfig: () => config,
+    setErrorConfig: (next: ErrorConfig) => {
+      config = { ...config, ...next };
+    },
+  };
+};
+
 export const setErrorConfig = (next: ErrorConfig): void => {
   errorConfig = { ...errorConfig, ...next };
 };
 
 export const getErrorConfig = (): Required<ErrorConfig> => errorConfig;
+
+export const createErrorHelpers = (store: ErrorConfigStore) => {
+  const getConfig = (): Required<ErrorConfig> =>
+    store.getErrorConfig();
+  const throwMeasurementMethodError = (
+    ctx: MeasurementMethodErrorContext,
+  ): never => {
+    const includeStack = shouldIncludeStackHint(
+      ctx.includeStackHint,
+      getConfig(),
+    );
+    const stackHint = includeStack
+      ? extractStackHint(new Error().stack)
+      : undefined;
+    throw new Error(
+      formatErrorMessage(ctx.operation, ctx.message, ctx.context, {
+        ...ctx.details,
+        stackHint,
+      }),
+    );
+  };
+  const throwHelperError = (ctx: HelperErrorContext): never => {
+    const includeStack = shouldIncludeStackHint(
+      ctx.includeStackHint,
+      getConfig(),
+    );
+    const stackHint = includeStack
+      ? extractStackHint(new Error().stack)
+      : undefined;
+    throw new Error(
+      formatErrorMessage(ctx.operation, ctx.message, ctx.context, {
+        ...ctx.details,
+        stackHint,
+      }),
+    );
+  };
+  return { throwMeasurementMethodError, throwHelperError };
+};
 
 const isProductionEnv = (): boolean => {
   if (typeof globalThis === "undefined") return false;

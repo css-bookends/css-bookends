@@ -100,6 +100,8 @@ const MODULE_EMITTERS = {
   custom: emitCustomFeatures,
 };
 
+export type MediaQueryModuleEmitters = typeof MODULE_EMITTERS;
+
 const ALL_MODULE_KEYS: Record<MediaQueryModuleId, readonly string[]> =
   MODULE_KEYS;
 
@@ -212,7 +214,9 @@ const runCustomLinter = <TModules extends MediaQueryModulesList | undefined, TOu
   throw new Error(message);
 };
 
-export const mediaQueryFactory = <
+export const createMediaQueryFactory = (
+  emitters: MediaQueryModuleEmitters,
+) => <
   TModules extends MediaQueryModulesList | undefined,
   TQueries extends Record<string, FactoryQueryProps<TModules>>,
   TOutput = ComplexStyleRule
@@ -232,7 +236,7 @@ export const mediaQueryFactory = <
       runCustomValidator(props as IMediaQueryProps, options.config);
       runCustomLinter(props as IMediaQueryProps, options.config);
       modules.forEach((moduleId) => {
-        MODULE_EMITTERS[moduleId](
+        emitters[moduleId](
           props as MediaQueryModulePropsMap[MediaQueryModuleId],
           helpers,
         );
@@ -261,3 +265,5 @@ export const mediaQueryFactory = <
       : (mediaQuery as TOutput);
   };
 };
+
+export const mediaQueryFactory = createMediaQueryFactory(MODULE_EMITTERS);

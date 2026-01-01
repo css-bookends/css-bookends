@@ -11,6 +11,15 @@ import type { IMeasurement } from '../core';
 
 export type MediaQueryValidationCheck<TConfig> = (config: TConfig) => void;
 
+export type MediaQueryCoreHelpers = {
+  assertCondition: typeof assertCondition;
+  assertMatchingUnits: typeof assertMatchingUnits;
+};
+
+export type MediaQueryValidation = ReturnType<
+  typeof createMediaQueryValidation
+>;
+
 const toValidationResult = (
   error: unknown,
   fallback: string,
@@ -19,103 +28,108 @@ const toValidationResult = (
   return fallback;
 };
 
-export const runMediaQueryValidation = <TConfig>(
-  config: TConfig,
-  helpers: MediaQueryBuilderHelpers,
-  check?: MediaQueryValidationCheck<TConfig>,
-  context?: string,
-  fallbackMessage = 'Invalid media query configuration',
-): boolean => {
-  if (!check) return true;
-  try {
-    check(config);
-    return true;
-  } catch (error) {
-    const result = toValidationResult(error, fallbackMessage);
-    return applyMediaQueryValidation(
-      config,
-      helpers,
-      () => result,
-      context,
+export const createMediaQueryValidation = (
+  core: MediaQueryCoreHelpers,
+) => {
+  const { assertCondition, assertMatchingUnits } = core;
+
+  const runMediaQueryValidation = <TConfig>(
+    config: TConfig,
+    helpers: MediaQueryBuilderHelpers,
+    check?: MediaQueryValidationCheck<TConfig>,
+    context?: string,
+    fallbackMessage = 'Invalid media query configuration',
+  ): boolean => {
+    if (!check) return true;
+    try {
+      check(config);
+      return true;
+    } catch (error) {
+      const result = toValidationResult(error, fallbackMessage);
+      return applyMediaQueryValidation(
+        config,
+        helpers,
+        () => result,
+        context,
+      );
+    }
+  };
+
+  const validateMinMaxWidth = (props: IMediaQueryCore): void => {
+    if (!props.minWidth || !props.maxWidth) return;
+    assertMatchingUnits(
+      props.minWidth,
+      props.maxWidth,
+      'mediaQueries.minMaxWidth',
     );
-  }
-};
-
-export const validateMinMaxWidth = (props: IMediaQueryCore): void => {
-  if (!props.minWidth || !props.maxWidth) return;
-  assertMatchingUnits(
-    props.minWidth,
-    props.maxWidth,
-    'mediaQueries.minMaxWidth',
-  );
-  assertCondition(
-    props.minWidth.getValue() <= props.maxWidth.getValue(),
-    'minWidth must be less than or equal to maxWidth',
-  );
-};
-
-export const validateWidthValuesPositive = (
-  props: IMediaQueryCore & IMediaQueryDimensions,
-): void => {
-  const assertPositive = (
-    value: IMeasurement,
-    label: string,
-  ): void => {
     assertCondition(
-      value.getValue() > 0,
-      `${label} must be greater than 0`,
+      props.minWidth.getValue() <= props.maxWidth.getValue(),
+      'minWidth must be less than or equal to maxWidth',
     );
   };
 
-  if (props.width) {
-    assertPositive(props.width, 'width');
-  }
-  if (props.minWidth) {
-    assertPositive(props.minWidth, 'minWidth');
-  }
-  if (props.maxWidth) {
-    assertPositive(props.maxWidth, 'maxWidth');
-  }
-};
-
-export const validateMinMaxHeight = (
-  props: IMediaQueryDimensions,
-): void => {
-  if (!props.minHeight || !props.maxHeight) return;
-  assertMatchingUnits(
-    props.minHeight,
-    props.maxHeight,
-    'mediaQueries.minMaxHeight',
-  );
-  assertCondition(
-    props.minHeight.getValue() <= props.maxHeight.getValue(),
-    'minHeight must be less than or equal to maxHeight',
-  );
-};
-
-export const validateHeightValuesPositive = (
-  props: IMediaQueryDimensions,
-): void => {
-  const assertPositive = (
-    value: IMeasurement,
-    label: string,
+  const validateWidthValuesPositive = (
+    props: IMediaQueryCore & IMediaQueryDimensions,
   ): void => {
+    const assertPositive = (
+      value: IMeasurement,
+      label: string,
+    ): void => {
+      assertCondition(
+        value.getValue() > 0,
+        `${label} must be greater than 0`,
+      );
+    };
+
+    if (props.width) {
+      assertPositive(props.width, 'width');
+    }
+    if (props.minWidth) {
+      assertPositive(props.minWidth, 'minWidth');
+    }
+    if (props.maxWidth) {
+      assertPositive(props.maxWidth, 'maxWidth');
+    }
+  };
+
+  const validateMinMaxHeight = (
+    props: IMediaQueryDimensions,
+  ): void => {
+    if (!props.minHeight || !props.maxHeight) return;
+    assertMatchingUnits(
+      props.minHeight,
+      props.maxHeight,
+      'mediaQueries.minMaxHeight',
+    );
     assertCondition(
-      value.getValue() > 0,
-      `${label} must be greater than 0`,
+      props.minHeight.getValue() <= props.maxHeight.getValue(),
+      'minHeight must be less than or equal to maxHeight',
     );
   };
 
-  if (props.height) {
-    assertPositive(props.height, 'height');
-  }
-  if (props.minHeight) {
-    assertPositive(props.minHeight, 'minHeight');
-  }
-  if (props.maxHeight) {
-    assertPositive(props.maxHeight, 'maxHeight');
-  }
-};
+  const validateHeightValuesPositive = (
+    props: IMediaQueryDimensions,
+  ): void => {
+    const assertPositive = (
+      value: IMeasurement,
+      label: string,
+    ): void => {
+      assertCondition(
+        value.getValue() > 0,
+        `${label} must be greater than 0`,
+      );
+    };
+
+    if (props.height) {
+      assertPositive(props.height, 'height');
+    }
+    if (props.minHeight) {
+      assertPositive(props.minHeight, 'minHeight');
+    }
+    if (props.maxHeight) {
+      assertPositive(props.maxHeight, 'maxHeight');
+    }
+  };
 
 const parseAspectRatio = (
   value: IMediaQueryDimensions['aspectRatio'],
@@ -139,76 +153,112 @@ const parseAspectRatio = (
   return Number.isFinite(parsed) ? parsed : null;
 };
 
-export const validateMinMaxAspectRatio = (
-  props: IMediaQueryDimensions,
-): void => {
-  if (!props.minAspectRatio || !props.maxAspectRatio) return;
-  const minRatio = parseAspectRatio(props.minAspectRatio);
-  const maxRatio = parseAspectRatio(props.maxAspectRatio);
-  assertCondition(
-    minRatio !== null && maxRatio !== null,
-    'aspectRatio values must be valid numbers or ratio strings',
-  );
-  assertCondition(
-    (minRatio as number) <= (maxRatio as number),
-    'minAspectRatio must be less than or equal to maxAspectRatio',
-  );
-};
-
-export const validateAspectRatioValuesPositive = (
-  props: IMediaQueryDimensions,
-): void => {
-  const assertValidPositive = (label: string, value: number | null): void => {
+  const validateMinMaxAspectRatio = (
+    props: IMediaQueryDimensions,
+  ): void => {
+    if (!props.minAspectRatio || !props.maxAspectRatio) return;
+    const minRatio = parseAspectRatio(props.minAspectRatio);
+    const maxRatio = parseAspectRatio(props.maxAspectRatio);
     assertCondition(
-      value !== null && value > 0,
-      `${label} must be a valid ratio greater than 0`,
+      minRatio !== null && maxRatio !== null,
+      'aspectRatio values must be valid numbers or ratio strings',
+    );
+    assertCondition(
+      (minRatio as number) <= (maxRatio as number),
+      'minAspectRatio must be less than or equal to maxAspectRatio',
     );
   };
 
-  if (props.aspectRatio !== undefined) {
-    assertValidPositive(
-      'aspectRatio',
-      parseAspectRatio(props.aspectRatio),
-    );
-  }
-  if (props.minAspectRatio !== undefined) {
-    assertValidPositive(
-      'minAspectRatio',
-      parseAspectRatio(props.minAspectRatio),
-    );
-  }
-  if (props.maxAspectRatio !== undefined) {
-    assertValidPositive(
-      'maxAspectRatio',
-      parseAspectRatio(props.maxAspectRatio),
-    );
-  }
-};
+  const validateAspectRatioValuesPositive = (
+    props: IMediaQueryDimensions,
+  ): void => {
+    const assertValidPositive = (
+      label: string,
+      value: number | null,
+    ): void => {
+      assertCondition(
+        value !== null && value > 0,
+        `${label} must be a valid ratio greater than 0`,
+      );
+    };
 
-export const validateResolutionValues = (
-  props: IMediaQueryResolutionRange,
-): void => {
-  const assertPositive = (value: IMeasurement, label: string): void => {
-    assertCondition(
-      value.getValue() > 0,
-      `${label} must be greater than 0`,
-    );
+    if (props.aspectRatio !== undefined) {
+      assertValidPositive(
+        'aspectRatio',
+        parseAspectRatio(props.aspectRatio),
+      );
+    }
+    if (props.minAspectRatio !== undefined) {
+      assertValidPositive(
+        'minAspectRatio',
+        parseAspectRatio(props.minAspectRatio),
+      );
+    }
+    if (props.maxAspectRatio !== undefined) {
+      assertValidPositive(
+        'maxAspectRatio',
+        parseAspectRatio(props.maxAspectRatio),
+      );
+    }
   };
 
-  if (props.resolutionValue) {
-    assertPositive(props.resolutionValue, 'resolution');
-  }
-  if (props.minResolution) {
-    assertPositive(props.minResolution, 'minResolution');
-  }
-  if (props.maxResolution) {
-    assertPositive(props.maxResolution, 'maxResolution');
-  }
-  if (props.minResolution && props.maxResolution) {
-    assertMatchingUnits(
-      props.minResolution,
-      props.maxResolution,
-      'mediaQueries.resolutionUnits',
-    );
-  }
+  const validateResolutionValues = (
+    props: IMediaQueryResolutionRange,
+  ): void => {
+    const assertPositive = (
+      value: IMeasurement,
+      label: string,
+    ): void => {
+      assertCondition(
+        value.getValue() > 0,
+        `${label} must be greater than 0`,
+      );
+    };
+
+    if (props.resolutionValue) {
+      assertPositive(props.resolutionValue, 'resolution');
+    }
+    if (props.minResolution) {
+      assertPositive(props.minResolution, 'minResolution');
+    }
+    if (props.maxResolution) {
+      assertPositive(props.maxResolution, 'maxResolution');
+    }
+    if (props.minResolution && props.maxResolution) {
+      assertMatchingUnits(
+        props.minResolution,
+        props.maxResolution,
+        'mediaQueries.resolutionUnits',
+      );
+    }
+  };
+
+  return {
+    runMediaQueryValidation,
+    validateMinMaxWidth,
+    validateWidthValuesPositive,
+    validateMinMaxHeight,
+    validateHeightValuesPositive,
+    validateMinMaxAspectRatio,
+    validateAspectRatioValuesPositive,
+    validateResolutionValues,
+  };
 };
+
+const defaultMediaQueryValidation = createMediaQueryValidation({
+  assertCondition,
+  assertMatchingUnits,
+});
+
+export const {
+  runMediaQueryValidation,
+  validateMinMaxWidth,
+  validateWidthValuesPositive,
+  validateMinMaxHeight,
+  validateHeightValuesPositive,
+  validateMinMaxAspectRatio,
+  validateAspectRatioValuesPositive,
+  validateResolutionValues,
+} = defaultMediaQueryValidation;
+
+export { defaultMediaQueryValidation };

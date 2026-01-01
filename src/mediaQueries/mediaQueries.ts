@@ -3,9 +3,8 @@ import type { ComplexStyleRule, StyleRule } from "./types";
 import type { MediaQueryBuilderHelpers } from "./helpers";
 import { createMediaQueryBuilder } from "./helpers";
 import {
-  runMediaQueryValidation,
-  validateMinMaxWidth,
-  validateWidthValuesPositive,
+  defaultMediaQueryValidation,
+  type MediaQueryValidation,
 } from "./validation";
 import {
   emitCustomFeatures,
@@ -51,10 +50,18 @@ export type IMediaQueryStyles<T extends IMediaQueries> = Partial<
   Record<keyof T, StyleRule>
 >;
 
-export const emitCoreFeatures = (
+export const createEmitCoreFeatures = (
+  validation: MediaQueryValidation,
+) => (
   props: IMediaQueryCore,
-  helpers: MediaQueryBuilderHelpers
+  helpers: MediaQueryBuilderHelpers,
 ): void => {
+  const {
+    runMediaQueryValidation,
+    validateMinMaxWidth,
+    validateWidthValuesPositive,
+  } = validation;
+
   if (
     !runMediaQueryValidation(
       props,
@@ -86,6 +93,10 @@ export const emitCoreFeatures = (
     addFeature("max-width", props.maxWidth);
   }
 };
+
+export const emitCoreFeatures = createEmitCoreFeatures(
+  defaultMediaQueryValidation,
+);
 
 const emitBaseFeatures = (
   props: IMediaQueryProps,

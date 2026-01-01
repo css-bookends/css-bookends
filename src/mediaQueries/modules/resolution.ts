@@ -4,7 +4,10 @@ import type {
   MediaQueryValidator,
 } from '../helpers';
 import { applyMediaQueryValidation } from '../helpers';
-import { runMediaQueryValidation, validateResolutionValues } from '../validation';
+import {
+  defaultMediaQueryValidation,
+  type MediaQueryValidation,
+} from '../validation';
 import { runMediaQueryLint } from '../linting';
 import { lintResolutionRedundancy } from '../linting/resolution';
 
@@ -17,11 +20,16 @@ export interface IMediaQueryResolutionRange {
 export type MediaQueryResolutionValidator =
   MediaQueryValidator<IMediaQueryResolutionRange>;
 
-export const emitResolutionFeatures = (
+export const createEmitResolutionFeatures = (
+  validation: MediaQueryValidation,
+) => (
   props: IMediaQueryResolutionRange,
   helpers: MediaQueryBuilderHelpers,
   validate?: MediaQueryResolutionValidator,
 ): void => {
+  const { runMediaQueryValidation, validateResolutionValues } =
+    validation;
+
   if (
     !runMediaQueryValidation(
       props,
@@ -59,3 +67,7 @@ export const emitResolutionFeatures = (
     addFeature('max-resolution', props.maxResolution);
   }
 };
+
+export const emitResolutionFeatures = createEmitResolutionFeatures(
+  defaultMediaQueryValidation,
+);

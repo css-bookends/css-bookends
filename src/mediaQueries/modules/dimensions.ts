@@ -5,12 +5,8 @@ import type {
 } from '../helpers';
 import { applyMediaQueryValidation } from '../helpers';
 import {
-  runMediaQueryValidation,
-  validateAspectRatioValuesPositive,
-  validateHeightValuesPositive,
-  validateMinMaxAspectRatio,
-  validateMinMaxHeight,
-  validateWidthValuesPositive,
+  defaultMediaQueryValidation,
+  type MediaQueryValidation,
 } from '../validation';
 import { runMediaQueryLint } from '../linting';
 import {
@@ -34,11 +30,22 @@ export interface IMediaQueryDimensions {
 export type MediaQueryDimensionsValidator =
   MediaQueryValidator<IMediaQueryDimensions>;
 
-export const emitDimensionsFeatures = (
+export const createEmitDimensionsFeatures = (
+  validation: MediaQueryValidation,
+) => (
   props: IMediaQueryDimensions,
   helpers: MediaQueryBuilderHelpers,
   validate?: MediaQueryDimensionsValidator,
 ): void => {
+  const {
+    runMediaQueryValidation,
+    validateMinMaxHeight,
+    validateHeightValuesPositive,
+    validateMinMaxAspectRatio,
+    validateAspectRatioValuesPositive,
+    validateWidthValuesPositive,
+  } = validation;
+
   if (
     !runMediaQueryValidation(
       props,
@@ -145,3 +152,7 @@ export const emitDimensionsFeatures = (
     addFeature('orientation', props.orientation);
   }
 };
+
+export const emitDimensionsFeatures = createEmitDimensionsFeatures(
+  defaultMediaQueryValidation,
+);
