@@ -334,6 +334,27 @@ setErrorConfig({ stackHints: "on" });
 
 ---
 
+## Factory entrypoint (optional)
+
+If you want instance-scoped configuration and a single re-export surface, use
+the factory entrypoint. The instance includes core helpers, unit helpers, and
+mediaQueries.
+
+```
+import { createCalipers } from "css-calipers/factory";
+
+const calipers = createCalipers({
+  errorConfig: { stackHints: "on" },
+});
+
+export const { m, mPx, mediaQueries, units } = calipers;
+```
+
+See [examples/factory-wrapper.example.ts](examples/factory-wrapper.example.ts)
+for a wrapper module you can re-export across your project.
+
+---
+
 ## Co-existing with other systems
 
 You don’t have to convert everything at once, or at all. If it fits your setup,
@@ -448,3 +469,5 @@ The `examples/` folder contains a few non-published usage sketches:
 - [examples/validation-and-runtime-checks.example.ts](examples/validation-and-runtime-checks.example.ts) &mdash;
   dev-only validation around shared tokens in two different consumers (HTML
   string and style object) using the same line-height measurement.
+- [examples/factory-wrapper.example.ts](examples/factory-wrapper.example.ts) &mdash;
+  instance-scoped factory wrapper that re-exports the helpers.
