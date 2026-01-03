@@ -1,7 +1,9 @@
 import type { SelectorMap, StyleRule } from '../types';
 
-export const mediaQueryOutputVanillaExtract = (
+export const mediaQueryOutputVanillaExtract = <
+  TSelectorMap extends Record<string, unknown> = SelectorMap
+>(
   media: StyleRule,
-): SelectorMap => ({
+): TSelectorMap => ({
   '&': media,
-});
+}) as unknown as TSelectorMap;

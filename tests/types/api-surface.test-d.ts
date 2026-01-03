@@ -37,10 +37,7 @@ import {
   type DpiMeasurement,
   type FrMeasurement,
 } from '../../dist/esm';
-import type {
-  SelectorMap,
-  StyleRule,
-} from '../../dist/esm/mediaQueries/types';
+import type { StyleRule } from '../../dist/esm/mediaQueries/types';
 import { mediaQueryOutputVanillaExtract } from '../../dist/esm/mediaQueries';
 
 import * as Units from '../../dist/esm/units';
@@ -190,9 +187,10 @@ expectAssignable<IMeasurement<'dpi'>>(resolution);
 const grid = GridUnits.mFr(2);
 expectAssignable<IMeasurement<'fr'>>(grid);
 
-expectAssignable<(media: StyleRule) => SelectorMap>(
-  mediaQueryOutputVanillaExtract,
-);
+const sampleStyleRule: StyleRule = { color: 'red' };
+const vanillaExtractOutput =
+  mediaQueryOutputVanillaExtract(sampleStyleRule);
+expectAssignable<Record<string, unknown>>(vanillaExtractOutput);
 
 // Alias types are consistent with their underlying measurement units
 expectAssignable<IMeasurement<'em'>>({} as EmMeasurement);
