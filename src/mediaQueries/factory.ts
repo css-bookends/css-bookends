@@ -153,6 +153,7 @@ export type MediaQueryFactoryConfig<
 > = MediaQueryBuilderConfig & {
   label: string;
   modules?: TModules;
+  preProcessor?: (media: StyleRule) => StyleRule;
   output?: (media: StyleRule) => TOutput;
   custom?: MediaQueryFactoryCustomHooks;
 };
@@ -287,9 +288,13 @@ export const createMediaQueryFactory = (
       '@media': result,
     };
 
+    const processed = options.config.preProcessor
+      ? options.config.preProcessor(mediaQuery)
+      : mediaQuery;
+
     return options.config.output
-      ? options.config.output(mediaQuery)
-      : (mediaQuery as TOutput);
+      ? options.config.output(processed)
+      : (processed as TOutput);
   };
 };
 

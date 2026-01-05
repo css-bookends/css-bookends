@@ -64,15 +64,15 @@ interface AllQueries<StyleType>
 
 export type WithQueries<StyleType> = StyleType & AllQueries<StyleType>;
 
-export interface SelectorMap {
-  [selector: string]: WithQueries<CSSPropertiesWithVars>;
-}
-
 export interface StyleWithSelectors extends CSSPropertiesAndPseudos {
   selectors?: SelectorMap;
 }
 
 export type StyleRule = WithQueries<StyleWithSelectors>;
+
+export interface SelectorMap {
+  [selector: string]: WithQueries<StyleWithSelectors>;
+}
 
 export type GlobalStyleRule = WithQueries<CSSPropertiesWithVars>;
 

@@ -10,10 +10,11 @@ import { m } from "css-calipers";
 import {
   makeMediaQueryStyle,
   mediaQueryFactory,
-  mediaQueryOutputVanillaExtract,
+  outputVanillaExtract,
+  preprocessorVanillaExtract,
 } from "css-calipers/mediaQueries";
 import type { IMediaQueryProps, StyleRule } from "css-calipers/mediaQueries";
-import type { StyleRule as VanillaStyleRule } from "@vanilla-extract/css";
+import { style } from "@vanilla-extract/css";
 
 // Simple helper: grid component uses its own breakpoints and column labels.
 // This helper uses the default builder, which includes all modules.
@@ -97,17 +98,24 @@ const vanillaExtractMedia = mediaQueryFactory({
   config: {
     label: "vanilla-extract",
     modules: ["core"],
-    output: (media: StyleRule) =>
-      mediaQueryOutputVanillaExtract<
-        { [selector: string]: VanillaStyleRule }
-      >(media),
+    preProcessor: preprocessorVanillaExtract,
+    output: outputVanillaExtract,
   },
 });
 
 const vanillaExtractStyles = {
+  padding: "20px",
   selectors: {
     ...vanillaExtractMedia({
-      compact: { display: "block" },
+      compact: {
+        display: "block",
+        padding: "10px",
+        selectors: {
+          "&:[data-query-mobile='no-padding'])": {
+            padding: "0px",
+          },
+        },
+      },
     }),
   },
 };

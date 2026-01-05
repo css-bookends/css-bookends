@@ -41,6 +41,8 @@ describe('mediaQueries API surface (ESM)', () => {
     expect(typeof esmMediaQueries.mediaQueryOutputVanillaExtract).toBe(
       'function',
     );
+    expect(esmMediaQueries).toHaveProperty('outputVanillaExtract');
+    expect(typeof esmMediaQueries.outputVanillaExtract).toBe('function');
   });
 
   it('exposes media query module emitters', () => {
