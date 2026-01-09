@@ -9,3 +9,4 @@ export const mMs = makeUnitHelperFromDefinition('mMs');
 export type SMeasurement = MeasurementOf<typeof mS>;
 export type MsMeasurement = MeasurementOf<typeof mMs>;
 
+export type TimeMeasurement = SMeasurement | MsMeasurement;

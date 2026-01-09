@@ -44,6 +44,7 @@ import {
   type HzMeasurement,
   type DpiMeasurement,
   type FrMeasurement,
+  type TimeMeasurement,
   type IRatio,
   type RatioParts,
 } from '../../dist/esm';
@@ -190,6 +191,11 @@ expectAssignable<IMeasurement<'deg'>>(angle);
 
 const time = TimeUnits.mS(2);
 expectAssignable<IMeasurement<'s'>>(time);
+expectAssignable<TimeMeasurement>(time);
+
+const timeMs = TimeUnits.mMs(250);
+expectAssignable<IMeasurement<'ms'>>(timeMs);
+expectAssignable<TimeMeasurement>(timeMs);
 
 const frequency = FrequencyUnits.mHz(120);
 expectAssignable<IMeasurement<'hz'>>(frequency);
