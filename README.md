@@ -1,6 +1,6 @@
 # CSS-Calipers
 
-**CSS is code. Measure it like one.**  
+**CSS is code. Treat it that way.**  
 Compile-time unit safety for numeric, unit-bearing CSS values, no surprises at runtime.
 
 CSS-Calipers is a tiny layer for typed CSS measurements. Stop parsing CSS
@@ -125,8 +125,8 @@ CSS-Calipers is a good fit if:
 - You already use TypeScript (or plan to) and want compile-time guarantees around CSS units.
 - You have a design system or token layer where layout math and unit conversions matter.
 - You care about catching unit mismatches and layout invariants early, in dev or tests.
-This library is opinionated about types and emitting valid CSS at the edges,
-but intentionally loose about how you structure or apply styles in between.
+  This library is opinionated about types and emitting valid CSS at the edges,
+  but intentionally loose about how you structure or apply styles in between.
 
 It’s probably overkill if:
 
@@ -177,7 +177,7 @@ const columns = 3;
 if (process.env.NODE_ENV !== "production") {
   assertCondition(
     () => columns > 0,
-    "cardGridStyles: columns must be greater than zero"
+    "cardGridStyles: columns must be greater than zero",
   );
 }
 
@@ -218,7 +218,7 @@ if (process.env.NODE_ENV !== "production") {
   assertMatchingUnits(
     formTokens.field.paddingBlock,
     formTokens.field.paddingInline,
-    "Form control padding mismatch"
+    "Form control padding mismatch",
   );
 }
 ```
@@ -268,9 +268,11 @@ css-calipers.m: Non-finite measurement value: undefined [code=CALIPERS_E_NONFINI
 ```
 
 What it means
+
 - A measurement was constructed with undefined, NaN, or Infinity.
 
 How to fix
+
 - Provide a real numeric value and a unit (m(12), m(12, "px")).
 - Add a context label so the error points to the calling helper or token (m(12, { context: "tokens.cardWidth" })).
 
@@ -283,9 +285,11 @@ css-calipers.assertMatchingUnits: measurement unit mismatch: px vs em [code=CALI
 ```
 
 What it means
+
 - You mixed units without an explicit conversion.
 
 How to fix
+
 - Normalize units at the source (convert em to px or vice versa).
 - Add an assertMatchingUnits call where the values enter your system.
 
@@ -298,9 +302,11 @@ css-calipers.Measurement.divide: Cannot divide 10px by zero [code=CALIPERS_E_DIV
 ```
 
 What it means
+
 - You attempted to divide by zero in a measurement operation.
 
 How to fix
+
 - Guard inputs before dividing or replace zero with a safe fallback.
 
 ### Clamp bounds
@@ -312,9 +318,11 @@ css-calipers.Measurement.clamp: clamp: min (20px) must be <= max (12px) [code=CA
 ```
 
 What it means
+
 - The clamp minimum is greater than the clamp maximum.
 
 How to fix
+
 - Ensure min and max come from the same source or swap them before calling clamp.
 
 ### Stack hints and configuration
