@@ -1,18 +1,26 @@
 # CSS-Calipers
 
+[![npm](https://img.shields.io/npm/v/css-calipers.svg)](https://www.npmjs.com/package/css-calipers)
+[![types](https://img.shields.io/npm/types/css-calipers.svg)](https://www.npmjs.com/package/css-calipers)
+[![license](https://img.shields.io/npm/l/css-calipers.svg)](./LICENSE.txt)
+
 **CSS is code. Treat it that way.**  
-Compile-time unit safety for numeric, unit-bearing CSS values, no surprises at runtime.
+Compile-time unit safety for numeric, unit-bearing CSS values, with no surprises at runtime.
 
-CSS-Calipers is a tiny layer for typed CSS measurements. Stop parsing CSS
-strings and concatenating units. Do your math on real numbers, get
-compile-time unit safety, and output CSS only at the edges.
+```ts
+// Before: pull the number AND the unit apart, do the math, glue them back
+const match = base.match(/^(-?\d*\.?\d+)([a-z%]+)$/i);
+if (!match) throw new Error(`Bad measurement: ${base}`);
+const [, numStr, unit] = match;
+const num = parseFloat(numStr);
+const pad = `${num + 4}${unit}`;   // and nobody checked that `unit` matches what the caller expects
 
-This README is a general overview. Deeper module guides live in their own files.
+// After: typed math, units enforced by the compiler
+const base = m(8);                 // or m(8, "rem"), m(1.5, "em"), etc.
+const pad = base.add(4).css();     // type error if units don't match
+```
 
-Module guides:
-
-- Measurements core: README_MEASUREMENT.md
-- Media queries: README_MEDIAQUERIES.md
+A small TypeScript library for **type-safe CSS measurements**. Do arithmetic on real numbers with the unit attached, let the compiler catch `px`-vs-`rem` mistakes, and emit a CSS string only at the edge.
 
 At a glance:
 
@@ -25,15 +33,6 @@ At a glance:
 ```bash
 npm install css-calipers
 ```
-
-### Status & support
-
-> 🚧 Work in progress.  
-> API surface and docs may change between `0.x` releases until the first stable version.
-
-- Status: early `0.x` release. Backwards compatibility is not guaranteed until `1.0.0`.
-- Questions or bugs: open an issue on GitHub (see the repository link at the top of this page or in `package.json`).
-- Tooling: tested primarily with TypeScript 5.6+ on Node 18+.
 
 ---
 
@@ -58,6 +57,16 @@ const style = {
 ```
 
 If you prefer, you can also import unit helpers from dedicated subpaths. For example, `mPercent` is available from the root entrypoint and from `css-calipers/units/percent`, and all unit helpers are aggregated under `css-calipers/units`.
+
+---
+
+## Status & support
+
+> API surface and docs may change between `0.x` releases until the first stable version.
+
+- Status: early `0.x` release. Backwards compatibility is not guaranteed until `1.0.0`.
+- Questions or bugs: open an issue on GitHub (see the repository link at the top of this page or in `package.json`).
+- Tooling: tested primarily with TypeScript 5.6+ on Node 18+.
 
 ---
 
@@ -463,6 +472,13 @@ method. CSS-Calipers only participates when there is a concrete measurement
 by your styling layer. That’s the intended scope: CSS will always be a mix of
 values, but the library gives you a tight, unit-safe boundary for the numeric
 parts inside a broader styling solution.
+
+### Module guides
+
+Deeper guides live alongside this README:
+
+- Measurements core: [README_MEASUREMENT.md](README_MEASUREMENT.md)
+- Media queries: [README_MEDIAQUERIES.md](README_MEDIAQUERIES.md)
 
 ### Further examples in this repo
 
