@@ -167,12 +167,12 @@ export const createCoreApi = (errorStore: ErrorConfigStore) => {
       return diff < 0 ? -1 : 1;
     }
 
-    add(delta: DeltaInput): Measurement<Unit> {
+    add(delta: number | IMeasurement<Unit>): Measurement<Unit> {
       const next = this.#value + deltaToNumber(this, delta);
       return this.#clone(next);
     }
 
-    subtract(delta: DeltaInput): Measurement<Unit> {
+    subtract(delta: number | IMeasurement<Unit>): Measurement<Unit> {
       const next = this.#value - deltaToNumber(this, delta);
       return this.#clone(next);
     }
@@ -242,19 +242,11 @@ export const createCoreApi = (errorStore: ErrorConfigStore) => {
     }
 
     clamp(
-      min: IMeasurement<string>,
-      max: IMeasurement<string>,
+      min: IMeasurement<Unit>,
+      max: IMeasurement<Unit>,
     ): Measurement<Unit> {
-      assertMatchingUnits(
-        this,
-        min as IMeasurement<Unit>,
-        'clamp(min)',
-      );
-      assertMatchingUnits(
-        this,
-        max as IMeasurement<Unit>,
-        'clamp(max)',
-      );
+      assertMatchingUnits(this, min, 'clamp(min)');
+      assertMatchingUnits(this, max, 'clamp(max)');
 
       const minValue = min.getValue();
       const maxValue = max.getValue();
@@ -445,7 +437,7 @@ export const createCoreApi = (errorStore: ErrorConfigStore) => {
 
   const measurementMin = <Unit extends string>(
     a: IMeasurement<Unit>,
-    b: IMeasurement<Unit>,
+    b: IMeasurement<NoInfer<Unit>>,
   ): IMeasurement<Unit> => {
     assertMatchingUnits(a, b, 'measurementMin');
     return a.getValue() <= b.getValue() ? a : b;
@@ -453,7 +445,7 @@ export const createCoreApi = (errorStore: ErrorConfigStore) => {
 
   const measurementMax = <Unit extends string>(
     a: IMeasurement<Unit>,
-    b: IMeasurement<Unit>,
+    b: IMeasurement<NoInfer<Unit>>,
   ): IMeasurement<Unit> => {
     assertMatchingUnits(a, b, 'measurementMax');
     return a.getValue() >= b.getValue() ? a : b;

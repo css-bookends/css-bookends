@@ -44,8 +44,8 @@ export interface IMeasurement<Unit extends string = string> {
   ) => void;
   equals: (other: IMeasurement<string>) => boolean;
   compare: (other: IMeasurement<string>) => number;
-  add: (delta: number | IMeasurement<string>) => IMeasurement<Unit>;
-  subtract: (delta: number | IMeasurement<string>) => IMeasurement<Unit>;
+  add(delta: number | IMeasurement<Unit>): IMeasurement<Unit>;
+  subtract(delta: number | IMeasurement<Unit>): IMeasurement<Unit>;
   multiply: (factor: number) => IMeasurement<Unit>;
   divide: (divisor: number) => IMeasurement<Unit>;
   double: () => IMeasurement<Unit>;
@@ -55,10 +55,7 @@ export interface IMeasurement<Unit extends string = string> {
   round: (precision?: number) => IMeasurement<Unit>;
   floor: () => IMeasurement<Unit>;
   ceil: () => IMeasurement<Unit>;
-  clamp: (
-    min: IMeasurement<string>,
-    max: IMeasurement<string>,
-  ) => IMeasurement<Unit>;
+  clamp(min: IMeasurement<Unit>, max: IMeasurement<Unit>): IMeasurement<Unit>;
 }
 
 export type BrandedMeasurement<Unit extends string> = IMeasurement<Unit> &

@@ -1,4 +1,4 @@
-import { expectAssignable, expectNotAssignable } from 'tsd';
+import { expectAssignable, expectError, expectNotAssignable } from 'tsd';
 
 import {
   m,
@@ -8,6 +8,7 @@ import {
   isPercentMeasurement,
   assertPercentMeasurement,
   measurementMin,
+  measurementMax,
   type IMeasurement,
   type MeasurementString,
   type PxMeasurement,
@@ -37,6 +38,16 @@ expectAssignable<IMeasurement<'em'>>(explicitWithOptions);
 
 const added = explicitPx.add(explicitPx);
 expectAssignable<IMeasurement<'px'>>(added);
+
+// Plain numbers remain valid operands
+expectAssignable<IMeasurement<'px'>>(explicitPx.add(4));
+
+// Mismatched units are rejected at compile time (this is what surfaces as a
+// red squiggle in the editor, not just a thrown error at runtime).
+expectError(explicitPx.add(explicitEm));
+expectError(explicitPx.subtract(explicitEm));
+expectError(explicitPx.clamp(explicitEm, explicitPx));
+expectError(explicitPx.clamp(explicitPx, explicitEm));
 
 // isMeasurement narrows unknown to IMeasurement<string>
 declare const maybeMeasurement: unknown;
@@ -98,6 +109,10 @@ expectNotAssignable<FakeSpacingKeyword>(pxString);
 const px1 = m(1, 'px');
 const px2 = m(2, 'px');
 expectAssignable<IMeasurement<'px'>>(measurementMin(px1, px2));
+
+// measurementMin / measurementMax reject mismatched units at compile time
+expectError(measurementMin(px1, explicitEm));
+expectError(measurementMax(px1, explicitEm));
 
 // Generic UnitGuard / UnitAssertion types align with percent helpers
 type PercentGuard = UnitGuard<typeof mPercent>;
