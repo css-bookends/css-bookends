@@ -252,6 +252,19 @@ export const runCoreTests = (label: string, api: CoreApi): void => {
       expect(m(1.23).multiply(1e21).css()).toBe(
         '1230000000000000000000px',
       );
+
+      // zero and normal decimals must be untouched (no rounding, no exponent)
+      expect(m(0).css()).toBe('0px');
+      expect(m(1).multiply(0).css()).toBe('0px');
+      expect(m(0.1).css()).toBe('0.1px');
+      expect(m(123.456).css()).toBe('123.456px');
+      expect(m(3.14159).css()).toBe('3.14159px');
+
+      // extremely small magnitudes still expand to faithful plain decimal
+      const tiny = m(1).divide(1e300).css();
+      expect(tiny.endsWith('px')).toBe(true);
+      expect(tiny).not.toMatch(/e/i);
+      expect(Number(tiny.slice(0, -2))).toBe(1e-300);
     });
 
     it('performs arithmetic safely within the same unit', () => {

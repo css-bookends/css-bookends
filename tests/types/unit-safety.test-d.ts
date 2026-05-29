@@ -1,4 +1,4 @@
-import { expectError, expectType } from 'tsd';
+import { expectError, expectNotAssignable, expectType } from 'tsd';
 
 import {
   mPx,
@@ -11,6 +11,7 @@ import {
   measurementMin,
   measurementMax,
   type IMeasurement,
+  type InscribedMeasurement,
 } from '../../dist/esm';
 
 // Representative measurements spanning multiple unit categories:
@@ -98,12 +99,36 @@ expectError(measurementMax(vh, dpi));
 expectError(measurementMax(em, deg));
 
 // ---------------------------------------------------------------------------
-// 4. equals / compare are NOT unit-constrained at the type level today.
-//    The default runtime path throws on a mismatch, but the public interface
-//    accepts any unit and does not expose the `strict` opt-out. These lines are
-//    canaries: they document the current (looser) contract. If equals/compare
-//    are ever tightened to require matching units, these will stop compiling
-//    and this file will fail - prompting a deliberate update.
+// 4. equals / compare reject a mismatch by default (matching the runtime,
+//    which throws unless strict is false). Cross-unit comparison is still
+//    reachable, but only by explicitly opting out with strict: false.
 // ---------------------------------------------------------------------------
-expectType<boolean>(px.equals(em));
-expectType<number>(px.compare(em));
+expectError(px.equals(em));
+expectError(px.compare(em));
+expectError(px.equals(em, true));
+
+// same-unit comparison is allowed, with or without strict
+expectType<boolean>(px.equals(px));
+expectType<boolean>(px.equals(px, true));
+expectType<number>(px.compare(px));
+
+// explicit cross-unit comparison is allowed only with strict: false
+expectType<boolean>(px.equals(em, false));
+expectType<number>(px.compare(em, false));
+
+// ---------------------------------------------------------------------------
+// 5. Units are nominal: a measurement of one unit is never assignable to a
+//    measurement type of another unit (the symbol brand makes the tag opaque,
+//    so it cannot be forged or structurally matched).
+// ---------------------------------------------------------------------------
+expectNotAssignable<IMeasurement<'px'>>(deg);
+expectNotAssignable<IMeasurement<'em'>>(px);
+expectNotAssignable<InscribedMeasurement<'px'>>(deg);
+expectNotAssignable<InscribedMeasurement<'em'>>(mDeg(1));
+
+// a plain object cannot satisfy the branded type (no way to name the brand)
+expectNotAssignable<InscribedMeasurement<'px'>>({
+  css: () => '10px',
+  getUnit: () => 'px',
+  getValue: () => 10,
+});

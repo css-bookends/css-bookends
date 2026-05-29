@@ -84,7 +84,6 @@ export const createCoreApi = (errorStore: ErrorConfigStore) => {
   class Measurement<Unit extends string>
     implements IMeasurement<Unit>
   {
-    readonly __unitBrand!: Unit;
     #value: number;
     #unit: Unit;
 
@@ -97,15 +96,8 @@ export const createCoreApi = (errorStore: ErrorConfigStore) => {
           details: { code: 'CALIPERS_E_NONFINITE' },
         });
       }
-      const normalizedUnit = unit.toLowerCase() as Unit;
       this.#value = value;
-      this.#unit = normalizedUnit;
-      Object.defineProperty(this, '__unitBrand', {
-        value: normalizedUnit,
-        enumerable: false,
-        configurable: false,
-        writable: false,
-      });
+      this.#unit = unit.toLowerCase() as Unit;
     }
 
     css(): string {
@@ -310,10 +302,13 @@ export const createCoreApi = (errorStore: ErrorConfigStore) => {
     }
   }
 
+  // Single controlled point where the unit brand is asserted onto a freshly
+  // created measurement (the brand is a compile-time-only phantom).
   const createMeasurement = <Unit extends string>(
     value: number,
     unit: Unit,
-  ): Measurement<Unit> => new Measurement(value, unit);
+  ): InscribedMeasurement<Unit> =>
+    new Measurement(value, unit) as unknown as InscribedMeasurement<Unit>;
 
   const isMeasurement = (
     x: unknown,
@@ -328,22 +323,16 @@ export const createCoreApi = (errorStore: ErrorConfigStore) => {
     value: number,
     unit: Unit,
     context?: string,
-  ): IMeasurement<Lowercase<Unit>> & {
-    readonly __unitBrand: Lowercase<Unit>;
-  };
+  ): InscribedMeasurement<Lowercase<Unit>>;
   function m<Unit extends string>(
     value: number,
     options: MeasurementCreateOptions<Unit>,
-  ): IMeasurement<Lowercase<Unit>> & {
-    readonly __unitBrand: Lowercase<Unit>;
-  };
+  ): InscribedMeasurement<Lowercase<Unit>>;
   function m<Unit extends string>(
     value: number,
     unitOrOptions: Unit | MeasurementCreateOptions<Unit> = 'px' as Unit,
     context?: string,
-  ): IMeasurement<Lowercase<Unit>> & {
-    readonly __unitBrand: Lowercase<Unit>;
-  } {
+  ): InscribedMeasurement<Lowercase<Unit>> {
     const options =
       unitOrOptions && typeof unitOrOptions === 'object'
         ? unitOrOptions

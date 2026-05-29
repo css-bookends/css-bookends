@@ -27,7 +27,11 @@ type UnitSymbol = UnitDefinitionRecord[keyof UnitDefinitionRecord]['unit'];
 export type MeasurementString<Unit extends string = UnitSymbol> =
   `${number}${Unit}`;
 
-type UnitBrand<Unit extends string> = { readonly __unitBrand: Unit };
+// The unit brand is keyed by a module-private unique symbol, so the tag cannot
+// be named (and therefore cannot be forged) from outside this module. The only
+// way past the unit guard is a deliberate `as` cast.
+declare const unitBrand: unique symbol;
+type UnitBrand<Unit extends string> = { readonly [unitBrand]: Unit };
 
 export interface IMeasurement<Unit extends string = string> {
   css: () => string;
@@ -42,8 +46,10 @@ export interface IMeasurement<Unit extends string = string> {
     predicate: (measurement: IMeasurement<Unit>) => boolean,
     message: string,
   ) => void;
-  equals: (other: IMeasurement<string>) => boolean;
-  compare: (other: IMeasurement<string>) => number;
+  equals(other: IMeasurement<Unit>, strict?: boolean): boolean;
+  equals(other: IMeasurement<string>, strict: false): boolean;
+  compare(other: IMeasurement<Unit>, strict?: boolean): number;
+  compare(other: IMeasurement<string>, strict: false): number;
   add(delta: number | IMeasurement<Unit>): IMeasurement<Unit>;
   subtract(delta: number | IMeasurement<Unit>): IMeasurement<Unit>;
   multiply: (factor: number) => IMeasurement<Unit>;
