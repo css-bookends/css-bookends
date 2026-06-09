@@ -44,3 +44,7 @@ cssBookends(); // 'css-bookends placeholder package'
 
 - css-bookends: https://github.com/slafleche/css-bookends · https://www.npmjs.com/package/@css-bookends/css-bookends
 - css-calipers: https://github.com/slafleche/css-calipers · https://www.npmjs.com/org/css-calipers
+
+## Support
+
+This is a solo, early-stage project. If the direction resonates, you can [buy me a coffee](https://buymeacoffee.com/slafleche) to support continued work.

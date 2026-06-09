@@ -22,6 +22,6 @@
     "release": "pnpm -r build && changeset publish"
   },
   "devDependencies": {
-    "@changesets/cli": "^2.27.0"
+    "@changesets/cli": "^2.31.0"
   }
 }

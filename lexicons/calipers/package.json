@@ -1,0 +1,100 @@
+{
+  "name": "css-calipers",
+  "version": "0.14.0",
+  "description": "Compile-time unit safety for numeric, unit-bearing CSS values via typed measurements.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/slafleche/css-calipers.git"
+  },
+  "bugs": {
+    "url": "https://github.com/slafleche/css-calipers/issues"
+  },
+  "homepage": "https://github.com/slafleche/css-calipers#readme",
+  "author": "slafleche",
+  "keywords": [
+    "css",
+    "units",
+    "typescript",
+    "measurement",
+    "safety",
+    "calipers",
+    "type-safe",
+    "css-calipers"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE.txt"
+  ],
+  "sideEffects": false,
+  "type": "commonjs",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/esm/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    },
+    "./factory": {
+      "types": "./dist/esm/factory.d.ts",
+      "import": "./dist/esm/factory.js",
+      "require": "./dist/cjs/factory.js"
+    },
+    "./units": {
+      "types": "./dist/esm/units/index.d.ts",
+      "import": "./dist/esm/units/index.js",
+      "require": "./dist/cjs/units/index.js"
+    },
+    "./units/*": {
+      "types": "./dist/esm/units/*.d.ts",
+      "import": "./dist/esm/units/*.js",
+      "require": "./dist/cjs/units/*.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "csstype": "^3.1.3"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.2",
+    "@types/node": "^24.10.1",
+    "@typescript-eslint/eslint-plugin": "^8.60.0",
+    "@typescript-eslint/parser": "^8.60.0",
+    "@vanilla-extract/css": "^1.20.1",
+    "@vitest/coverage-v8": "^4.1.7",
+    "eslint": "^9.39.2",
+    "tsd": "^0.33.0",
+    "typescript": "^5.6.3",
+    "vitest": "^4.1.7"
+  },
+  "scripts": {
+    "build": "npm run build:cjs && npm run build:esm && npm run build:examples",
+    "build:cjs": "echo \"🛠️  Building CommonJS (cjs) bundle...\" && tsc -p tsconfig.build.cjs.json",
+    "build:esm": "echo \"🛠️  Building ES module (esm) bundle...\" && tsc -p tsconfig.build.esm.json && node scripts/emit-esm-package.mjs",
+    "build:examples": "tsc -p tsconfig.examples.json --noEmit",
+    "build:test": "npm run build && npm run test",
+    "build:delete": "node -e \"const { existsSync, rmSync } = require('fs'); const paths = ['dist/cjs', 'dist/esm']; for (const p of paths) { console.log('Scanning', p + '...'); if (existsSync(p)) { console.log('Found', p + ', deleting...'); rmSync(p, { recursive: true, force: true }); console.log('Deleted', p); } else { console.log(p + ' not found, skipping.'); } }\"",
+    "test": "npm run build && npm run test:core && npm run test:ratio && npm run test:factory && npm run test:dist && npm run test:types && npm run test:tsc && npm run lint && npm run test:internal",
+    "test:core": "vitest run tests/runtime/core/core.src.test.ts",
+    "test:ratio": "vitest run tests/runtime/ratio/ratio.src.test.ts",
+    "test:core:cjs": "vitest run tests/runtime/core/core.cjs.test.ts tests/runtime/api-surface/api-surface.cjs.test.ts",
+    "test:core:esm": "vitest run tests/runtime/core/core.esm.test.ts tests/runtime/api-surface/api-surface.esm.test.ts",
+    "test:core:dist": "npm run test:core:cjs && npm run test:core:esm",
+    "lint": "eslint . --max-warnings=0",
+    "test:lint": "npm run lint",
+    "test:types": "echo \"\n 🧪 Starting tsd type checks...\n\" && tsd --files tests/types/**/*.test-d.ts && echo \"✅ tsd type checks passed!\n\"",
+    "test:tsc": "tsc -p tsconfig.json --noEmit",
+    "test:dist": "npm run test:core:dist && npm run test:factory:dist",
+    "test:factory": "vitest run tests/runtime/factory/factory.src.test.ts",
+    "test:factory:cjs": "vitest run tests/runtime/factory/factory.cjs.test.ts tests/runtime/api-surface/factory.api-surface.cjs.test.ts",
+    "test:factory:esm": "vitest run tests/runtime/factory/factory.esm.test.ts tests/runtime/api-surface/factory.api-surface.esm.test.ts",
+    "test:factory:dist": "npm run test:factory:cjs && npm run test:factory:esm",
+    "test:internal": "tsc -p tsconfig.internal.json --noEmit"
+  }
+}
