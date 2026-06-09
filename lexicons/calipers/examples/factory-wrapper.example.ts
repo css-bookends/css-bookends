@@ -1,4 +1,4 @@
-import { createCalipers } from "css-calipers/factory";
+import { createCalipers } from "@css-bookends/css-calipers/factory";
 
 /**
  * Example wrapper module.

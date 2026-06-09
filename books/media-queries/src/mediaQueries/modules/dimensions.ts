@@ -1,4 +1,4 @@
-import type { IMeasurement, IRatio } from 'css-calipers';
+import type { IMeasurement, IRatio } from '@css-bookends/css-calipers';
 import type {
   MediaQueryBuilderHelpers,
   MediaQueryValidator,

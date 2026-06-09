@@ -1,5 +1,5 @@
-import type { IMeasurement } from 'css-calipers';
-import { hasCssMethod } from 'css-calipers';
+import type { IMeasurement } from '@css-bookends/css-calipers';
+import { hasCssMethod } from '@css-bookends/css-calipers';
 import type {
   MediaQueryBuilderHelpers,
   MediaQueryValidator,

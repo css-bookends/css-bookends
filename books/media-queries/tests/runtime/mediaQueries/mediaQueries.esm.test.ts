@@ -3,7 +3,7 @@ import { runMediaQueryTests } from './mediaQueries.shared';
 const mediaQueriesModule = await import(
   '../../../dist/esm/index.js'
 );
-const coreModule = await import('css-calipers');
+const coreModule = await import('@css-bookends/css-calipers');
 
 const {
   buildMediaQueryFromFeatures,

@@ -1,5 +1,5 @@
-import type { IMeasurement, IRatio } from 'css-calipers';
-import { hasCssMethod } from 'css-calipers';
+import type { IMeasurement, IRatio } from '@css-bookends/css-calipers';
+import { hasCssMethod } from '@css-bookends/css-calipers';
 
 type MediaQueryFeatureValue = string | number | IMeasurement | IRatio;
 

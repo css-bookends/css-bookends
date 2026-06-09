@@ -8,11 +8,11 @@ import {
   isRatio,
   ratioToFloat,
   type IRatio,
-} from 'css-calipers';
+} from '@css-bookends/css-calipers';
 import type { IMediaQueryCore } from './mediaQueries';
 import type { IMediaQueryDimensions } from './modules/dimensions';
 import type { IMediaQueryResolutionRange } from './modules/resolution';
-import type { IMeasurement } from 'css-calipers';
+import type { IMeasurement } from '@css-bookends/css-calipers';
 
 export type MediaQueryValidationCheck<TConfig> = (config: TConfig) => void;
 

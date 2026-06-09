@@ -12,8 +12,8 @@ import type {
   MediaQueryBuilderHelpers,
   MediaQueryValidationResult,
 } from '../../../src/mediaQueries/helpers';
-import type { IMeasurement, IRatio } from 'css-calipers';
-import type { r as ratioFactory } from 'css-calipers';
+import type { IMeasurement, IRatio } from '@css-bookends/css-calipers';
+import type { r as ratioFactory } from '@css-bookends/css-calipers';
 import type { StyleRule } from '../../../src/mediaQueries/types';
 import type { IMediaQueryProps } from '../../../src/mediaQueries/mediaQueries';
 import type {

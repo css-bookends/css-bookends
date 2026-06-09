@@ -1,11 +1,12 @@
 {
-  "name": "css-calipers",
-  "version": "0.15.0",
+  "name": "@css-bookends/css-calipers",
+  "version": "1.0.0",
   "description": "Compile-time unit safety for numeric, unit-bearing CSS values via typed measurements.",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/slafleche/css-calipers.git"
+    "url": "git+https://github.com/slafleche/css-bookends.git",
+    "directory": "lexicons/calipers"
   },
   "bugs": {
     "url": "https://github.com/slafleche/css-calipers/issues"

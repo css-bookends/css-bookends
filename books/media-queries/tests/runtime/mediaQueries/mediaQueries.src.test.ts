@@ -1,7 +1,7 @@
 import { describe, expect, it } from "vitest";
 import { runMediaQueryTests } from "./mediaQueries.shared";
 
-import { mDpi, mDppx, mEm, mPx, r } from "css-calipers";
+import { mDpi, mDppx, mEm, mPx, r } from "@css-bookends/css-calipers";
 import {
   buildMediaQueryFromFeatures,
   buildMediaQueryString,

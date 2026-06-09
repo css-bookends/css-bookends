@@ -1,7 +1,7 @@
 import { expectAssignable, expectNotAssignable, expectType } from 'tsd';
 
-import type { IMeasurement, IRatio } from 'css-calipers';
-import { mPx, r } from 'css-calipers';
+import type { IMeasurement, IRatio } from '@css-bookends/css-calipers';
+import { mPx, r } from '@css-bookends/css-calipers';
 import {
   buildMediaQueryFromFeatures,
   buildMediaQueryString,

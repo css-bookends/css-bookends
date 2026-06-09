@@ -61,17 +61,17 @@ A lexicon is the vocabulary; a book is written using it. Every package, lexicon
 or book, is independently installable and pulls in only what it actually depends
 on. The umbrella is organizational, never a bundle you are forced to take whole.
 
-Naming follows the same split: `css-calipers` keeps its established, unscoped npm
-name, and everything else publishes under the `@css-bookends/*` scope.
+Every package publishes under the `@css-bookends/*` scope, lexicons and books
+alike (for example `@css-bookends/css-calipers` and `@css-bookends/media-queries`).
 
 ## What is available today
 
-- **`css-calipers`** — the measurement lexicon and the foundation most other
-  pieces build on. Stable, headed to 1.0.
+- **`@css-bookends/css-calipers`** — the measurement lexicon and the foundation
+  most other pieces build on. Stable, headed to 1.0.
   [repo](https://github.com/slafleche/css-calipers) ·
-  [npm](https://www.npmjs.com/package/css-calipers)
+  [npm](https://www.npmjs.com/package/@css-bookends/css-calipers)
 - **`@css-bookends/media-queries`** — typed, unit-safe media query strings, built
-  on `css-calipers`. Experimental 0.x.
+  on `@css-bookends/css-calipers`. Experimental 0.x.
 
 More lexicons (`spacing`, `colours`) and books (`borders`, `shadow`, `margins`)
 are being brought in.
@@ -98,10 +98,17 @@ Install only the pieces you want; nothing pulls in the rest of the umbrella.
 
 ```bash
 # the measurement lexicon
-npm install css-calipers
+npm install @css-bookends/css-calipers
 
 # a book (brings in css-calipers as its dependency)
 npm install @css-bookends/media-queries
+```
+
+Or take the whole bookshelf in one package, which re-exports every lexicon and
+book:
+
+```bash
+npm install @css-bookends/shelf
 ```
 
 ## Repository layout

@@ -9,7 +9,7 @@ config object and get a normalized query string.
 ## Quick start
 
 ```ts
-import { m } from "css-calipers";
+import { m } from "@css-bookends/css-calipers";
 import { mediaQueryFactory } from "@css-bookends/media-queries";
 
 const queries = {
@@ -42,7 +42,7 @@ If you want the smallest surface area, makeMediaQueryStyle keeps the same
 query config shape and returns a media style object without factory config.
 
 ```ts
-import { m } from "css-calipers";
+import { m } from "@css-bookends/css-calipers";
 import { makeMediaQueryStyle } from "@css-bookends/media-queries";
 
 const queries = {
@@ -103,7 +103,7 @@ module hint) and lets you customize validation and linting behavior per
 factory.
 
 ```ts
-import { m } from "css-calipers";
+import { m } from "@css-bookends/css-calipers";
 import {
   defineMediaQueryModules,
   mediaQueryFactory,
@@ -136,7 +136,7 @@ For advanced usage, build your own query builder by composing emitters. Each
 builder instance can have its own config and extension hooks.
 
 ```ts
-import { m } from "css-calipers";
+import { m } from "@css-bookends/css-calipers";
 import {
   createMediaQueryBuilder,
   emitDimensionsFeatures,
@@ -284,7 +284,7 @@ const build = createMediaQueryBuilder({
 ### Global screens + component-specific factory (menu example)
 
 ```ts
-import { m } from "css-calipers";
+import { m } from "@css-bookends/css-calipers";
 import {
   createMediaQueryBuilder,
   emitDimensionsFeatures,
@@ -337,7 +337,7 @@ const menuStyles = {
 ### Build a query with custom features
 
 ```ts
-import { m } from "css-calipers";
+import { m } from "@css-bookends/css-calipers";
 import { buildMediaQueryString } from "@css-bookends/media-queries";
 
 const query = buildMediaQueryString({
@@ -352,7 +352,7 @@ const query = buildMediaQueryString({
 ### Use a custom builder with a subset of modules
 
 ```ts
-import { m } from "css-calipers";
+import { m } from "@css-bookends/css-calipers";
 import {
   createMediaQueryBuilder,
   emitResolutionFeatures,

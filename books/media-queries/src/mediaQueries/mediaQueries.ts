@@ -1,4 +1,4 @@
-import type { IMeasurement } from "css-calipers";
+import type { IMeasurement } from "@css-bookends/css-calipers";
 import type { ComplexStyleRule, StyleRule } from "./types";
 import type { MediaQueryBuilderHelpers } from "./helpers";
 import { createMediaQueryBuilder } from "./helpers";

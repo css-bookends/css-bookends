@@ -6,7 +6,7 @@
  * media query configs (and different breakpoints) in the same codebase.
  */
 
-import { m } from "css-calipers";
+import { m } from "@css-bookends/css-calipers";
 import {
   makeMediaQueryStyle,
   mediaQueryFactory,
