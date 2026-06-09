@@ -59,12 +59,28 @@ rm -rf "$DEST/.github"
 mkdir -p "$DEST/.github"
 cp "$REPO_ROOT/.github/FUNDING.yml" "$DEST/.github/FUNDING.yml"
 
+# The mirror's own release tag mirrors the package version, so the standalone
+# repo's Releases page stays in step with the monorepo (which holds the canonical
+# `@css-bookends/css-calipers@<version>` tag). Tags do not flow through file sync,
+# so we set it here explicitly.
+VERSION="$(node -p "require('$SRC/package.json').version")"
+TAG="v$VERSION"
+
 cd "$DEST"
 git add -A
 if git diff --cached --quiet; then
-  echo "No changes to mirror; nothing to commit."
-  exit 0
+  echo "No file changes to mirror."
+else
+  git commit -m "Mirror calipers from css-bookends monorepo"
+  git push origin main
+  echo "Mirrored files pushed."
 fi
-git commit -m "Mirror calipers from css-bookends monorepo"
-git push origin main
-echo "Done: mirrored and pushed to slafleche/css-calipers."
+
+if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
+  echo "Tag $TAG already exists on the mirror; leaving it."
+else
+  git tag "$TAG"
+  git push origin "$TAG"
+  echo "Tagged mirror $TAG and pushed."
+fi
+echo "Done."
