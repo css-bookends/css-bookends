@@ -1,7 +1,7 @@
 import { runMediaQueryTests } from './mediaQueries.shared';
 
 const mediaQueriesModule = await import(
-  '../../../dist/cjs/mediaQueries/index.js'
+  '../../../dist/cjs/index.js'
 );
 const coreModule = await import('css-calipers');
 

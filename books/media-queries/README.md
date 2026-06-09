@@ -1,14 +1,16 @@
-# CSS-Calipers Media Queries
+# @css-bookends/media-queries
 
-Build typed, unit-safe media query strings with a small, configurable
-builder. The media queries module focuses on feature coverage, not syntax
-variants: you supply a typed config object and get a normalized query string.
+Build typed, unit-safe media query strings with a small, configurable builder,
+built on [CSS-Calipers](https://github.com/slafleche/css-calipers) measurements.
+Part of the [CSS-Bookends](https://github.com/slafleche/css-bookends) umbrella.
+This package focuses on feature coverage, not syntax variants: you supply a typed
+config object and get a normalized query string.
 
 ## Quick start
 
 ```ts
 import { m } from "css-calipers";
-import { mediaQueryFactory } from "css-calipers/mediaQueries";
+import { mediaQueryFactory } from "@css-bookends/media-queries";
 
 const queries = {
   mobile: { maxWidth: m(639) },
@@ -41,7 +43,7 @@ query config shape and returns a media style object without factory config.
 
 ```ts
 import { m } from "css-calipers";
-import { makeMediaQueryStyle } from "css-calipers/mediaQueries";
+import { makeMediaQueryStyle } from "@css-bookends/media-queries";
 
 const queries = {
   mobile: { maxWidth: m(639) },
@@ -105,7 +107,7 @@ import { m } from "css-calipers";
 import {
   defineMediaQueryModules,
   mediaQueryFactory,
-} from "css-calipers/mediaQueries";
+} from "@css-bookends/media-queries";
 
 const modules = defineMediaQueryModules("core", "interaction");
 
@@ -138,7 +140,7 @@ import { m } from "css-calipers";
 import {
   createMediaQueryBuilder,
   emitDimensionsFeatures,
-} from "css-calipers/mediaQueries";
+} from "@css-bookends/media-queries";
 
 const buildDimensionsQuery = createMediaQueryBuilder({
   emitBase: emitDimensionsFeatures,
@@ -264,7 +266,7 @@ throw behavior matches the config.
 Each factory instance may supply a configuration object:
 
 ```ts
-import { createMediaQueryBuilder } from "css-calipers/mediaQueries";
+import { createMediaQueryBuilder } from "@css-bookends/media-queries";
 
 const build = createMediaQueryBuilder({
   emitBase: () => {},
@@ -289,7 +291,7 @@ import {
   emitInteractionFeatures,
   emitPreferencesFeatures,
   emitCustomFeatures,
-} from "css-calipers/mediaQueries";
+} from "@css-bookends/media-queries";
 
 const buildScreenQuery = createMediaQueryBuilder({
   emitBase: (props, helpers) => {
@@ -336,7 +338,7 @@ const menuStyles = {
 
 ```ts
 import { m } from "css-calipers";
-import { buildMediaQueryString } from "css-calipers/mediaQueries";
+import { buildMediaQueryString } from "@css-bookends/media-queries";
 
 const query = buildMediaQueryString({
   minWidth: m(800),
@@ -354,7 +356,7 @@ import { m } from "css-calipers";
 import {
   createMediaQueryBuilder,
   emitResolutionFeatures,
-} from "css-calipers/mediaQueries";
+} from "@css-bookends/media-queries";
 
 const buildResolutionQuery = createMediaQueryBuilder({
   emitBase: emitResolutionFeatures,

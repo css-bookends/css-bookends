@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 const cjsMediaQueries = await import(
-  '../../dist/cjs/mediaQueries/index.js'
+  '../../dist/cjs/index.js'
 );
 
 describe('mediaQueries API surface (CJS)', () => {

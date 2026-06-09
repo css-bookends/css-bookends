@@ -9,11 +9,11 @@ import {
   defineMediaQueryModules,
   emitDimensionsFeatures,
   mediaQueryFactory,
-} from '../../dist/esm/mediaQueries';
+} from '../../dist/esm';
 import type {
   IMediaQueryProps,
   MediaQueryModulePropsMap,
-} from '../../dist/esm/mediaQueries';
+} from '../../dist/esm';
 
 const width = mPx(640);
 expectAssignable<IMeasurement<'px'>>(width);

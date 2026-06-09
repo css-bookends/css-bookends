@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 const esmMediaQueries = await import(
-  '../../dist/esm/mediaQueries/index.js'
+  '../../dist/esm/index.js'
 );
 
 describe('mediaQueries API surface (ESM)', () => {

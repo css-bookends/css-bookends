@@ -279,8 +279,7 @@ setErrorConfig({ stackHints: "on" });
 ## Factory entrypoint (optional)
 
 If you want instance-scoped configuration and a single re-export surface, use
-the factory entrypoint. The instance includes core helpers, unit helpers, and
-mediaQueries.
+the factory entrypoint. The instance includes core helpers and unit helpers.
 
 ```
 import { createCalipers } from "css-calipers/factory";
@@ -289,7 +288,7 @@ const calipers = createCalipers({
   errorConfig: { stackHints: "on" },
 });
 
-export const { m, mPx, mediaQueries, units } = calipers;
+export const { m, mPx, units } = calipers;
 ```
 
 See [examples/factory-wrapper.example.ts](examples/factory-wrapper.example.ts)

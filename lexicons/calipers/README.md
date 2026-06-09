@@ -73,29 +73,10 @@ If you prefer, you can also import unit helpers from dedicated subpaths. For exa
 
 ## Media queries
 
-```ts
-import { m } from "css-calipers";
-import { mediaQueryFactory } from "css-calipers/mediaQueries";
-
-const media = mediaQueryFactory({
-  queries: {
-    mobile: { maxWidth: m(639) },
-    desktop: { minWidth: m(640) },
-  },
-  config: {
-    label: "layout",
-  },
-});
-
-const styles = {
-  ...media({
-    mobile: { gridTemplateColumns: "1fr" },
-    desktop: { gridTemplateColumns: "repeat(4, 1fr)" },
-  }),
-};
-```
-
-See README_MEDIAQUERIES.md for the full media queries guide.
+Media queries have moved out of CSS-Calipers into their own package,
+`@css-bookends/media-queries`, part of the
+[CSS-Bookends](https://github.com/slafleche/css-bookends) umbrella. CSS-Calipers
+is now purely the measurement layer.
 
 ---
 
@@ -355,8 +336,7 @@ setErrorConfig({ stackHints: "on" });
 ## Factory entrypoint (optional)
 
 If you want instance-scoped configuration and a single re-export surface, use
-the factory entrypoint. The instance includes core helpers, unit helpers, and
-mediaQueries.
+the factory entrypoint. The instance includes core helpers and unit helpers.
 
 ```
 import { createCalipers } from "css-calipers/factory";
@@ -365,7 +345,7 @@ const calipers = createCalipers({
   errorConfig: { stackHints: "on" },
 });
 
-export const { m, mPx, mediaQueries, units } = calipers;
+export const { m, mPx, units } = calipers;
 ```
 
 See [examples/factory-wrapper.example.ts](examples/factory-wrapper.example.ts)
@@ -479,7 +459,7 @@ parts inside a broader styling solution.
 Deeper guides live alongside this README:
 
 - Measurements core: [README_MEASUREMENT.md](README_MEASUREMENT.md)
-- Media queries: [README_MEDIAQUERIES.md](README_MEDIAQUERIES.md)
+- Media queries: now in [`@css-bookends/media-queries`](https://github.com/slafleche/css-bookends)
 
 ### Further examples in this repo
 

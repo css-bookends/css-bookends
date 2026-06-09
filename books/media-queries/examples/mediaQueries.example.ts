@@ -12,8 +12,8 @@ import {
   mediaQueryFactory,
   outputVanillaExtract,
   preprocessorVanillaExtract,
-} from "css-calipers/mediaQueries";
-import type { IMediaQueryProps, StyleRule } from "css-calipers/mediaQueries";
+} from "@css-bookends/media-queries";
+import type { IMediaQueryProps, StyleRule } from "@css-bookends/media-queries";
 import { style } from "@vanilla-extract/css";
 
 // Simple helper: grid component uses its own breakpoints and column labels.
