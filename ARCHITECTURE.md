@@ -3,6 +3,20 @@
 How every helper in CSS-Bookends is structured and consumed. This is the design
 all lexicons/books are being reworked toward.
 
+## Vocabulary
+
+- **lexicon** : primitives for CSS use (calipers, colours, spacing). The raw
+  vocabulary every other package builds on.
+- **book** : a workable library for one CSS concern (borders, shadows, ...),
+  built by combining three pages.
+- **page** : one of a book's three stages, `input` -> `storage` -> `output(s)`.
+- **press** : the definition of a book, its three pages plus config defaults.
+- **printer** : the factory (in `@css-bookends/bookpress`) that stamps a book from
+  a press, able to rewrite any page or the whole press. This is the "factory" the
+  sections below describe, made concrete.
+- **shelf** : the per-project composition root that wires books together with
+  shared config.
+
 ## Goal: a stable public surface that absorbs internal change
 
 Helpers get rewritten over time, sources, imports, dependencies, even which
