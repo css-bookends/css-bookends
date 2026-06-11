@@ -63,6 +63,57 @@ export interface BordersConfig {
   output: OutputFormat;
 }
 
+/* ---------- the output contract (plain CSS, one shape per format) ---------- */
+
+/**
+ * "Typed tokens in, plain CSS out." The output is always a plain style object.
+ * csstype's `Property.*` types are the machine-readable form of the CSS spec, so
+ * the contract is the full valid surface (e.g. `Property.BorderTopWidth` already
+ * includes `thin/medium/thick`; `Property.BorderTopColor` includes `currentColor`).
+ */
+
+/** long: every border longhand, each a valid CSS value. */
+export interface BorderLong {
+  borderTopWidth?: Property.BorderTopWidth;
+  borderRightWidth?: Property.BorderRightWidth;
+  borderBottomWidth?: Property.BorderBottomWidth;
+  borderLeftWidth?: Property.BorderLeftWidth;
+  borderTopStyle?: Property.BorderTopStyle;
+  borderRightStyle?: Property.BorderRightStyle;
+  borderBottomStyle?: Property.BorderBottomStyle;
+  borderLeftStyle?: Property.BorderLeftStyle;
+  borderTopColor?: Property.BorderTopColor;
+  borderRightColor?: Property.BorderRightColor;
+  borderBottomColor?: Property.BorderBottomColor;
+  borderLeftColor?: Property.BorderLeftColor;
+  borderTopLeftRadius?: Property.BorderTopLeftRadius;
+  borderTopRightRadius?: Property.BorderTopRightRadius;
+  borderBottomRightRadius?: Property.BorderBottomRightRadius;
+  borderBottomLeftRadius?: Property.BorderBottomLeftRadius;
+}
+
+/** line: per-edge shorthands + the radius shorthand. */
+export interface BorderLine {
+  borderTop?: Property.BorderTop;
+  borderRight?: Property.BorderRight;
+  borderBottom?: Property.BorderBottom;
+  borderLeft?: Property.BorderLeft;
+  borderRadius?: Property.BorderRadius;
+}
+
+/** short: the full shorthand + the radius shorthand. */
+export interface BorderShort {
+  border?: Property.Border;
+  borderRadius?: Property.BorderRadius;
+}
+
+/**
+ * Anything a borders book emits: a plain CSS style object. The chosen format
+ * decides which keys are present; the type is the all-optional superset so a
+ * consumer can read or spread any key without narrowing.
+ */
+export interface BorderOutput extends BorderLong, BorderLine, BorderShort {}
+
 /* ---------- the resolved, navigable result ---------- */
 
 /** A resolved edge: leaves are the lexicon values, each with its own `.css()`. */
@@ -71,7 +122,7 @@ export interface ResolvedEdge {
   style: BorderStyle;
   color: ColorWrapper;
   /** this edge as a style object, in the configured format. */
-  css(): Record<string, string>;
+  css(): BorderOutput;
 }
 
 /** A resolved corner radius. */
@@ -85,7 +136,7 @@ export interface ResolvedBorders
   extends Record<Side, ResolvedEdge>,
     Record<Corner, ResolvedCorner> {
   /** the whole border as a style object, in the configured output format. */
-  css(): Record<string, string>;
+  css(): BorderOutput;
 }
 
 /** A borders book: callable bare (global defaults) or with an input spec. */

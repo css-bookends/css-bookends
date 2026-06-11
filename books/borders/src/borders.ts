@@ -8,6 +8,7 @@ import type {
   BordersConfig,
   BordersInput,
   BordersSpec,
+  BorderOutput,
   BorderStyle,
   BorderWidth,
   Corner,
@@ -153,7 +154,7 @@ function parse(raw: BordersInput | undefined, cfg: BordersConfig): Store {
 /* ---------- output (page 3): store -> navigable ResolvedBorders ---------- */
 
 function build(store: Store): ResolvedBorders {
-  const edgeCss = (side: Side): Record<string, string> => {
+  const edgeCss = (side: Side): BorderOutput => {
     const e = store.edges[side];
     if (e.omitted) return {};
     const C = cap(side);
@@ -161,17 +162,17 @@ function build(store: Store): ResolvedBorders {
       [`border${C}Width`]: e.width.css(),
       [`border${C}Style`]: e.style as string,
       [`border${C}Color`]: e.color.css(),
-    };
+    } as BorderOutput;
   };
 
-  const fullCss = (): Record<string, string> => {
+  const fullCss = (): BorderOutput => {
     const out: Record<string, string> = {};
     SIDES.forEach((s) => Object.assign(out, edgeCss(s)));
     CORNERS.forEach((c) => {
       const v = store.corners[c];
       if (v !== undefined) out[CORNER_PROP[c]] = renderCorner(v);
     });
-    return out;
+    return out as BorderOutput;
   };
 
   const edgeNode = (side: Side): ResolvedEdge => {
