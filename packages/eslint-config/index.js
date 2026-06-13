@@ -18,8 +18,12 @@ const DEFAULT_IGNORES = [
   'dist/**',
   'coverage/**',
   'node_modules/**',
-  'docs/.vitepress/dist/**',
-  'docs/.vitepress/cache/**',
+  // Scratch folder, intentionally outside every tsconfig (holds deliberate
+  // type errors for manual editor checks); never linted.
+  'demo/**',
+  // VitePress internals (config.mts + build output) are tooling outside the
+  // package tsconfig, not library code; Prettier still formats them.
+  'docs/.vitepress/**',
 ];
 
 // TypeScript files intentionally outside the package tsconfig: tsd-style
@@ -30,6 +34,20 @@ const NO_PROJECT_TS = [
   '**/*.test-d.ts',
   'tests/types/**',
   'examples/**',
+  // Build/tooling scripts (e.g. emit-esm-package.mts) live outside the
+  // package tsconfig, so they lint untyped.
+  'scripts/**',
+];
+
+// TypeScript sources, including the .mts/.cts module variants this repo uses
+// for tooling scripts.
+const TS_FILES = [
+  '**/*.{ts,mts,cts}',
+];
+
+// Everything ESLint lints: TypeScript plus JS module variants.
+const LINT_FILES = [
+  '**/*.{ts,mts,cts,js,cjs,mjs}',
 ];
 
 /**
@@ -47,22 +65,18 @@ module.exports = function bookendsEslintConfig(options = {}) {
 
     js.configs.recommended,
 
-    // Type-checked TypeScript rules, scoped to `.ts` so the type-aware
+    // Type-checked TypeScript rules, scoped to TS files so the type-aware
     // parser is never pointed at JS config/script files.
     ...tseslint.configs.recommendedTypeChecked.map((config) => ({
       ...config,
-      files: [
-        '**/*.ts',
-      ],
+      files: TS_FILES,
     })),
 
     // Point the type-aware parser at each package's own tsconfig. eslint
     // runs per-package (`eslint .` in the package dir), so cwd is the
     // package root and projectService finds the nearest tsconfig.json.
     {
-      files: [
-        '**/*.ts',
-      ],
+      files: TS_FILES,
       languageOptions: {
         globals: nodeGlobals,
         parserOptions: {
@@ -83,9 +97,7 @@ module.exports = function bookendsEslintConfig(options = {}) {
     // Import hygiene: deterministic sort, cycle detection, dead-import
     // removal (with `_` opt-out for intentionally unused bindings).
     {
-      files: [
-        '**/*.{ts,js,cjs,mjs}',
-      ],
+      files: LINT_FILES,
       plugins: {
         import: importPlugin,
         'simple-import-sort': simpleImportSort,
@@ -116,9 +128,7 @@ module.exports = function bookendsEslintConfig(options = {}) {
     // Promise best practices.
     {
       ...promisePlugin.configs['flat/recommended'],
-      files: [
-        '**/*.{ts,js,cjs,mjs}',
-      ],
+      files: LINT_FILES,
     },
 
     // Declaration files: relax any/unused.

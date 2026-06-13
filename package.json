@@ -11,21 +11,26 @@
   },
   "packageManager": "pnpm@11.0.9",
   "engines": {
-    "node": ">=20"
+    "node": ">=24"
   },
   "scripts": {
+    "//temp-exclude": "TEMP: colours & borders are excluded from lint/typecheck below while they are rewritten against the new bookpress publishBook API. Restore by deleting the two `--filter='!...'` flags (and the matching set in lint-staged.config.mts).",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
-    "lint": "pnpm -r lint",
+    "lint": "pnpm --filter='!@css-bookends/colours' --filter='!@css-bookends/borders' -r lint",
+    "typecheck": "pnpm --filter='!@css-bookends/colours' --filter='!@css-bookends/borders' -r run test:tsc",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "changeset": "changeset",
     "version": "changeset version",
     "release": "bash scripts/release-all.sh",
-    "release:npm-only": "pnpm -r build && changeset publish"
+    "release:npm-only": "pnpm -r build && changeset publish",
+    "prepare": "husky"
   },
   "devDependencies": {
     "@changesets/cli": "^2.31.0",
+    "husky": "^9.1.7",
+    "lint-staged": "^17.0.7",
     "prettier": "^3.8.4",
     "prettier-plugin-jsdoc": "^1.8.0",
     "prettier-plugin-multiline-arrays": "^4.1.8"

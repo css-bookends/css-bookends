@@ -83,3 +83,31 @@ colour('#3366cc').css(colorFormats.hex);   // one-off override (argument) -> '#3
 colour('#3366cc').hex().css();             // one-off override (selector) -> '#3366cc'
 colour('red').darken(0.2).css();           // navigate/modify, then render via .css()
 ```
+
+### Format, lint, and type-check every file you touch (absolute)
+
+Any code an agent writes or edits MUST be run through the repo's formatter,
+linter, and type-checker before the work is considered done. Do not hand back
+unformatted, unlinted, or type-erroring code.
+
+- **Format with Prettier:** `pnpm format` from the repo root. Markdown is
+  intentionally Prettier-ignored (hand-tuned tables and aligned fenced-code
+  comments), so never reformat `.md` files.
+- **Lint with ESLint, in the owning package:** flat config does not cascade and
+  type-aware linting needs the package as its cwd, so run e.g.
+  `pnpm --filter @css-bookends/<name> exec eslint . --fix` and resolve anything
+  not auto-fixable. All packages share `@css-bookends/eslint-config`; never add
+  per-package lint plugins or a per-package Prettier config.
+- **Type-check with `tsc`, in the owning package:**
+  `pnpm --filter @css-bookends/<name> exec tsc -p tsconfig.json --noEmit` (the
+  package's `test:tsc`). It checks the whole project, not a single file, so run
+  it for every package you changed and fix all errors.
+
+Tooling scripts use `.mts` (e.g. `scripts/emit-esm-package.mts`) and run under
+plain `node`, which requires **Node >= 24** to build (see `.nvmrc` / root
+`engines`).
+
+A `husky` pre-commit hook runs `lint-staged` on staged files as a backstop:
+per-package ESLint `--fix`, then per-package `tsc --noEmit`, then Prettier. It
+is a safety net, not a substitute: leave the tree already clean rather than
+relying on the hook.

@@ -25,7 +25,8 @@ peer (`lexicons/spacing` for a lexicon, `books/transforms` for a book) and renam
   `module.exports = require('@css-bookends/eslint-config')();` (pass
   `{ ignores: [...] }` only to override the default ignore globs). Do NOT
   copy a full config or re-list the eslint plugins.
-- `scripts/emit-esm-package.mjs` (writes `dist/esm/package.json` = `{"type":"module"}`)
+- `scripts/emit-esm-package.mts` (writes `dist/esm/package.json` = `{"type":"module"}`;
+  run via plain `node` in `build:esm`, which requires Node >= 24 to build)
 - `src/index.ts` re-exporting the package surface
 - `tests/runtime/<name>.src.test.ts`
 - `notes.md` capturing known debt / improvement ideas

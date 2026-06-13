@@ -75,7 +75,7 @@
   "scripts": {
     "build": "npm run build:cjs && npm run build:esm && npm run build:examples",
     "build:cjs": "echo \"🛠️  Building CommonJS (cjs) bundle...\" && tsc -p tsconfig.build.cjs.json",
-    "build:esm": "echo \"🛠️  Building ES module (esm) bundle...\" && tsc -p tsconfig.build.esm.json && node scripts/emit-esm-package.mjs",
+    "build:esm": "echo \"🛠️  Building ES module (esm) bundle...\" && tsc -p tsconfig.build.esm.json && node scripts/emit-esm-package.mts",
     "build:examples": "tsc -p tsconfig.examples.json --noEmit",
     "build:test": "npm run build && npm run test",
     "build:delete": "node -e \"const { existsSync, rmSync } = require('fs'); const paths = ['dist/cjs', 'dist/esm']; for (const p of paths) { console.log('Scanning', p + '...'); if (existsSync(p)) { console.log('Found', p + ', deleting...'); rmSync(p, { recursive: true, force: true }); console.log('Deleted', p); } else { console.log(p + ' not found, skipping.'); } }\"",

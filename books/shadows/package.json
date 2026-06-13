@@ -50,7 +50,7 @@
   "scripts": {
     "build": "npm run build:cjs && npm run build:esm",
     "build:cjs": "tsc -p tsconfig.build.cjs.json",
-    "build:esm": "tsc -p tsconfig.build.esm.json && node scripts/emit-esm-package.mjs",
+    "build:esm": "tsc -p tsconfig.build.esm.json && node scripts/emit-esm-package.mts",
     "test": "npm run build && npm run test:src && npm run test:tsc && npm run lint",
     "test:src": "vitest run tests/runtime/shadows.src.test.ts",
     "test:tsc": "tsc -p tsconfig.json --noEmit",
