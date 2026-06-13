@@ -38,9 +38,11 @@
     "culori": "^4.0.2"
   },
   "peerDependencies": {
+    "@css-bookends/bookpress": "workspace:^",
     "@css-bookends/css-calipers": "workspace:^"
   },
   "devDependencies": {
+    "@css-bookends/bookpress": "workspace:*",
     "@css-bookends/css-calipers": "workspace:*",
     "@eslint/js": "^9.39.2",
     "@types/node": "^24.10.1",
@@ -55,7 +57,7 @@
     "build:cjs": "tsc -p tsconfig.build.cjs.json",
     "build:esm": "tsc -p tsconfig.build.esm.json && node scripts/emit-esm-package.mjs",
     "test": "npm run build && npm run test:src && npm run test:tsc && npm run lint",
-    "test:src": "vitest run tests/runtime/colorWrap.src.test.ts",
+    "test:src": "vitest run tests/runtime",
     "test:tsc": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint . --max-warnings=0"
   }

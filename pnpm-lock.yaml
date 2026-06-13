@@ -322,6 +322,9 @@ importers:
         specifier: ^4.0.2
         version: 4.0.2
     devDependencies:
+      '@css-bookends/bookpress':
+        specifier: workspace:*
+        version: link:../../bookpress
       '@css-bookends/css-calipers':
         specifier: workspace:*
         version: link:../calipers
