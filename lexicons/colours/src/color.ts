@@ -1,16 +1,140 @@
-/**
- * color — the new color book. STEP 1: the input contract (types only).
- *
- * The guts are deliberately not here yet; this file defines what a color can be
- * MADE from. See `color-spaces.md` for the full surface. Rule: if it is a valid CSS
- * color value, it is accepted. Accepted values are either translatable (a concrete
- * point in a color space - manipulable + convertible) or symbolic (a keyword with no
- * fixed value - emit-only; modifying or converting it throws).
- */
+import type { DegMeasurement } from '@css-bookends/css-calipers';
+import type { Color } from 'chroma-js';
+import type { Oklch } from 'culori';
 
-/* ---------- symbolic keywords (emit-only; modifying/converting throws) ---------- */
+export type { Color } from 'chroma-js';
 
-/** The element's own `color`. */
+type MixArgs = Parameters<Color['mix']>;
+
+type CssOptions = {
+  forceAlpha?: boolean;
+  preferKeywordTransparent?: boolean;
+};
+
+export type ColorWrapper = {
+  unsafeColor: Color;
+  css: (options?: CssOptions) => string;
+  alpha: {
+    (): number;
+    (value: number): ColorWrapper;
+  };
+  darken: (value?: number) => ColorWrapper;
+  brighten: (value?: number) => ColorWrapper;
+  lighten: (value?: number) => ColorWrapper;
+  saturate: (value?: number) => ColorWrapper;
+  desaturate: (value?: number) => ColorWrapper;
+  hueShift: (value: DegMeasurement) => ColorWrapper;
+  mix: (
+    target: ColorInput,
+    ratio?: number,
+    mode?: MixArgs[2],
+  ) => ColorWrapper;
+  mixSolid: (
+    target: ColorInput,
+    ratio?: number,
+    mode?: MixArgs[2],
+  ) => ColorWrapper;
+  blend: {
+    multiply: (options?: BlendOptions) => ColorWrapper;
+    screen: (options?: BlendOptions) => ColorWrapper;
+  };
+  clone: () => ColorWrapper;
+  value: () => Color;
+  solid: () => ColorWrapper;
+};
+
+export type ColorInput = Color | ColorWrapper | string | ColorObject;
+type BlendOptions = {
+  ratio?: number;
+  stripColor?: ColorInput;
+};
+
+export type CuloriOKLCH = Oklch;
+
+type OklchCreator = {
+  (value: string): ColorWrapper;
+  (l: number, c: number, h: number, alpha?: number): ColorWrapper;
+};
+
+type ColorCreators = {
+  css: (value: string) => ColorWrapper;
+  hex: (value: string) => ColorWrapper;
+  rgba: (
+    r: number,
+    g: number,
+    b: number,
+    alpha?: number,
+  ) => ColorWrapper;
+  hsl: (
+    h: number,
+    s: number,
+    l: number,
+    alpha?: number,
+  ) => ColorWrapper;
+  hwb: (
+    h: number,
+    w: number,
+    b: number,
+    alpha?: number,
+  ) => ColorWrapper;
+  lab: (
+    l: number,
+    a: number,
+    b: number,
+    alpha?: number,
+  ) => ColorWrapper;
+  lch: (
+    l: number,
+    c: number,
+    h: number,
+    alpha?: number,
+  ) => ColorWrapper;
+  oklab: (
+    l: number,
+    a: number,
+    b: number,
+    alpha?: number,
+  ) => ColorWrapper;
+  oklch: OklchCreator;
+};
+
+export type OKLCH = {
+  l: number;
+  c: number;
+  h: number;
+  a?: number;
+};
+
+export type ColorInputWithOKLCH = OKLCH | string | ColorWrapper;
+
+/* ---------- added: structured object input (one per color space; `alpha` everywhere) ---------- */
+
+export type ColorObject =
+  | { space: 'rgb'; r: number; g: number; b: number; alpha?: number }
+  | { space: 'hsl'; h: number; s: number; l: number; alpha?: number }
+  | { space: 'hwb'; h: number; w: number; b: number; alpha?: number }
+  | { space: 'lab'; l: number; a: number; b: number; alpha?: number }
+  | { space: 'lch'; l: number; c: number; h: number; alpha?: number }
+  | {
+      space: 'oklab';
+      l: number;
+      a: number;
+      b: number;
+      alpha?: number;
+    }
+  | {
+      space: 'oklch';
+      l: number;
+      c: number;
+      h: number;
+      alpha?: number;
+    };
+
+/** The color-space discriminants (`'rgb' | 'hsl' | ...`). */
+export type ColorSpace = ColorObject['space'];
+
+/* ---------- added: symbolic keywords (emit-only; no fixed value) ---------- */
+
 export type CurrentColor = 'currentColor';
 
 /** CSS Color 4 system colors (current). */
@@ -69,60 +193,9 @@ export type CascadeKeyword =
   | 'revert'
   | 'revert-layer';
 
-/** Every symbolic color: a keyword with no fixed value (emit-only). */
+/** Any keyword with no fixed value (emit-only; modifying/converting it throws). */
 export type SymbolicColor =
   | CurrentColor
   | SystemColor
   | DeprecatedSystemColor
   | CascadeKeyword;
-
-/* ---------- translatable structured inputs (one per color space) ---------- */
-
-/** A structured, translatable color: a concrete point in a named space. `alpha` is
- *  the optional opacity channel everywhere (never `a`). */
-export type ColorObject =
-  | { space: 'rgb'; r: number; g: number; b: number; alpha?: number }
-  | { space: 'hsl'; h: number; s: number; l: number; alpha?: number }
-  | { space: 'hwb'; h: number; w: number; b: number; alpha?: number }
-  | { space: 'lab'; l: number; a: number; b: number; alpha?: number }
-  | { space: 'lch'; l: number; c: number; h: number; alpha?: number }
-  | {
-      space: 'oklab';
-      l: number;
-      a: number;
-      b: number;
-      alpha?: number;
-    }
-  | {
-      space: 'oklch';
-      l: number;
-      c: number;
-      h: number;
-      alpha?: number;
-    };
-
-/** The color-space discriminants (`'rgb' | 'hsl' | ...`). */
-export type ColorSpace = ColorObject['space'];
-
-/* ---------- an already-resolved color (re-wrap) ---------- */
-
-/**
- * The result type. Fully defined with the output step; here it is the minimum
- * needed so an existing color can be passed back in (re-wrap). It must expose
- * `.css()` (the engine's `Out extends { css(): unknown }` contract).
- */
-export interface ResolvedColor {
-  css(): string;
-}
-
-/* ---------- the input union ---------- */
-
-/**
- * Anything a color can be MADE from:
- * - a CSS color string (named, hex, `rgb()/hsl()/hwb()/lab()/lch()/oklab()/oklch()`,
- *   `transparent`, plus the symbolic keywords above) — `string` covers them all;
- *   `SymbolicColor` is exported separately for recognition/typing,
- * - a structured `ColorObject` (one per space), or
- * - an existing `ResolvedColor` (re-wrap).
- */
-export type ColorInput = string | ColorObject | ResolvedColor;
