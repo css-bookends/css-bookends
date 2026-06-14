@@ -1,201 +1,236 @@
-import type { DegMeasurement } from '@css-bookends/css-calipers';
-import type { Color } from 'chroma-js';
-import type { Oklch } from 'culori';
+import type {
+  Color,
+  Hsl,
+  Hwb,
+  Lab,
+  Lch,
+  Oklab,
+  Oklch,
+  Rgb,
+} from 'culori';
+import { converter, parse } from 'culori';
 
-export type { Color } from 'chroma-js';
+import type {
+  ColorInput,
+  ColorObject,
+  Store,
+  SymbolicColor,
+} from './types';
 
-type MixArgs = Parameters<Color['mix']>;
+export * from './types';
 
-type CssOptions = {
-  forceAlpha?: boolean;
-  preferKeywordTransparent?: boolean;
-};
+/* ============================================================================
+ * INPUT (Part 1 of the book): parse a `ColorInput` into the canonical store.
+ *
+ * The store is the boundary between input and the rest of the book. Translatable
+ * values become a culori color object; symbolic keywords are kept verbatim and
+ * pass through on emit (modifying them throws later, not here). Storage
+ * normalization and output formatting are separate, later steps.
+ * ==========================================================================*/
 
-export type ColorWrapper = {
-  unsafeColor: Color;
-  css: (options?: CssOptions) => string;
-  alpha: {
-    (): number;
-    (value: number): ColorWrapper;
-  };
-  darken: (value?: number) => ColorWrapper;
-  brighten: (value?: number) => ColorWrapper;
-  lighten: (value?: number) => ColorWrapper;
-  saturate: (value?: number) => ColorWrapper;
-  desaturate: (value?: number) => ColorWrapper;
-  hueShift: (value: DegMeasurement) => ColorWrapper;
-  mix: (
-    target: ColorInput,
-    ratio?: number,
-    mode?: MixArgs[2],
-  ) => ColorWrapper;
-  mixSolid: (
-    target: ColorInput,
-    ratio?: number,
-    mode?: MixArgs[2],
-  ) => ColorWrapper;
-  blend: {
-    multiply: (options?: BlendOptions) => ColorWrapper;
-    screen: (options?: BlendOptions) => ColorWrapper;
-  };
-  clone: () => ColorWrapper;
-  value: () => Color;
-  solid: () => ColorWrapper;
-};
+/* The symbolic allowlist, in canonical casing. Runtime mirror of the
+ * `Symbolic*` types; `satisfies` keeps each entry a valid keyword. */
+const SYMBOLIC_KEYWORDS = [
+  'currentColor',
+  // system colors (current, CSS Color 4)
+  'Canvas',
+  'CanvasText',
+  'LinkText',
+  'VisitedText',
+  'ActiveText',
+  'ButtonFace',
+  'ButtonText',
+  'ButtonBorder',
+  'Field',
+  'FieldText',
+  'Highlight',
+  'HighlightText',
+  'SelectedItem',
+  'SelectedItemText',
+  'Mark',
+  'MarkText',
+  'GrayText',
+  'AccentColor',
+  'AccentColorText',
+  // system colors (deprecated, Appendix A - still accepted)
+  'ActiveBorder',
+  'ActiveCaption',
+  'AppWorkspace',
+  'Background',
+  'ButtonHighlight',
+  'ButtonShadow',
+  'CaptionText',
+  'InactiveBorder',
+  'InactiveCaption',
+  'InactiveCaptionText',
+  'InfoBackground',
+  'InfoText',
+  'Menu',
+  'MenuText',
+  'Scrollbar',
+  'ThreeDDarkShadow',
+  'ThreeDFace',
+  'ThreeDHighlight',
+  'ThreeDLightShadow',
+  'ThreeDShadow',
+  'Window',
+  'WindowFrame',
+  'WindowText',
+  // CSS-wide cascade keywords
+  'inherit',
+  'initial',
+  'unset',
+  'revert',
+  'revert-layer',
+] as const satisfies readonly SymbolicColor[];
 
-export type ColorInput = Color | ColorWrapper | string | ColorObject;
-type BlendOptions = {
-  ratio?: number;
-  stripColor?: ColorInput;
-};
+/** lower-cased keyword -> canonical casing, for case-insensitive matching. */
+const SYMBOLIC_BY_LOWER = new Map<string, SymbolicColor>(
+  SYMBOLIC_KEYWORDS.map((keyword) => [
+    keyword.toLowerCase(),
+    keyword,
+  ]),
+);
 
-export type CuloriOKLCH = Oklch;
+const isColorObject = (
+  input: ColorObject | Color,
+): input is ColorObject =>
+  typeof input === 'object' && input !== null && 'space' in input;
 
-type OklchCreator = {
-  (value: string): ColorWrapper;
-  (l: number, c: number, h: number, alpha?: number): ColorWrapper;
-};
+const isCuloriColor = (input: ColorObject | Color): input is Color =>
+  typeof input === 'object' && input !== null && 'mode' in input;
 
-type ColorCreators = {
-  css: (value: string) => ColorWrapper;
-  hex: (value: string) => ColorWrapper;
-  rgba: (
-    r: number,
-    g: number,
-    b: number,
-    alpha?: number,
-  ) => ColorWrapper;
-  hsl: (
-    h: number,
-    s: number,
-    l: number,
-    alpha?: number,
-  ) => ColorWrapper;
-  hwb: (
-    h: number,
-    w: number,
-    b: number,
-    alpha?: number,
-  ) => ColorWrapper;
-  lab: (
-    l: number,
-    a: number,
-    b: number,
-    alpha?: number,
-  ) => ColorWrapper;
-  lch: (
-    l: number,
-    c: number,
-    h: number,
-    alpha?: number,
-  ) => ColorWrapper;
-  oklab: (
-    l: number,
-    a: number,
-    b: number,
-    alpha?: number,
-  ) => ColorWrapper;
-  oklch: OklchCreator;
-};
-
-export type OKLCH = {
-  l: number;
-  c: number;
-  h: number;
-  a?: number;
-};
-
-export type ColorInputWithOKLCH = OKLCH | string | ColorWrapper;
-
-/* ---------- added: structured object input (one per color space; `alpha` everywhere) ---------- */
-
-export type ColorObject =
-  | { space: 'rgb'; r: number; g: number; b: number; alpha?: number }
-  | { space: 'hsl'; h: number; s: number; l: number; alpha?: number }
-  | { space: 'hwb'; h: number; w: number; b: number; alpha?: number }
-  | { space: 'lab'; l: number; a: number; b: number; alpha?: number }
-  | { space: 'lch'; l: number; c: number; h: number; alpha?: number }
-  | {
-      space: 'oklab';
-      l: number;
-      a: number;
-      b: number;
-      alpha?: number;
+/**
+ * Adapt a structured `ColorObject` to a culori color object. We accept
+ * CSS-authoring ranges (rgb 0-255, hsl/hwb percentages 0-100) and convert them
+ * to culori's normalized ranges; lab/lch/oklab/oklch channels are 1:1.
+ */
+const colorObjectToCulori = (input: ColorObject): Color => {
+  switch (input.space) {
+    case 'rgb': {
+      const color: Rgb = {
+        mode: 'rgb',
+        r: input.r / 255,
+        g: input.g / 255,
+        b: input.b / 255,
+      };
+      if (input.alpha !== undefined) color.alpha = input.alpha;
+      return color;
     }
-  | {
-      space: 'oklch';
-      l: number;
-      c: number;
-      h: number;
-      alpha?: number;
-    };
+    case 'hsl': {
+      const color: Hsl = {
+        mode: 'hsl',
+        h: input.h,
+        s: input.s / 100,
+        l: input.l / 100,
+      };
+      if (input.alpha !== undefined) color.alpha = input.alpha;
+      return color;
+    }
+    case 'hwb': {
+      const color: Hwb = {
+        mode: 'hwb',
+        h: input.h,
+        w: input.w / 100,
+        b: input.b / 100,
+      };
+      if (input.alpha !== undefined) color.alpha = input.alpha;
+      return color;
+    }
+    case 'lab': {
+      const color: Lab = {
+        mode: 'lab',
+        l: input.l,
+        a: input.a,
+        b: input.b,
+      };
+      if (input.alpha !== undefined) color.alpha = input.alpha;
+      return color;
+    }
+    case 'lch': {
+      const color: Lch = {
+        mode: 'lch',
+        l: input.l,
+        c: input.c,
+        h: input.h,
+      };
+      if (input.alpha !== undefined) color.alpha = input.alpha;
+      return color;
+    }
+    case 'oklab': {
+      const color: Oklab = {
+        mode: 'oklab',
+        l: input.l,
+        a: input.a,
+        b: input.b,
+      };
+      if (input.alpha !== undefined) color.alpha = input.alpha;
+      return color;
+    }
+    case 'oklch': {
+      const color: Oklch = {
+        mode: 'oklch',
+        l: input.l,
+        c: input.c,
+        h: input.h,
+      };
+      if (input.alpha !== undefined) color.alpha = input.alpha;
+      return color;
+    }
+  }
+};
 
-/** The color-space discriminants (`'rgb' | 'hsl' | ...`). */
-export type ColorSpace = ColorObject['space'];
+/**
+ * Parse any `ColorInput` into the canonical store.
+ *
+ * - string: a symbolic keyword (case-insensitive) -> passthrough store;
+ *   otherwise parsed as a CSS color; an unparseable string throws.
+ * - structured `ColorObject` -> adapted to a culori color.
+ * - re-wrap: an existing culori color (internal/engine use) -> reused as-is.
+ */
+export const parseColor = (input: ColorInput | Color): Store => {
+  if (typeof input === 'string') {
+    const canonical = SYMBOLIC_BY_LOWER.get(input.toLowerCase());
+    if (canonical !== undefined) {
+      return { kind: 'symbolic', keyword: canonical };
+    }
+    const color = parse(input);
+    if (color === undefined) {
+      throw new Error(`color: unparseable color string "${input}"`);
+    }
+    return { kind: 'color', color };
+  }
 
-/* ---------- added: symbolic keywords (emit-only; no fixed value) ---------- */
+  if (isColorObject(input)) {
+    return { kind: 'color', color: colorObjectToCulori(input) };
+  }
 
-export type CurrentColor = 'currentColor';
+  if (isCuloriColor(input)) {
+    return { kind: 'color', color: input };
+  }
 
-/** CSS Color 4 system colors (current). */
-export type SystemColor =
-  | 'Canvas'
-  | 'CanvasText'
-  | 'LinkText'
-  | 'VisitedText'
-  | 'ActiveText'
-  | 'ButtonFace'
-  | 'ButtonText'
-  | 'ButtonBorder'
-  | 'Field'
-  | 'FieldText'
-  | 'Highlight'
-  | 'HighlightText'
-  | 'SelectedItem'
-  | 'SelectedItemText'
-  | 'Mark'
-  | 'MarkText'
-  | 'GrayText'
-  | 'AccentColor'
-  | 'AccentColorText';
+  throw new Error('color: unsupported color input');
+};
 
-/** Deprecated system colors (Appendix A): valid values, accepted as passthrough. */
-export type DeprecatedSystemColor =
-  | 'ActiveBorder'
-  | 'ActiveCaption'
-  | 'AppWorkspace'
-  | 'Background'
-  | 'ButtonHighlight'
-  | 'ButtonShadow'
-  | 'CaptionText'
-  | 'InactiveBorder'
-  | 'InactiveCaption'
-  | 'InactiveCaptionText'
-  | 'InfoBackground'
-  | 'InfoText'
-  | 'Menu'
-  | 'MenuText'
-  | 'Scrollbar'
-  | 'ThreeDDarkShadow'
-  | 'ThreeDFace'
-  | 'ThreeDHighlight'
-  | 'ThreeDLightShadow'
-  | 'ThreeDShadow'
-  | 'Window'
-  | 'WindowFrame'
-  | 'WindowText';
+/* ============================================================================
+ * STORAGE (Part 2 of the book): normalize the canonical store.
+ *
+ * Every translatable color is converted to OKLCH, so the rest of the book works
+ * from one perceptually-uniform representation: modifications become direct
+ * coordinate edits (l/c/h), and outputs convert out of OKLCH. Symbolic keywords
+ * have no value to normalize and pass through untouched.
+ *
+ * This is pure culori math and runs anywhere JS runs - it needs no browser
+ * `oklch()` support. Browser compatibility is purely an output-step concern
+ * (which format you emit), not a storage concern.
+ * ==========================================================================*/
 
-/** CSS-wide cascade keywords: valid color values, accepted as passthrough. */
-export type CascadeKeyword =
-  | 'inherit'
-  | 'initial'
-  | 'unset'
-  | 'revert'
-  | 'revert-layer';
+const toOklch = converter('oklch');
 
-/** Any keyword with no fixed value (emit-only; modifying/converting it throws). */
-export type SymbolicColor =
-  | CurrentColor
-  | SystemColor
-  | DeprecatedSystemColor
-  | CascadeKeyword;
+/** Normalize a parsed store into the canonical OKLCH working space. */
+export const storeColor = (store: Store): Store => {
+  if (store.kind === 'symbolic') {
+    return store;
+  }
+  return { kind: 'color', color: toOklch(store.color) };
+};

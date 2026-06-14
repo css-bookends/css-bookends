@@ -32,9 +32,7 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
-    "@types/chroma-js": "^3.1.2",
     "@types/culori": "^4.0.1",
-    "chroma-js": "^3.2.0",
     "culori": "^4.0.2"
   },
   "peerDependencies": {
