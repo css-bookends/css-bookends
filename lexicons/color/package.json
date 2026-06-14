@@ -1,12 +1,12 @@
 {
-  "name": "@css-bookends/colours",
+  "name": "@css-bookends/color",
   "version": "0.1.0",
   "description": "Typed, immutable color book with OKLCH storage and multi-format output. The color lexicon of CSS-Bookends.",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/slafleche/css-bookends.git",
-    "directory": "lexicons/colours"
+    "directory": "lexicons/color"
   },
   "author": "slafleche",
   "publishConfig": {

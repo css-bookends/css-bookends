@@ -1,4 +1,4 @@
-import type { ColorWrapper } from '@css-bookends/colours';
+import type { ResolvedColor } from '@css-bookends/color';
 import type {
   IMeasurement,
   PercentMeasurement,
@@ -24,7 +24,7 @@ export type BackdropFilterIntent = {
   saturate?: PercentInput;
   contrast?: PercentInput;
   brightness?: BrightnessInput;
-  backgroundColor?: ColorWrapper;
+  backgroundColor?: ResolvedColor;
 };
 
 const blurPart = (value: BlurInput): string | undefined =>

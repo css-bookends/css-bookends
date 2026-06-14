@@ -1,4 +1,4 @@
-import { color } from '@css-bookends/colours';
+import { publishBookColor } from '@css-bookends/color';
 import { m } from '@css-bookends/css-calipers';
 import { describe, expect, it } from 'vitest';
 
@@ -10,6 +10,8 @@ import {
   shadowTotalY,
 } from '../../src/shadows';
 
+const color = publishBookColor();
+
 describe('shadow.helper', () => {
   it('formats single and multiple box shadows', () => {
     const singleStyle = boxShadow({
@@ -20,7 +22,7 @@ describe('shadow.helper', () => {
       alpha: 0.5,
     });
     expect(singleStyle.boxShadow).toBe(
-      '1px 2px 3px 0 rgb(91 65 153 / 0.5)',
+      '1px 2px 3px 0 rgba(91, 65, 153, 0.5)',
     );
 
     const multiStyle = boxShadow([
@@ -28,7 +30,9 @@ describe('shadow.helper', () => {
       { x: m(1), y: m(2), inset: true },
     ]);
     expect(multiStyle.boxShadow).toContain(' inset');
-    expect(multiStyle.boxShadow.split(', ')).toHaveLength(2);
+    // two shadows -> two color tokens (the default color is rgba(...), whose own
+    // commas make a naive `, ` split unreliable).
+    expect(multiStyle.boxShadow.match(/rgba\(/g)).toHaveLength(2);
 
     const singleValue = boxShadow.value({
       x: m(1),
@@ -37,7 +41,7 @@ describe('shadow.helper', () => {
       color: color('#5b4199'),
       alpha: 0.5,
     });
-    expect(singleValue).toBe('1px 2px 3px 0 rgb(91 65 153 / 0.5)');
+    expect(singleValue).toBe('1px 2px 3px 0 rgba(91, 65, 153, 0.5)');
   });
 
   it('builds drop-shadow filters with defaults', () => {

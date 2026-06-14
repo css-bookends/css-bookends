@@ -54,9 +54,9 @@ importers:
         specifier: ^3.1.3
         version: 3.2.3
     devDependencies:
-      '@css-bookends/colours':
+      '@css-bookends/color':
         specifier: workspace:*
-        version: link:../../lexicons/colours
+        version: link:../../lexicons/color
       '@css-bookends/css-calipers':
         specifier: workspace:*
         version: link:../../lexicons/calipers
@@ -88,9 +88,9 @@ importers:
       '@css-bookends/bookpress':
         specifier: workspace:*
         version: link:../../bookpress
-      '@css-bookends/colours':
+      '@css-bookends/color':
         specifier: workspace:*
-        version: link:../../lexicons/colours
+        version: link:../../lexicons/color
       '@css-bookends/css-calipers':
         specifier: workspace:*
         version: link:../../lexicons/calipers
@@ -172,9 +172,9 @@ importers:
         specifier: ^3.1.3
         version: 3.2.3
     devDependencies:
-      '@css-bookends/colours':
+      '@css-bookends/color':
         specifier: workspace:*
-        version: link:../../lexicons/colours
+        version: link:../../lexicons/color
       '@css-bookends/css-calipers':
         specifier: workspace:*
         version: link:../../lexicons/calipers
@@ -271,7 +271,7 @@ importers:
         specifier: ^4.1.7
         version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
 
-  lexicons/colours:
+  lexicons/color:
     dependencies:
       '@types/culori':
         specifier: ^4.0.1
@@ -358,9 +358,9 @@ importers:
 
   packages/shelf:
     dependencies:
-      '@css-bookends/colours':
+      '@css-bookends/color':
         specifier: workspace:*
-        version: link:../../lexicons/colours
+        version: link:../../lexicons/color
       '@css-bookends/css-calipers':
         specifier: workspace:*
         version: link:../../lexicons/calipers

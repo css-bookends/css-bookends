@@ -1,4 +1,4 @@
-import type { ColorWrapper } from '@css-bookends/colours';
+import type { ColorWrapper } from '@css-bookends/color';
 import type { IMeasurement } from '@css-bookends/css-calipers';
 import type { Property } from 'csstype';
 

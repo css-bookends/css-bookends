@@ -1,4 +1,4 @@
-import { color } from '@css-bookends/colours';
+import { color } from '@css-bookends/color';
 import { m } from '@css-bookends/css-calipers';
 import { describe, expect, it } from 'vitest';
 

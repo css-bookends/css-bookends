@@ -1,6 +1,11 @@
-import { color, type ColorWrapper } from '@css-bookends/colours';
+import {
+  publishBookColor,
+  type ResolvedColor,
+} from '@css-bookends/color';
 import { type IMeasurement, m } from '@css-bookends/css-calipers';
 import type * as CSS_TYPES from 'csstype';
+
+const color = publishBookColor();
 
 // Neutral built-in defaults (inherited from the portfolio drop-shadow tokens;
 // review them, see notes.md). Callers override any field per call.
@@ -19,7 +24,7 @@ export interface IBoxShadow {
   spread?: IMeasurement;
   alpha?: number;
   inset?: boolean;
-  color?: ColorWrapper;
+  color?: ResolvedColor;
 }
 
 // Will default to global set of default value
@@ -122,7 +127,7 @@ export interface ITextShadow {
   x?: IMeasurement;
   y?: IMeasurement;
   blur?: IMeasurement;
-  color?: ColorWrapper;
+  color?: ResolvedColor;
 }
 
 export const textShadow = (props: ITextShadow = {}) => {

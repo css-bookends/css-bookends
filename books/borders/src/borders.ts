@@ -1,5 +1,5 @@
 import { bookPress, type Press } from '@css-bookends/bookpress';
-import { color, type ColorWrapper } from '@css-bookends/colours';
+import { color, type ColorWrapper } from '@css-bookends/color';
 import { type IMeasurement, m } from '@css-bookends/css-calipers';
 
 import type {
