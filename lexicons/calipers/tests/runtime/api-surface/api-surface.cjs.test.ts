@@ -142,6 +142,8 @@ describe('API surface (CJS)', () => {
       'hasCssMethod',
       'assertUnit',
       'assertCondition',
+      'validateGreaterOrEqualToZero',
+      'validateSmallerOrEqualToZero',
       'normalizeRatio',
       'parseRatio',
       'ratioToFloat',

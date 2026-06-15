@@ -142,6 +142,8 @@ describe('API surface (ESM)', () => {
       'hasCssMethod',
       'assertUnit',
       'assertCondition',
+      'validateGreaterOrEqualToZero',
+      'validateSmallerOrEqualToZero',
       'normalizeRatio',
       'parseRatio',
       'ratioToFloat',

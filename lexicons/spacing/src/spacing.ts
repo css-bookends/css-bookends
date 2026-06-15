@@ -1,10 +1,32 @@
-import { isMeasurement, m } from '@css-bookends/css-calipers';
+import { isMeasurement } from '@css-bookends/css-calipers';
 
 import type {
-  AxisValues,
+  AnchorSize,
+  AnchorSizeKeyword,
+  AnchorSizeOptions,
+  Axis,
+  Side,
+  SpacingInput,
   SpacingKeyword,
+  SpacingPolicy,
   SpacingValue,
 } from './types';
+
+/* ============================================================================
+ * INPUT guts of the padding/margin books, factored into the spacing LEXICON.
+ *
+ * The lexicon's job is INPUT only: accept a permissive `SpacingInput` (scalar
+ * shorthand or `{ x, y, top, right, bottom, left }`), VALIDATE its shape and each
+ * value against the book's policy, and return it unchanged (shorthand intact).
+ *
+ * It does NOT spell the value out into the four sides - that resolution is the
+ * book's STORAGE step (it differs slightly between padding and margin), so it lives
+ * in the books, not here.
+ *
+ * Expandable: a `SpacingPolicy` lets a book forbid `auto`, negatives, and/or
+ * `anchor-size()` (the padding/margin spec split). Each flag defaults to allowed;
+ * `false` -> violation.
+ * ==========================================================================*/
 
 const SPACING_KEYWORDS = new Set<SpacingKeyword>([
   'auto',
@@ -15,213 +37,120 @@ const SPACING_KEYWORDS = new Set<SpacingKeyword>([
   'revert-layer',
 ]);
 
-const defaultSpacing = (): SpacingFourSides => ({
-  top: m(0),
-  right: m(0),
-  bottom: m(0),
-  left: m(0),
-});
+const ANCHOR_SIZE_KEYWORDS = new Set<AnchorSizeKeyword>([
+  'width',
+  'height',
+  'block',
+  'inline',
+  'self-block',
+  'self-inline',
+]);
+
+const OBJECT_KEYS: ReadonlyArray<Axis | Side> = [
+  'x',
+  'y',
+  'top',
+  'right',
+  'bottom',
+  'left',
+];
+
+const isAnchorSize = (value: unknown): value is AnchorSize =>
+  typeof value === 'object' &&
+  value !== null &&
+  (value as { kind?: unknown }).kind === 'anchorSize';
 
 /**
- * Spacing intent (internal):
- *
- * - Prefer `all` when every side shares the same spacing.
- * - Prefer `vertical` when top/bottom are the same.
- * - Prefer `horizontal` when left/right are the same.
- * - Use explicit `top`/`right`/`bottom`/`left` only for asymmetrical
- *   cases.
- *
- * External callers should eventually rely on `SpacingIntent` (which
- * omits the internal `all` axis) plus value shorthands; helpers keep
- * this richer shape for their own resolution logic.
+ * Build a margin-only `anchor-size()` value, e.g.
+ * `anchorSize({ anchor: '--btn', size: 'width', fallback: m(50) })`.
  */
-export type SpacingIntentInternal = AxisValues<SpacingValue>;
-
-export type SpacingIntent = {
-  horizontal?: SpacingValue;
-  vertical?: SpacingValue;
-} & Partial<
-  Record<'top' | 'right' | 'bottom' | 'left', SpacingValue>
->;
-
-export type SpacingInput = SpacingIntentInternal | undefined;
-export type SpacingInputPublic =
-  | SpacingValue
-  | SpacingIntent
-  | undefined;
-export type SpacingFourSides = {
-  top: SpacingValue;
-  right: SpacingValue;
-  bottom: SpacingValue;
-  left: SpacingValue;
-};
-
-const isSpacingKeyword = (value: unknown): value is SpacingKeyword =>
-  typeof value === 'string' &&
-  SPACING_KEYWORDS.has(value as SpacingKeyword);
-
-const spacingToCss = (v: SpacingValue | 0): string => {
-  if (v === 0) return m(0).css();
-  if (isMeasurement(v)) return v.css();
-  if (isSpacingKeyword(v)) return v;
-  throw new Error(
-    '[spacing] Expected a css-calipers measurement value or approved spacing keyword (auto, inherit, initial, unset, revert, revert-layer).',
-  );
-};
-
-const resolve = (
-  candidates: Array<SpacingValue | undefined>,
-  fallback: SpacingValue,
-): string => {
-  for (const candidate of candidates) {
-    if (candidate !== undefined) {
-      return spacingToCss(candidate);
-    }
-  }
-  return spacingToCss(fallback);
-};
-
-const normalize = (
-  input?: SpacingInput | SpacingInputPublic,
-): SpacingIntentInternal | undefined => {
-  if (input === undefined) return undefined;
-
-  if (input === 0) {
-    return {
-      all: m(0),
-    };
-  }
-
-  if (isMeasurement(input) || isSpacingKeyword(input)) {
-    return {
-      all: input,
-    };
-  }
-
+export const anchorSize = (
+  options: AnchorSizeOptions = {},
+): AnchorSize => {
   if (
-    typeof input === 'object' &&
-    input !== null &&
-    !Array.isArray(input)
+    options.anchor !== undefined &&
+    !options.anchor.startsWith('--')
   ) {
+    throw new Error(
+      `spacing: anchor name must be a dashed-ident (got "${options.anchor}")`,
+    );
+  }
+  if (
+    options.size !== undefined &&
+    !ANCHOR_SIZE_KEYWORDS.has(options.size)
+  ) {
+    throw new Error(
+      `spacing: invalid anchor-size keyword "${String(options.size)}"`,
+    );
+  }
+  return { kind: 'anchorSize', ...options };
+};
+
+/** A valid single spacing value: `0`, a known keyword, a measurement, or anchor-size(). */
+const isSpacingValue = (value: unknown): value is SpacingValue =>
+  value === 0 ||
+  (typeof value === 'string' &&
+    SPACING_KEYWORDS.has(value as SpacingKeyword)) ||
+  isMeasurement(value) ||
+  isAnchorSize(value);
+
+/** Enforce the book's value-domain policy on one value. */
+const checkValue = (
+  key: string,
+  value: SpacingValue,
+  policy: SpacingPolicy,
+): void => {
+  if (value === 'auto' && policy.auto === false) {
+    throw new Error(`spacing: "auto" is not allowed for "${key}"`);
+  }
+  if (
+    isMeasurement(value) &&
+    value.getValue() < 0 &&
+    policy.negative === false
+  ) {
+    throw new Error(
+      `spacing: a negative value is not allowed for "${key}"`,
+    );
+  }
+  if (isAnchorSize(value) && policy.anchorSize === false) {
+    throw new Error(
+      `spacing: anchor-size() is not allowed for "${key}"`,
+    );
+  }
+};
+
+/**
+ * Validate a `SpacingInput` against the book's value-domain `policy` (default: `auto`,
+ * negatives, and anchor-size() all allowed) and return it unchanged. Spelling it out
+ * into the four sides is the book's storage step, not this.
+ */
+export const parseSpacing = <
+  K extends SpacingKeyword = SpacingKeyword,
+  F extends AnchorSize = AnchorSize,
+>(
+  input: SpacingInput<K, F>,
+  policy: SpacingPolicy = {},
+): SpacingInput<K, F> => {
+  const raw: SpacingInput = input;
+
+  // scalar shorthand: a single value.
+  if (isSpacingValue(raw)) {
+    checkValue('value', raw, policy);
     return input;
   }
 
-  throw new Error(
-    '[spacing] Expected a spacing value or spacing intent object (e.g., { vertical, horizontal }). Wrap unsupported inputs accordingly.',
-  );
-};
-
-type SpacingResolved = Partial<{
-  top: string;
-  right: string;
-  bottom: string;
-  left: string;
-}>;
-
-const spacingSides = (
-  input?: SpacingInput | SpacingInputPublic,
-): SpacingResolved => {
-  const props = normalize(input);
-  if (!props) return {};
-
-  const spacing: SpacingResolved = {};
-
-  if (
-    props.top !== undefined ||
-    props.vertical !== undefined ||
-    props.all !== undefined
-  ) {
-    spacing.top = resolve(
-      [
-        props.top,
-        props.vertical,
-        props.all,
-      ],
-      defaultSpacing().top,
-    );
+  // object form: validate every provided key against the value domain + policy.
+  if (typeof raw === 'object' && raw !== null) {
+    for (const key of OBJECT_KEYS) {
+      const value = raw[key];
+      if (value === undefined) continue;
+      if (!isSpacingValue(value)) {
+        throw new Error(`spacing: invalid value for "${key}"`);
+      }
+      checkValue(key, value, policy);
+    }
+    return input;
   }
 
-  if (
-    props.right !== undefined ||
-    props.horizontal !== undefined ||
-    props.all !== undefined
-  ) {
-    spacing.right = resolve(
-      [
-        props.right,
-        props.horizontal,
-        props.all,
-      ],
-      defaultSpacing().right,
-    );
-  }
-
-  if (
-    props.bottom !== undefined ||
-    props.vertical !== undefined ||
-    props.all !== undefined
-  ) {
-    spacing.bottom = resolve(
-      [
-        props.bottom,
-        props.vertical,
-        props.all,
-      ],
-      defaultSpacing().bottom,
-    );
-  }
-
-  if (
-    props.left !== undefined ||
-    props.horizontal !== undefined ||
-    props.all !== undefined
-  ) {
-    spacing.left = resolve(
-      [
-        props.left,
-        props.horizontal,
-        props.all,
-      ],
-      defaultSpacing().left,
-    );
-  }
-
-  return spacing;
-};
-
-export const paddings = (
-  props?: SpacingInput | SpacingInputPublic,
-) => {
-  const spacing = spacingSides(props);
-  const styles: Partial<{
-    paddingTop: string;
-    paddingRight: string;
-    paddingBottom: string;
-    paddingLeft: string;
-  }> = {};
-  if (spacing.top !== undefined) styles.paddingTop = spacing.top;
-  if (spacing.right !== undefined)
-    styles.paddingRight = spacing.right;
-  if (spacing.bottom !== undefined)
-    styles.paddingBottom = spacing.bottom;
-  if (spacing.left !== undefined) styles.paddingLeft = spacing.left;
-  return styles;
-};
-
-export const margins = (
-  props?: SpacingInput | SpacingInputPublic,
-) => {
-  const spacing = spacingSides(props);
-  const styles: Partial<{
-    marginTop: string;
-    marginRight: string;
-    marginBottom: string;
-    marginLeft: string;
-  }> = {};
-  if (spacing.top !== undefined) styles.marginTop = spacing.top;
-  if (spacing.right !== undefined) styles.marginRight = spacing.right;
-  if (spacing.bottom !== undefined)
-    styles.marginBottom = spacing.bottom;
-  if (spacing.left !== undefined) styles.marginLeft = spacing.left;
-  return styles;
+  throw new Error(`spacing: unsupported input "${String(raw)}"`);
 };

@@ -34,6 +34,21 @@ export type MeasurementString<Unit extends string = UnitSymbol> =
 declare const unitBrand: unique symbol;
 type UnitBrand<Unit extends string> = { readonly [unitBrand]: Unit };
 
+// Value-constraint brands. Like the unit brand, each is keyed by a module-private
+// unique symbol, so the tag cannot be forged from outside this module - the only way
+// to obtain it is by passing a measurement through the matching `validate*` helper,
+// which performs the runtime check first. The brands are additive over `IMeasurement`
+// and are dropped by arithmetic (which can cross zero), so a derived result must be
+// re-validated.
+declare const greaterOrEqualToZeroBrand: unique symbol;
+declare const smallerOrEqualToZeroBrand: unique symbol;
+export type GreaterOrEqualToZeroBrand = {
+  readonly [greaterOrEqualToZeroBrand]: true;
+};
+export type SmallerOrEqualToZeroBrand = {
+  readonly [smallerOrEqualToZeroBrand]: true;
+};
+
 export interface IMeasurement<Unit extends string = string> {
   css: () => string;
   toString: () => string;
@@ -78,6 +93,30 @@ export type InscribedMeasurement<Unit extends string> =
 export type BrandedMeasurement<Unit extends string> =
   InscribedMeasurement<Unit>;
 
+/**
+ * A measurement proven `>= 0` by `validateGreaterOrEqualToZero`. `NonNegativeMeasurement`
+ * is the conventional alias for the same constraint. The brand is additive over
+ * `IMeasurement` and is dropped by arithmetic, so a derived result must be re-validated.
+ */
+export type GreaterOrEqualToZeroMeasurement<
+  Unit extends string = string,
+> = IMeasurement<Unit> & GreaterOrEqualToZeroBrand;
+/** Non-negative (`>= 0`); alias of {@link GreaterOrEqualToZeroMeasurement}. */
+export type NonNegativeMeasurement<Unit extends string = string> =
+  GreaterOrEqualToZeroMeasurement<Unit>;
+
+/**
+ * A measurement proven `<= 0` by `validateSmallerOrEqualToZero`. `NonPositiveMeasurement`
+ * is the conventional alias for the same constraint. The brand is additive over
+ * `IMeasurement` and is dropped by arithmetic, so a derived result must be re-validated.
+ */
+export type SmallerOrEqualToZeroMeasurement<
+  Unit extends string = string,
+> = IMeasurement<Unit> & SmallerOrEqualToZeroBrand;
+/** Non-positive (`<= 0`); alias of {@link SmallerOrEqualToZeroMeasurement}. */
+export type NonPositiveMeasurement<Unit extends string = string> =
+  SmallerOrEqualToZeroMeasurement<Unit>;
+
 export type UnitHelper<Unit extends string = string> = ((
   value: number,
   context?: string,
@@ -113,6 +152,8 @@ export const {
   hasCssMethod,
   assertUnit,
   assertCondition,
+  validateGreaterOrEqualToZero,
+  validateSmallerOrEqualToZero,
   getErrorConfig,
   setErrorConfig,
 } = coreApi;

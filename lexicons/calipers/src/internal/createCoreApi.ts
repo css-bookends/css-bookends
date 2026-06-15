@@ -1,6 +1,8 @@
 import type {
+  GreaterOrEqualToZeroBrand,
   IMeasurement,
   InscribedMeasurement,
+  SmallerOrEqualToZeroBrand,
   UnitAssertion,
   UnitGuard,
   UnitHelper,
@@ -505,6 +507,36 @@ export const createCoreApi = (errorStore: ErrorConfigStore) => {
     }
   };
 
+  // Type-hardening pass-through validators: run any measurement through one to assert a
+  // value constraint at runtime and narrow it to the matching constraint brand. They add
+  // the brand without changing the value; arithmetic returns plain `IMeasurement`, so a
+  // derived result drops the brand and must be re-validated.
+  const validateGreaterOrEqualToZero = <M extends IMeasurement>(
+    measurement: M,
+    context?: string,
+  ): M & GreaterOrEqualToZeroBrand => {
+    assertCondition(
+      measurement.getValue() >= 0,
+      `Expected a measurement >= 0 (got ${measurement.css()})${
+        context === undefined ? '' : ` [${context}]`
+      }.`,
+    );
+    return measurement as M & GreaterOrEqualToZeroBrand;
+  };
+
+  const validateSmallerOrEqualToZero = <M extends IMeasurement>(
+    measurement: M,
+    context?: string,
+  ): M & SmallerOrEqualToZeroBrand => {
+    assertCondition(
+      measurement.getValue() <= 0,
+      `Expected a measurement <= 0 (got ${measurement.css()})${
+        context === undefined ? '' : ` [${context}]`
+      }.`,
+    );
+    return measurement as M & SmallerOrEqualToZeroBrand;
+  };
+
   return {
     m,
     isMeasurement,
@@ -519,6 +551,8 @@ export const createCoreApi = (errorStore: ErrorConfigStore) => {
     hasCssMethod,
     assertUnit,
     assertCondition,
+    validateGreaterOrEqualToZero,
+    validateSmallerOrEqualToZero,
     getErrorConfig: errorStore.getErrorConfig,
     setErrorConfig: errorStore.setErrorConfig,
   } as const;
