@@ -35,18 +35,25 @@ declare const unitBrand: unique symbol;
 type UnitBrand<Unit extends string> = { readonly [unitBrand]: Unit };
 
 // Value-constraint brands. Like the unit brand, each is keyed by a module-private
-// unique symbol, so the tag cannot be forged from outside this module - the only way
-// to obtain it is by passing a measurement through the matching `validate*` helper,
-// which performs the runtime check first. The brands are additive over `IMeasurement`
-// and are dropped by arithmetic (which can cross zero), so a derived result must be
-// re-validated.
+// unique symbol, so the tag cannot be forged from outside this module - the only way to
+// obtain it is by passing a measurement through a refinement (see
+// `makeMeasurementRefinement`), which performs the runtime check first. The brands are
+// additive over `IMeasurement` and are dropped by arithmetic (which can cross a bound),
+// so a derived result must be re-checked.
 declare const greaterOrEqualToZeroBrand: unique symbol;
 declare const smallerOrEqualToZeroBrand: unique symbol;
+declare const inRangeBrand: unique symbol;
 export type GreaterOrEqualToZeroBrand = {
   readonly [greaterOrEqualToZeroBrand]: true;
 };
 export type SmallerOrEqualToZeroBrand = {
   readonly [smallerOrEqualToZeroBrand]: true;
+};
+export type InRangeBrand<
+  Min extends number = number,
+  Max extends number = number,
+> = {
+  readonly [inRangeBrand]: { readonly min: Min; readonly max: Max };
 };
 
 export interface IMeasurement<Unit extends string = string> {
@@ -73,7 +80,8 @@ export interface IMeasurement<Unit extends string = string> {
   double: () => IMeasurement<Unit>;
   half: () => IMeasurement<Unit>;
   negation: (shouldNegate?: boolean) => IMeasurement<Unit>;
-  absolute: () => IMeasurement<Unit>;
+  /** Absolute value; always `>= 0`, so the result is hardened to `NonNegativeMeasurement`. */
+  absolute: () => NonNegativeMeasurement<Unit>;
   round: (precision?: number) => IMeasurement<Unit>;
   floor: () => IMeasurement<Unit>;
   ceil: () => IMeasurement<Unit>;
@@ -94,9 +102,9 @@ export type BrandedMeasurement<Unit extends string> =
   InscribedMeasurement<Unit>;
 
 /**
- * A measurement proven `>= 0` by `validateGreaterOrEqualToZero`. `NonNegativeMeasurement`
+ * A measurement proven `>= 0` by the `nonNegative` refinement. `NonNegativeMeasurement`
  * is the conventional alias for the same constraint. The brand is additive over
- * `IMeasurement` and is dropped by arithmetic, so a derived result must be re-validated.
+ * `IMeasurement` and is dropped by arithmetic, so a derived result must be re-checked.
  */
 export type GreaterOrEqualToZeroMeasurement<
   Unit extends string = string,
@@ -106,9 +114,9 @@ export type NonNegativeMeasurement<Unit extends string = string> =
   GreaterOrEqualToZeroMeasurement<Unit>;
 
 /**
- * A measurement proven `<= 0` by `validateSmallerOrEqualToZero`. `NonPositiveMeasurement`
+ * A measurement proven `<= 0` by the `nonPositive` refinement. `NonPositiveMeasurement`
  * is the conventional alias for the same constraint. The brand is additive over
- * `IMeasurement` and is dropped by arithmetic, so a derived result must be re-validated.
+ * `IMeasurement` and is dropped by arithmetic, so a derived result must be re-checked.
  */
 export type SmallerOrEqualToZeroMeasurement<
   Unit extends string = string,
@@ -116,6 +124,49 @@ export type SmallerOrEqualToZeroMeasurement<
 /** Non-positive (`<= 0`); alias of {@link SmallerOrEqualToZeroMeasurement}. */
 export type NonPositiveMeasurement<Unit extends string = string> =
   SmallerOrEqualToZeroMeasurement<Unit>;
+
+/**
+ * A measurement proven within an inclusive numeric range by an `inRange(min, max)`
+ * refinement. The brand carries the literal bounds, so `InRangeMeasurement<'px', 0, 10>`
+ * is distinct from `InRangeMeasurement<'px', 0, 5>`. Assignability is by exact bounds, not
+ * range containment (TypeScript cannot compare numeric literals).
+ */
+export type InRangeMeasurement<
+  Unit extends string = string,
+  Min extends number = number,
+  Max extends number = number,
+> = IMeasurement<Unit> & InRangeBrand<Min, Max>;
+
+/** Result of a non-throwing refinement check (`refinement.check`). */
+export type MeasurementRefinementResult<M extends IMeasurement, B> =
+  | { ok: true; value: M & B }
+  | { ok: false; value: M; error: string };
+
+/**
+ * The quartet a value-constraint refinement exposes, built by
+ * `makeMeasurementRefinement`. `nonNegative` / `nonPositive` / `inRange(...)` are
+ * instances. `B` is the constraint brand the refinement applies.
+ */
+export interface MeasurementRefinement<B> {
+  /** Non-throwing guard; narrows to the brand on success. */
+  is: <M extends IMeasurement>(
+    measurement: M,
+  ) => measurement is M & B;
+  /** Throws if the constraint fails; otherwise returns the branded measurement. */
+  ensure: <M extends IMeasurement>(
+    measurement: M,
+    context?: string,
+  ) => M & B;
+  /** Non-throwing; returns an ok/error result. */
+  check: <M extends IMeasurement>(
+    measurement: M,
+  ) => MeasurementRefinementResult<M, B>;
+  /** Returns the measurement if valid, else the fallback (default: a known-good value). */
+  hardenWith: <M extends IMeasurement>(
+    measurement: M,
+    fallback?: M & B,
+  ) => M & B;
+}
 
 export type UnitHelper<Unit extends string = string> = ((
   value: number,
@@ -152,8 +203,10 @@ export const {
   hasCssMethod,
   assertUnit,
   assertCondition,
-  validateGreaterOrEqualToZero,
-  validateSmallerOrEqualToZero,
+  makeMeasurementRefinement,
+  nonNegative,
+  nonPositive,
+  inRange,
   getErrorConfig,
   setErrorConfig,
 } = coreApi;

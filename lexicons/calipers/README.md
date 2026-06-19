@@ -4,7 +4,7 @@
 [![types](https://img.shields.io/npm/types/@css-bookends/css-calipers.svg)](https://www.npmjs.com/package/@css-bookends/css-calipers)
 [![license](https://img.shields.io/npm/l/@css-bookends/css-calipers.svg)](./LICENSE.txt)
 
-**CSS is code. Treat it that way.**  
+**CSS is code. Treat it that way.**
 Compile-time unit safety for numeric, unit-bearing CSS values, with no surprises at runtime.
 
 ```ts
@@ -12,21 +12,16 @@ Compile-time unit safety for numeric, unit-bearing CSS values, with no surprises
 const match = base.match(/^(-?\d*\.?\d+)([a-z%]+)$/i);
 if (!match) throw new Error(`Bad measurement: ${base}`);
 const [, numStr, unit] = match;
-const num = parseFloat(numStr);
-const pad = `${num + 4}${unit}`;   // and nobody checked that `unit` matches what the caller expects
+const pad = `${parseFloat(numStr) + 4}${unit}`; // nobody checked that `unit` is what the caller expects
 
 // After: typed math, units enforced by the compiler
 const base = m(8);                 // or m(8, "rem"), m(1.5, "em"), etc.
 const pad = base.add(4).css();     // type error if units don't match
 ```
 
-A small TypeScript library for **type-safe CSS measurements**. Do arithmetic on real numbers with the unit attached, let the compiler catch `px`-vs-`rem` mistakes, and emit a CSS string only at the edge.
-
-At a glance:
-
-- Create measurements with `m` from a number and a unit; if you omit the unit, it defaults to `px` and is typed as the px measurement type.
-- Do unit-safe math with methods like `add` and `multiply`, then call `.css()`
-  at the edge to get a CSS string (for example "10px").
+A small TypeScript library for **type-safe CSS measurements**. Do arithmetic on real numbers
+with the unit attached, let the compiler catch `px`-vs-`rem` mistakes, and emit a CSS string
+only at the edge.
 
 ## Install
 
@@ -34,450 +29,129 @@ At a glance:
 npm install @css-bookends/css-calipers
 ```
 
----
-
 ## Quick start
 
 ```ts
 import { m } from "@css-bookends/css-calipers";
 
-// Declare vars
-const paddingBase = m(4); // defaults to px (and is typed as a px measurement) when no unit is specified
-const rotation = m(45, "deg"); // equivalent to a dedicated helper: mDeg(45)
+const paddingBase = m(4);          // defaults to px (typed as a px measurement)
+const rotation = m(45, "deg");     // equivalent to mDeg(45)
 
-// Do safe arithmetic
-const margins = paddingBase.add(4);
-const offset = paddingBase.add(margins).multiply(2).subtract(1);
+// Unit-safe arithmetic
+const offset = paddingBase.add(paddingBase.add(4)).multiply(2).subtract(1);
 
-// Emit only at the end in CSS (at runtime or in a build step)
+// Emit CSS only at the edge
 const style = {
-  padding: paddingBase.css(),
-  transform: `rotate(${rotation.double().css()})`, // 90deg
+  padding: paddingBase.css(),                        // "4px"
+  transform: `rotate(${rotation.double().css()})`,   // "90deg"
 };
 ```
 
-If you prefer, you can also import unit helpers from dedicated subpaths. For example, `mPercent` is available from the root entrypoint and from `@css-bookends/css-calipers/units/percent`, and all unit helpers are aggregated under `@css-bookends/css-calipers/units`.
+Every standard CSS unit also has a named helper (`mPx`, `mPercent`, `mVw`, `mEm`, `mMs`,
+`mFr`, …), equivalent to `m(value, 'unit')`. Helpers are importable from the root, from
+`@css-bookends/css-calipers/units`, or per-family subpaths.
 
----
+## Value hardening
 
-## Status & support
+Many CSS values have a restricted domain (padding `>= 0`, opacity `0..1`). Refinements
+enforce the restriction at runtime **and** harden the TypeScript type, so a function can
+demand a checked value and the compiler rejects anything unchecked.
 
-- Status: stable `1.0` release of the measurement layer, part of the [CSS-Bookends](https://github.com/slafleche/css-bookends) umbrella.
-- Questions or bugs: open an issue on GitHub (see the repository link at the top of this page or in `package.json`).
-- Tooling: tested primarily with TypeScript 5.6+ on Node 18+.
-- Support: this is a solo, early-stage project. If it saves you time, you can [buy me a coffee](https://buymeacoffee.com/slafleche) to support continued work.
+```ts
+import { m, nonNegative, inRange } from "@css-bookends/css-calipers";
 
----
+nonNegative.ensure(m(-4));               // throws: value must be >= 0
+nonNegative.hardenWith(m(apiValue));     // out of range -> falls back to 0, never throws
+const opacity = inRange(0, 1).ensure(m(value)); // typed as in-range [0, 1]
+```
 
-## Media queries
-
-Media queries are not part of CSS-Calipers, which is purely the measurement
-layer. They live in
-[`@css-bookends/media-queries`](https://www.npmjs.com/package/@css-bookends/media-queries),
-a book in the [CSS-Bookends](https://github.com/slafleche/css-bookends) umbrella
-that builds on this lexicon.
-
-**Upgrading to v1?** The only change is media queries. If you never used the media
-query helper, v1 is a drop-in, nothing to change, no functional difference. If you
-did use it, switch to [CSS-Bookends](https://github.com/slafleche/css-bookends),
-which has the same measurement layer plus the media query helper and the rest of
-the umbrella.
-
----
+Built-ins: `nonNegative`, `nonPositive`, `inRange(min, max)` (bounds carried in the type).
+Each exposes `is` / `ensure` / `check` / `hardenWith`. Full guide:
+**[Value hardening](docs/hardening.md)**.
 
 ## Features
 
 - **Compile-time unit validation.** Prevents mixing incompatible units.
-- **Arithmetic safety.** Operate only within matching units; explicit when
-  converting.
-- **Explicit emission.** `.css()` outputs a typed string literal only when
-  needed.
+- **Arithmetic safety.** Operate only within matching units; conversions are explicit.
+- **Value hardening.** Runtime constraints (non-negative, ranges) that also narrow the type.
+- **Explicit emission.** `.css()` outputs a typed string only when needed.
 - **Light runtime footprint.** Near-zero cost when emitted at build time.
 - **Framework-agnostic.** Works anywhere TypeScript does.
 
-Any numeric, unit-bearing CSS value is supported: `m` accepts any unit string you’d use in CSS
-(`'px'`, `'rem'`, `'%'`, `'vw'`, `'deg'`, `'ms'`, …), and you can model new
-measurements without waiting for a dedicated helper. For convenience and better
-types, every standard CSS unit also has a named helper (for example
-`mPx`, `mPercent`, `mVw`, `mEm`, `mMs`, `mFr`), which are equivalent to calling
-`m(value, 'unit')` directly.
+`m` accepts any unit string you'd use in CSS. CSS-Calipers focuses exclusively on numeric,
+unit-bearing values; keywords (`auto`, `fit-content`), shorthand strings, `var(--token)`,
+and `calc(...)` stay as explicit strings in your styling layer (see
+[Philosophy](docs/integration.md#philosophy-and-boundaries)).
 
-CSS-Calipers focuses exclusively on numeric, unit-bearing CSS values. Keywords
-like `auto`, `fit-content`, or `max-content`, full shorthand strings,
-`var(--token)`, or `calc(...)` expressions should remain explicit strings or
-dedicated keyword types in your app or styling layer. Everything else stays as
-plain CSS (see "Philosophy & Boundaries" below for more detail). For a concrete
-example of this separation in a mixed-input helper, see
-[examples/lineHeight-normalizer.example.ts](examples/lineHeight-normalizer.example.ts),
-which keeps keywords and CSS variables as plain strings while using measurements
-for numeric values.
+## Status & support
 
----
+- Stable `1.0` release of the measurement layer, part of the
+  [CSS-Bookends](https://github.com/slafleche/css-bookends) umbrella.
+- Tested with TypeScript 5.6+ on Node 18+.
+- Solo, early-stage project. If it saves you time, you can
+  [buy me a coffee](https://buymeacoffee.com/slafleche).
+
+## Media queries
+
+Media queries are not part of CSS-Calipers (purely the measurement layer). They live in
+[`@css-bookends/media-queries`](https://www.npmjs.com/package/@css-bookends/media-queries).
+**Upgrading to v1?** The only change is media queries; if you never used the media-query
+helper, v1 is a drop-in.
 
 ## Should I use this?
 
-CSS-Calipers is a good fit if:
+A good fit if you use TypeScript and want compile-time guarantees around CSS units, or you
+have a design system where layout math and unit conversions matter. Probably overkill if
+your project has little custom layout math, relies mostly on utility classes, or doesn't use
+TypeScript.
 
-- You already use TypeScript (or plan to) and want compile-time guarantees around CSS units.
-- You have a design system or token layer where layout math and unit conversions matter.
-- You care about catching unit mismatches and layout invariants early, in dev or tests.
-  This library is opinionated about types and emitting valid CSS at the edges,
-  but intentionally loose about how you structure or apply styles in between.
+## Errors
 
-It’s probably overkill if:
-
-- Your project has minimal custom layout math or relies mostly on utility classes/framework CSS.
-- You don’t use TypeScript and aren’t looking for stronger typing around CSS values.
-- You’re comfortable relying on manual discipline instead of typed measurements for units.
-
----
-
-### Layout tokens example
-
-```ts
-import { m, mPercent, mVw, mVh, assertCondition } from "@css-bookends/css-calipers";
-
-// Token-style measurements (px by default)
-const spacing = m(8); // Defaults to px and is typed as a PxMeasurement
-const cardPadding = spacing.multiply(2); // 16px
-const gutter = spacing.multiply(1.5); // 12px
-
-// Responsive bounds expressed in other units
-const minWidthPercent = mPercent(75); // 75%; same as m(75, "%")
-const maxWidthViewport = mVw(100); // 100vw; same as m(100, "vw")
-
-// Derived content width in px
-const contentBase = m(320);
-const minCardWidth = m(260);
-const maxCardWidth = m(360);
-
-// In real code, these bounds typically come from tokens or configuration,
-// so keeping the clamp in measurement space ensures units stay consistent.
-const cardWidth = contentBase.clamp(minCardWidth, maxCardWidth);
-
-// Unitless ratio you can reuse elsewhere
-const ratio = contentBase.getValue() / spacing.getValue(); // returns a number, no unit
-
-// Apply ratio to a different unit family
-const heroHeight = mVh(40).multiply(ratio);
-
-// Invalid arithmetic (different units) fails at compile time
-const exampleError = cardWidth.add(heroHeight); // ❌ Type error (px vs vh) see error handling below
-
-// Use plain numbers where they are just counts
-const columns = 3;
-
-// In development, enforce simple invariants so layout mistakes fail fast.
-// In production, you can either rely on earlier validation or add a separate
-// fallback path if this invariant is ever broken.
-if (process.env.NODE_ENV !== "production") {
-  assertCondition(
-    () => columns > 0,
-    "cardGridStyles: columns must be greater than zero",
-  );
-}
-
-// Compose a simple grid layout
-const cardGridStyles = {
-  display: "grid",
-  gap: gutter.css(),
-  // Keep fraction units as plain CSS alongside measurement-derived values
-  gridTemplateColumns: `repeat(${columns}, 1fr)`,
-  // width driven by card width + gutters
-  width: cardWidth
-    .multiply(columns)
-    .add(gutter.multiply(columns - 1))
-    .css(),
-  // container bounds in percent/viewport units
-  minWidth: minWidthPercent.css(),
-  maxWidth: maxWidthViewport.css(),
-  // derived hero height based on px ratio, expressed in vh and used inside a calc() string
-  // calc() stays plain CSS; CSS-Calipers only provides the numeric pieces
-  minHeight: `calc(${heroHeight.css()} + 10vh)`,
-};
-```
-
----
-
-## Do custom checks your way
-
-CSS-Calipers will happily enforce units anywhere you choose, but it stays
-unopinionated about where those guards live. Drop assertions in a component, in
-a theme override, hardcode a debug routine, or wire a global invariant; the
-structure is up to you:
-
-```ts
-import { assertMatchingUnits } from "@css-bookends/css-calipers";
-import { formTokens } from "@/tokens/forms.tokens";
-
-if (process.env.NODE_ENV !== "production") {
-  assertMatchingUnits(
-    formTokens.field.paddingBlock,
-    formTokens.field.paddingInline,
-    "Form control padding mismatch",
-  );
-}
-```
-
-You can apply the same checks globally (e.g., during app bootstrap), only
-inside the components that need them, or in dedicated test helpers. For more
-complete patterns, see the examples folder: the validation unit-tests example
-([examples/validation-unit-tests.example.ts](examples/validation-unit-tests.example.ts)) shows how to
-enforce spacing token invariants in a test suite, and the validation and runtime
-checks example ([examples/validation-and-runtime-checks.example.ts](examples/validation-and-runtime-checks.example.ts))
-shows how to apply dev-only guards around shared tokens in two different
-consumers (an HTML snippet and a style object) using the same line-height
-measurement.
-
----
-
-## Error behavior
-
-- Operations are fail-fast: when you call helpers like `add`, `divide`, `clamp`,
-  `measurementMin` / `measurementMax`, or the assertion helpers with invalid
-  input (for example, mismatched units or non-finite values), CSS-Calipers
-  throws a normal `Error`.
-- Error messages include the operation name (for example,
-  `css-calipers.Measurement.divide` or `css-calipers.assertMatchingUnits`), the
-  relevant values/units, and any context string you pass in.
-- The library does not catch these errors for you. You choose where to place
-  assertions and where (if anywhere) to catch and handle exceptions.
-- In production, a common pattern is to wrap assertions in dev-only guards
-  (such as `if (process.env.NODE_ENV !== 'production')`) or to enforce
-  invariants in tests, so checks stay cheap and predictable at runtime.
-
-For concrete uses of these errors in tests and dev-only guards, see
-`TESTING.md` and the validation examples in
-[examples/validation-unit-tests.example.ts](examples/validation-unit-tests.example.ts) and
-[examples/validation-and-runtime-checks.example.ts](examples/validation-and-runtime-checks.example.ts).
-
----
-
-## Common errors
-
-### Non-finite measurement value
-
-Example
-
-```
-css-calipers.m: Non-finite measurement value: undefined [code=CALIPERS_E_NONFINITE | helper=m | inputs=value=undefined, unit=px | stack=...]
-```
-
-What it means
-
-- A measurement was constructed with undefined, NaN, or Infinity.
-
-How to fix
-
-- Provide a real numeric value and a unit (m(12), m(12, "px")).
-- Add a context label so the error points to the calling helper or token (m(12, { context: "tokens.cardWidth" })).
-
-### Unit mismatch
-
-Example
-
-```
-css-calipers.assertMatchingUnits: measurement unit mismatch: px vs em [code=CALIPERS_E_UNIT_MISMATCH]
-```
-
-What it means
-
-- You mixed units without an explicit conversion.
-
-How to fix
-
-- Normalize units at the source (convert em to px or vice versa).
-- Add an assertMatchingUnits call where the values enter your system.
-
-### Divide by zero
-
-Example
-
-```
-css-calipers.Measurement.divide: Cannot divide 10px by zero [code=CALIPERS_E_DIVIDE_BY_ZERO]
-```
-
-What it means
-
-- You attempted to divide by zero in a measurement operation.
-
-How to fix
-
-- Guard inputs before dividing or replace zero with a safe fallback.
-
-### Clamp bounds
-
-Example
-
-```
-css-calipers.Measurement.clamp: clamp: min (20px) must be <= max (12px) [code=CALIPERS_E_CLAMP_INVALID_RANGE]
-```
-
-What it means
-
-- The clamp minimum is greater than the clamp maximum.
-
-How to fix
-
-- Ensure min and max come from the same source or swap them before calling clamp.
-
-### Stack hints and configuration
-
-For m and unit helpers, errors include a trimmed stack hint in non-production by default.
-You can disable or force stack hints globally:
-
-```
-import { setErrorConfig } from "@css-bookends/css-calipers";
-
-// Disable stack hints everywhere (for production).
-setErrorConfig({ stackHints: "off" });
-
-// Force stack hints everywhere (useful in dev or tests).
-setErrorConfig({ stackHints: "on" });
-```
-
----
+Operations are fail-fast: invalid input (mismatched units, non-finite values, bad clamp
+bounds, failed constraints) throws a normal `Error` with the operation name, the values, and
+a structured code (for example `CALIPERS_E_UNIT_MISMATCH`). You choose where to place
+assertions and whether to catch. Stack hints and per-code details: **[Errors](docs/errors.md)**.
 
 ## Factory entrypoint (optional)
 
-If you want instance-scoped configuration and a single re-export surface, use
-the factory entrypoint. The instance includes core helpers and unit helpers.
+For instance-scoped configuration and a single re-export surface:
 
-```
+```ts
 import { createCalipers } from "@css-bookends/css-calipers/factory";
 
-const calipers = createCalipers({
-  errorConfig: { stackHints: "on" },
-});
-
+const calipers = createCalipers({ errorConfig: { stackHints: "on" } });
 export const { m, mPx, units } = calipers;
 ```
 
-See [examples/factory-wrapper.example.ts](examples/factory-wrapper.example.ts)
-for a wrapper module you can re-export across your project.
+See [examples/factory-wrapper.example.ts](examples/factory-wrapper.example.ts).
 
----
+## Philosophy
 
-## Co-existing with other systems
+Measurement math lives here; string composition lives elsewhere. `.css()` is an edge, not a
+habit. Numbers are operands, not values (no unit, no measurement). Keywords and
+`var(--token)` coexist but stay outside the library. Details and integration patterns:
+**[Integration & philosophy](docs/integration.md)**.
 
-You don’t have to convert everything at once, or at all. If it fits your setup,
-you can write small adapters that accept existing CSS strings, CSS-Calipers
-measurements, or plain numbers and turn them into CSS values. CSS-Calipers can
-be dropped into an existing styling system or used from the ground up; it
-focuses narrowly on numeric, unit-bearing values and leaves the rest of your
-styling approach up to you. For a more realistic adapter pattern that
-normalizes mixed inputs (including CSS variables) into a single css-like value,
-see the line-height normalizer example referenced below.
+## Docs
 
-## Advanced
+- [Value hardening](docs/hardening.md) — non-negative, non-positive, and typed ranges.
+- [Errors](docs/errors.md) — error behavior, common codes, stack hints.
+- [Integration & philosophy](docs/integration.md) — worked example, patterns, boundaries.
+- [Measurements core](README_MEASUREMENT.md) — the measurement API in depth.
+- [Testing](TESTING.md) — testing patterns and dev-only guards.
 
-### String Literal Type Exclusion
+## Examples
 
-When helpers must _exclude_ CSS-Calipers–emitted numeric, unit-bearing CSS values from a keyword union,
-use the exported `MeasurementString` type together with your existing CSS
-property typings (for example, the `Property` types from the `csstype`
-package):
+The `examples/` folder contains non-published usage sketches:
 
-```ts
-import type { MeasurementString } from "@css-bookends/css-calipers";
-import type { Property } from "csstype";
-
-type SpacingKeyword = Exclude<
-  Extract<Property.Margin, string>,
-  MeasurementString
->;
-```
-
-This lets helpers stay strict: `IMeasurement` for numeric, unit-bearing CSS values; targeted string
-keywords for symbolic CSS values, without reintroducing vague unions like
-`MeasurementLike`.
-
-### Integration Patterns
-
-- **Typed helpers:** Accept either `IMeasurement` or a constrained keyword type,
-  never a generic string.
-- **Pre-emission transforms:** Compose all math in CSS-Calipers, emit once at
-  the style boundary.
-- **Build-time pipelines:** Run measurement math in Node or a build step
-  (scripts, codegen, or bundler plugins) and emit plain CSS or tokens for your
-  existing styling system so runtime only sees static values.
-- **Unit guards in debug:** Use `assertUnit()` in dev-only blocks to confirm
-  consistency between related measurements.
-- **CSS variables:** Pass CSS-Calipers `.css()` output into style layers that
-  interpolate them, but don’t try to store `var(--token)` inside the library.
-
----
-
-## Philosophy & Boundaries
-
-- **Measurement math lives here; string composition lives elsewhere.**  
-  Use CSS-Calipers for unit-aware calculations, then hand results to
-  helpers/adapters that emit CSS literals. Keep `calc()`/`linear-gradient()` logic outside
-  the library so measurement objects remain pure.
-
-- **`.css()` at runtime is an edge, not a habit.**  
-  You can call `.css()` at runtime, but prefer emitting once to avoid hot-path
-  string churn.
-
-- **Numbers are operands, not CSS-Calipers values.**  
-  You cannot create a CSS-Calipers value without a unit. Pass plain numbers as
-  operands (`add`, `subtract`, `multiply`, `divide`) or combine with another
-  `IMeasurement`, but never store bare numbers inside library state. If a value
-  lacks both number and unit, CSS-Calipers won’t track it; you own whatever
-  logic wraps it.
-
-- **Model keywords explicitly (not “escape hatches”).**  
-  If a helper needs symbolic CSS (e.g., `'auto'`, `'fit-content'`), define a
-  precise keyword type and purposely exclude the emitted string type from
-  CSS-Calipers so numeric, unit-bearing CSS values remain the default path.
-
-- **CSS custom properties coexist; they don’t mix.**  
-  Third-party primitives exposing `var(--token)` should keep those values as raw
-  CSS strings. CSS-Calipers is intentionally narrow: it works with numeric
-  measurements and unit-safe conversions, not tokens or CSS variables. You can
-  still use `var(...)` and token strings anywhere in your styling system; they
-  just sit outside the library. If you want those values to flow through
-  CSS-Calipers, first extract the numeric value and unit in your own code and
-  then pass that measurement into the library.
-
-## Using CSS-Calipers in a larger styling system
-
-CSS is inherently flexible: the same property can accept numbers, unit-bearing
-strings, keywords, and CSS variables. CSS-Calipers is one focused piece of that
-ecosystem. It keeps the numeric, unit-bearing parts typed and predictable, and
-lets the rest of your styling system own tokens, variables, and higher-level
-APIs.
-
-For a worked example of this pattern, see
-[examples/lineHeight-normalizer.example.ts](examples/lineHeight-normalizer.example.ts). It shows a helper that accepts a
-`lineHeight` value from a CMS or configuration (numbers, numeric strings with
-units, keywords like `"normal"`, or CSS variables such as
-`"var(--body-line-height)"`) and normalizes them into a value with a `.css()`
-method. CSS-Calipers only participates when there is a concrete measurement
-(numbers and units); keywords and CSS variables remain plain CSS strings owned
-by your styling layer. That’s the intended scope: CSS will always be a mix of
-values, but the library gives you a tight, unit-safe boundary for the numeric
-parts inside a broader styling solution.
-
-### Module guides
-
-Deeper guides live alongside this README:
-
-- Measurements core: [README_MEASUREMENT.md](README_MEASUREMENT.md)
-- Media queries: now in [`@css-bookends/media-queries`](https://github.com/slafleche/css-bookends)
-
-### Further examples in this repo
-
-The `examples/` folder contains a few non-published usage sketches:
-
-- [examples/lineHeight-normalizer.example.ts](examples/lineHeight-normalizer.example.ts) &mdash;
-  mixed input normalization for `lineHeight` (numbers, strings, CSS variables)
-  into a single value with a `.css()` method.
-- [examples/validation-unit-tests.example.ts](examples/validation-unit-tests.example.ts) &mdash;
-  simple unit tests that enforce spacing token invariants (shared units and
-  small &le; large).
-- [examples/validation-and-runtime-checks.example.ts](examples/validation-and-runtime-checks.example.ts) &mdash;
-  dev-only validation around shared tokens in two different consumers (HTML
-  string and style object) using the same line-height measurement.
-- [examples/factory-wrapper.example.ts](examples/factory-wrapper.example.ts) &mdash;
-  instance-scoped factory wrapper that re-exports the helpers.
+- [hardening-fallback](examples/hardening-fallback.example.ts) — harden an API value with
+  `ensure` / `is` / `hardenWith`.
+- [hardening-range](examples/hardening-range.example.ts) — a typed `inRange` bound flowing
+  into a function that demands it.
+- [lineHeight-normalizer](examples/lineHeight-normalizer.example.ts) — mixed-input
+  normalization (numbers, strings, CSS variables) into a value with `.css()`.
+- [validation-unit-tests](examples/validation-unit-tests.example.ts) — enforcing spacing
+  token invariants in tests.
+- [validation-and-runtime-checks](examples/validation-and-runtime-checks.example.ts) —
+  dev-only validation across two consumers using the same measurement.
+- [factory-wrapper](examples/factory-wrapper.example.ts) — instance-scoped factory wrapper.

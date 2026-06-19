@@ -1,7 +1,11 @@
 import type {
   GreaterOrEqualToZeroBrand,
   IMeasurement,
+  InRangeBrand,
   InscribedMeasurement,
+  MeasurementRefinement,
+  MeasurementRefinementResult,
+  NonNegativeMeasurement,
   SmallerOrEqualToZeroBrand,
   UnitAssertion,
   UnitGuard,
@@ -249,8 +253,12 @@ export const createCoreApi = (errorStore: ErrorConfigStore) => {
       return shouldNegate ? this.#clone(-this.#value) : this;
     }
 
-    absolute(): Measurement<Unit> {
-      return this.#clone(Math.abs(this.#value));
+    absolute(): NonNegativeMeasurement<Unit> {
+      // Math.abs is always >= 0, so the result is hardened to NonNegativeMeasurement
+      // (the governing rule: a runtime restriction must also harden the type).
+      return this.#clone(
+        Math.abs(this.#value),
+      ) as unknown as NonNegativeMeasurement<Unit>;
     }
 
     round(precision = 0): Measurement<Unit> {
@@ -507,34 +515,108 @@ export const createCoreApi = (errorStore: ErrorConfigStore) => {
     }
   };
 
-  // Type-hardening pass-through validators: run any measurement through one to assert a
-  // value constraint at runtime and narrow it to the matching constraint brand. They add
-  // the brand without changing the value; arithmetic returns plain `IMeasurement`, so a
-  // derived result drops the brand and must be re-validated.
-  const validateGreaterOrEqualToZero = <M extends IMeasurement>(
-    measurement: M,
-    context?: string,
-  ): M & GreaterOrEqualToZeroBrand => {
-    assertCondition(
-      measurement.getValue() >= 0,
-      `Expected a measurement >= 0 (got ${measurement.css()})${
-        context === undefined ? '' : ` [${context}]`
-      }.`,
-    );
-    return measurement as M & GreaterOrEqualToZeroBrand;
+  // Value-constraint refinements. One factory builds the quartet (is / ensure / check /
+  // hardenWith) from a numeric predicate and narrows to a constraint brand. The brand is
+  // additive over `IMeasurement` and is dropped by arithmetic (which can cross a bound),
+  // so a derived result must be re-checked. `nonNegative` / `nonPositive` / `inRange(...)`
+  // are the built-ins.
+  const makeMeasurementRefinement = <B>(spec: {
+    predicate: (value: number) => boolean;
+    message: (measurement: IMeasurement) => string;
+    defaultFallback?: number;
+  }): MeasurementRefinement<B> => {
+    const is = <M extends IMeasurement>(
+      measurement: M,
+    ): measurement is M & B => spec.predicate(measurement.getValue());
+
+    const ensure = <M extends IMeasurement>(
+      measurement: M,
+      context?: string,
+    ): M & B => {
+      if (!is(measurement)) {
+        throwHelperError({
+          operation: 'css-calipers.refinement.ensure',
+          params: [
+            measurement,
+          ],
+          message: spec.message(measurement),
+          context,
+          details: { code: 'CALIPERS_E_CONSTRAINT' },
+        });
+      }
+      // A negated generic type-guard does not narrow the fall-through to `M & B`, so the
+      // brand cast is necessary here (the runtime check above guarantees it holds).
+      return measurement as M & B;
+    };
+
+    const check = <M extends IMeasurement>(
+      measurement: M,
+    ): MeasurementRefinementResult<M, B> =>
+      is(measurement)
+        ? { ok: true, value: measurement }
+        : {
+            ok: false,
+            value: measurement,
+            error: spec.message(measurement),
+          };
+
+    const hardenWith = <M extends IMeasurement>(
+      measurement: M,
+      fallback?: M & B,
+    ): M & B => {
+      if (is(measurement)) return measurement;
+      if (fallback !== undefined) return fallback;
+      const { defaultFallback } = spec;
+      if (defaultFallback !== undefined) {
+        return createMeasurement(
+          defaultFallback,
+          measurement.getUnit(),
+        ) as unknown as M & B;
+      }
+      return throwHelperError({
+        operation: 'css-calipers.refinement.hardenWith',
+        params: [
+          measurement,
+        ],
+        message:
+          'no fallback provided and this refinement has no default fallback',
+        details: { code: 'CALIPERS_E_CONSTRAINT' },
+      });
+    };
+
+    return { is, ensure, check, hardenWith };
   };
 
-  const validateSmallerOrEqualToZero = <M extends IMeasurement>(
-    measurement: M,
-    context?: string,
-  ): M & SmallerOrEqualToZeroBrand => {
+  const nonNegative =
+    makeMeasurementRefinement<GreaterOrEqualToZeroBrand>({
+      predicate: (value) => value >= 0,
+      message: (measurement) =>
+        `expected a measurement >= 0 (got ${measurement.css()})`,
+      defaultFallback: 0,
+    });
+
+  const nonPositive =
+    makeMeasurementRefinement<SmallerOrEqualToZeroBrand>({
+      predicate: (value) => value <= 0,
+      message: (measurement) =>
+        `expected a measurement <= 0 (got ${measurement.css()})`,
+      defaultFallback: 0,
+    });
+
+  const inRange = <Min extends number, Max extends number>(
+    min: Min,
+    max: Max,
+  ): MeasurementRefinement<InRangeBrand<Min, Max>> => {
     assertCondition(
-      measurement.getValue() <= 0,
-      `Expected a measurement <= 0 (got ${measurement.css()})${
-        context === undefined ? '' : ` [${context}]`
-      }.`,
+      min <= max,
+      `inRange: min (${min}) must be <= max (${max})`,
     );
-    return measurement as M & SmallerOrEqualToZeroBrand;
+    return makeMeasurementRefinement<InRangeBrand<Min, Max>>({
+      predicate: (value) => value >= min && value <= max,
+      message: (measurement) =>
+        `expected a measurement in [${min}, ${max}] (got ${measurement.css()})`,
+      defaultFallback: min,
+    });
   };
 
   return {
@@ -551,8 +633,10 @@ export const createCoreApi = (errorStore: ErrorConfigStore) => {
     hasCssMethod,
     assertUnit,
     assertCondition,
-    validateGreaterOrEqualToZero,
-    validateSmallerOrEqualToZero,
+    makeMeasurementRefinement,
+    nonNegative,
+    nonPositive,
+    inRange,
     getErrorConfig: errorStore.getErrorConfig,
     setErrorConfig: errorStore.setErrorConfig,
   } as const;

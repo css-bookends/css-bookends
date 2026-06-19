@@ -6,7 +6,6 @@ import {
 
 import {
   assertPercentMeasurement,
-  type GreaterOrEqualToZeroMeasurement,
   type IMeasurement,
   isMeasurement,
   isPercentMeasurement,
@@ -16,15 +15,10 @@ import {
   type MeasurementString,
   mPercent,
   mPx,
-  type NonNegativeMeasurement,
-  type NonPositiveMeasurement,
   type PercentMeasurement,
   type PxMeasurement,
-  type SmallerOrEqualToZeroMeasurement,
   type UnitAssertion,
   type UnitGuard,
-  validateGreaterOrEqualToZero,
-  validateSmallerOrEqualToZero,
 } from '../../dist/esm';
 
 const implicit = m(10);
@@ -137,33 +131,4 @@ type PercentAssert = UnitAssertion<typeof mPercent>;
 expectAssignable<PercentGuard>(isPercentMeasurement);
 expectAssignable<PercentAssert>(assertPercentMeasurement);
 
-// Value-constraint validators narrow to the matching brand, preserving unit + value.
-const geZero = validateGreaterOrEqualToZero(m(4, 'px'));
-expectAssignable<GreaterOrEqualToZeroMeasurement<'px'>>(geZero);
-expectAssignable<NonNegativeMeasurement<'px'>>(geZero); // alias of the same brand
-expectAssignable<IMeasurement<'px'>>(geZero);
-
-const leZero = validateSmallerOrEqualToZero(m(-4, 'px'));
-expectAssignable<SmallerOrEqualToZeroMeasurement<'px'>>(leZero);
-expectAssignable<NonPositiveMeasurement<'px'>>(leZero); // alias of the same brand
-expectAssignable<IMeasurement<'px'>>(leZero);
-
-// A plain measurement carries neither constraint brand.
-expectNotAssignable<NonNegativeMeasurement<'px'>>(m(4, 'px'));
-expectNotAssignable<NonPositiveMeasurement<'px'>>(m(4, 'px'));
-
-// The two constraints are distinct brands (>= 0 is not <= 0).
-expectNotAssignable<NonPositiveMeasurement<'px'>>(geZero);
-expectNotAssignable<NonNegativeMeasurement<'px'>>(leZero);
-
-// Arithmetic drops the brand (a derived value can cross zero) - it must be re-validated.
-expectNotAssignable<NonNegativeMeasurement<'px'>>(
-  geZero.subtract(m(2, 'px')),
-);
-
-// A function can demand the hardened type and reject a plain measurement at compile time.
-declare function needsNonNegative(
-  value: NonNegativeMeasurement<'px'>,
-): void;
-needsNonNegative(geZero);
-expectError(needsNonNegative(m(4, 'px')));
+// Value-constraint refinements have their own type suite in refinement.test-d.ts.
