@@ -5,6 +5,7 @@ import type {
   Side,
   SpacingInput,
   SpacingKeyword,
+  SpacingStore,
 } from '@css-bookends/spacing';
 
 /**
@@ -14,6 +15,16 @@ import type {
  * lexicon's `spacing-spec.md` for the shared contract.
  */
 export type MarginInput = SpacingInput<
+  IMeasurement,
+  SpacingKeyword,
+  AnchorSize
+>;
+
+/**
+ * The margin BOOK's canonical store: `MarginInput` spelled out per physical side (partial -
+ * only the sides the input specified). Produced by `storeMargin`.
+ */
+export type MarginStore = SpacingStore<
   IMeasurement,
   SpacingKeyword,
   AnchorSize
