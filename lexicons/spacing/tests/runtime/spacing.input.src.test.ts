@@ -2,7 +2,7 @@ import { m } from '@css-bookends/css-calipers';
 import { describe, expect, it } from 'vitest';
 
 import { anchorSize, parseSpacing } from '../../src/spacing';
-import type { SpacingKeyword } from '../../src/types';
+import type { SpacingKeyword, SpacingObject } from '../../src/types';
 
 /*
  * INPUT step of the spacing LEXICON (shared guts of the padding/margin books). The
@@ -44,15 +44,25 @@ describe('spacing input — validates and returns the input (shorthand intact)',
     const o = { top: m(2), left: m(0) };
     expect(parseSpacing(o)).toBe(o);
   });
+
+  it('accepts four different units across the sides', () => {
+    const o: SpacingObject = {
+      top: m(1, 'px'),
+      right: m(2, 'em'),
+      bottom: m(3, 'rem'),
+      left: m(4, 'vw'),
+    };
+    expect(parseSpacing(o)).toBe(o);
+  });
 });
 
 describe('spacing input — invalid input throws', () => {
   it('throws on an unknown scalar string', () => {
-    expect(() => parseSpacing('huge' as never)).toThrow();
+    expect(() => parseSpacing('invalid' as never)).toThrow();
   });
 
   it('throws on an invalid value inside the object', () => {
-    expect(() => parseSpacing({ x: 'huge' as never })).toThrow();
+    expect(() => parseSpacing({ x: 'invalid' as never })).toThrow();
   });
 
   it('throws on a non-value, non-object input', () => {

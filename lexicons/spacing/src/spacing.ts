@@ -1,4 +1,7 @@
-import { isMeasurement } from '@css-bookends/css-calipers';
+import {
+  type IMeasurement,
+  isMeasurement,
+} from '@css-bookends/css-calipers';
 
 import type {
   AnchorSize,
@@ -9,19 +12,21 @@ import type {
   SpacingInput,
   SpacingKeyword,
   SpacingPolicy,
+  SpacingStore,
   SpacingValue,
 } from './types';
 
 /* ============================================================================
- * INPUT guts of the padding/margin books, factored into the spacing LEXICON.
+ * Shared guts of the padding/margin books, factored into the spacing LEXICON. The
+ * books compose two steps from here:
  *
- * The lexicon's job is INPUT only: accept a permissive `SpacingInput` (scalar
- * shorthand or `{ x, y, top, right, bottom, left }`), VALIDATE its shape and each
- * value against the book's policy, and return it unchanged (shorthand intact).
- *
- * It does NOT spell the value out into the four sides - that resolution is the
- * book's STORAGE step (it differs slightly between padding and margin), so it lives
- * in the books, not here.
+ *   INPUT   - `parseSpacing(input, policy)`: accept a permissive `SpacingInput`
+ *             (scalar shorthand or `{ x, y, top, right, bottom, left }`), VALIDATE its
+ *             shape + each value against the book's policy, and return it unchanged.
+ *   STORAGE - `resolveSpacing(input)`: spell the shorthand out into the canonical
+ *             four-side `SpacingStore`. The spell-out mechanics are identical for
+ *             padding and margin, so they live here, shared and generic over the value
+ *             type; the value-domain differences are handled at INPUT.
  *
  * Expandable: a `SpacingPolicy` lets a book forbid `auto`, negatives, and/or
  * `anchor-size()` (the padding/margin spec split). Each flag defaults to allowed;
@@ -125,12 +130,13 @@ const checkValue = (
  * into the four sides is the book's storage step, not this.
  */
 export const parseSpacing = <
+  M extends IMeasurement = IMeasurement,
   K extends SpacingKeyword = SpacingKeyword,
   F extends AnchorSize = AnchorSize,
 >(
-  input: SpacingInput<K, F>,
+  input: SpacingInput<M, K, F>,
   policy: SpacingPolicy = {},
-): SpacingInput<K, F> => {
+): SpacingInput<M, K, F> => {
   const raw: SpacingInput = input;
 
   // scalar shorthand: a single value.
@@ -153,4 +159,49 @@ export const parseSpacing = <
   }
 
   throw new Error(`spacing: unsupported input "${String(raw)}"`);
+};
+
+/**
+ * STORAGE step (shared): spell a validated `SpacingInput` out into the canonical four-side
+ * `SpacingStore`. A scalar fills all four sides; `x`/`y` fill their axis; an explicit side
+ * overrides its axis (precedence side > axis); unset sides are omitted (partial store).
+ *
+ * Assumes the input was already validated by `parseSpacing` (parse-don't-validate): this
+ * only resolves shape, it does not re-check the value domain.
+ */
+export const resolveSpacing = <
+  M extends IMeasurement = IMeasurement,
+  K extends SpacingKeyword = SpacingKeyword,
+  F extends AnchorSize = AnchorSize,
+>(
+  input: SpacingInput<M, K, F>,
+): SpacingStore<M, K, F> => {
+  const raw: SpacingInput = input;
+
+  // scalar shorthand: every side takes the value.
+  if (isSpacingValue(raw)) {
+    return {
+      top: raw,
+      right: raw,
+      bottom: raw,
+      left: raw,
+    } as SpacingStore<M, K, F>;
+  }
+
+  // object form (raw is narrowed to SpacingObject here): axes first, then explicit sides
+  // override (precedence side > axis).
+  const store: SpacingStore = {};
+  if (raw.x !== undefined) {
+    store.left = raw.x;
+    store.right = raw.x;
+  }
+  if (raw.y !== undefined) {
+    store.top = raw.y;
+    store.bottom = raw.y;
+  }
+  if (raw.top !== undefined) store.top = raw.top;
+  if (raw.right !== undefined) store.right = raw.right;
+  if (raw.bottom !== undefined) store.bottom = raw.bottom;
+  if (raw.left !== undefined) store.left = raw.left;
+  return store as SpacingStore<M, K, F>;
 };
