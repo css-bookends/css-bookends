@@ -13,7 +13,7 @@ import {
 } from '../../src/color';
 
 /*
- * The color book's coverage MATRIX (from color-spaces.md + the modification surface).
+ * The color book's coverage MATRIX (from color-coverage.md + the modification surface).
  *
  * EMIT axis (make x emit): REAL assertions. Each cell builds a color from a make-form
  * and renders it in an emit format, then round-trips the output back to sRGB and
@@ -247,7 +247,7 @@ describe('color — alpha round-trips through alpha-capable formats', () => {
 // mixSolid/mixWithAlpha/solid/clone/chaining) is implemented and tested in
 // color.modify.src.test.ts. The cells below are the still-deferred gaps: `blend`
 // (its old semantics were a non-standard alpha hack - needs a real design) and the
-// documented gaps from color-spaces.md. Real failing placeholders (never `it.todo`).
+// documented gaps from color-coverage.md. Real failing placeholders (never `it.todo`).
 const pending = (): void => {
   expect(false).toBe(true); // pending: not implemented yet
 };

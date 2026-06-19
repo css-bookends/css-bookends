@@ -1,7 +1,7 @@
 # Backing library research (the color guts)
 
 Which library (or libraries) backs the color book's guts to get full coverage of the
-`color-spaces.md` surface and the function set in `src/color.ts`, best-in-class. The
+`color-space.md` surface and the function set in `src/color.ts`, best-in-class. The
 contract never names the library; this is purely a guts decision and is swappable.
 
 ## What we need the guts to do
