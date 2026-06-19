@@ -27,9 +27,15 @@ string like `'8px'`. Do the math in measurement space and emit a string once, wi
 
 - **Keywords:** `auto`, `fit-content`, `max-content`, `min-content`, `normal`,
   `center`, `stretch`, `baseline`, ... (model these as typed string unions).
-- **CSS custom properties:** `var(--token)`, `var(--space, 1rem)` - keep as strings.
-- **`calc(...)`:** compose the string outside calipers; calipers only provides the
-  numeric pieces (`` `calc(${m(8).css()} + 10vh)` ``).
+- **CSS custom properties:** `var(--token)`, `var(--space, 1rem)` - keep as strings;
+  calipers never parses or stores them.
+- **CSS math functions** `calc()` / `min()` / `max()` / `clamp()` (and friends):
+  **intentionally out of scope.** Compose the string outside calipers; calipers only
+  provides the numeric pieces (`` `calc(${m(8).css()} + 10vh)` ``). You MAY use CSS
+  variables inside them (`` `calc(var(--gap) + ${m(4).css()})` ``) - the whole thing stays
+  plain CSS, not a calipers value. When building a helper/book, do NOT accept or emit these
+  as input; they are not part of the helper. They coexist happily next to helper output as
+  plain CSS (you write them by hand).
 - **Shorthands / complex strings:** `linear-gradient(...)`, `url(...)`,
   `margin: 10px 20px` (build from individual measurements, do not wrap the whole).
 - **Unitless numbers:** `line-height: 1.5`, `z-index: 10`, `opacity: 0.8`,
@@ -38,6 +44,39 @@ string like `'8px'`. Do the math in measurement space and emit a string once, wi
 
 If a value is both numeric and carries a unit, it is a measurement. Everything else
 stays explicit.
+
+## Composing with plain CSS (calc / var coexistence)
+
+Because `calc()` / `min()` / `max()` / `var()` are out of scope, when a value needs one, let
+the helper produce the measurement-driven sides and hand-write the rest as plain CSS. The
+cascade and partial application keep this clean (these are possibilities, not prescribed
+best practice):
+
+- **Override after the shorthand.** Emit the full shorthand from the helper, then override
+  one side with a plain-CSS longhand on the next line - the later declaration wins:
+
+  ```css
+  margin: 8px 16px;                   /* helper output */
+  margin-left: calc(var(--x) + 4px);  /* hand-written, wins */
+  ```
+
+- **Partial helper + plain longhand.** Apply the helper to a subset of sides and hand-write
+  the remaining side as a longhand:
+
+  ```css
+  /* helper emits top + the inline (left/right) sides */
+  margin-bottom: calc(var(--footer) - 8px);  /* hand-written */
+  ```
+
+The measurement-driven sides stay type-safe; the calc / var side stays plain CSS.
+
+**Prefer longhand output.** A side-emitting book (padding, margin, inset, …) should default
+to emitting **longhands**, not the shorthand. Longhands only touch the sides you specify,
+whereas the shorthand resets the omitted sides - so longhands give finer override control
+and clean partial application (leave a side out, hand-write it with `calc()`/`var()`).
+Longhand's usual downside, verbosity, does not apply here: the helper generates the output,
+so the author writes nothing extra (the verbosity is generated CSS only). Shorthand is at
+most an opt-in for compact generated output.
 
 ## Create
 
