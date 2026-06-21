@@ -7,7 +7,7 @@ import {
 } from '../../src/padding';
 
 /*
- * The padding BOOK's factory (the OUTPUT step wired through bookpress): publishBookPadding binds
+ * The padding BOOK's factory (the OUTPUT step wired through self-publish): publishBookPadding binds
  * a book; calling it runs input -> storage -> output. The input gate is INHERITED through the
  * factory, so negatives / `auto` / `anchor-size()` throw on a book call.
  */

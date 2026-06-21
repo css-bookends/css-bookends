@@ -3,13 +3,12 @@ import path from 'node:path';
 
 const ROOT = process.cwd();
 
-// TEMP: packages excluded from ESLint + tsc in the hook while they are
-// rewritten against the new bookpress publishBook API. Staged files in these
-// packages are still Prettier-formatted. Empty this set to restore (and remove
-// the matching `--filter='!...'` flags from the root package.json scripts).
+// TEMP: color is excluded from ESLint + tsc in the hook pending its documented
+// culori-rewrite gaps. Staged files are still Prettier-formatted. Empty this set
+// to restore (and remove the matching `--filter='!...'` flags from the root
+// package.json scripts). borders was restored once migrated onto self-publish.
 const TEMP_EXCLUDED = new Set([
   '@css-bookends/color',
-  '@css-bookends/borders',
 ]);
 
 // Shell-safe quoting for file paths passed on a command line.

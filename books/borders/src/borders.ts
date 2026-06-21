@@ -1,11 +1,16 @@
-import { bookPress, type Press } from '@css-bookends/bookpress';
-import { color, type ColorWrapper } from '@css-bookends/color';
+import {
+  publishBookColor,
+  type ResolvedColor,
+} from '@css-bookends/color';
 import { type IMeasurement, m } from '@css-bookends/css-calipers';
+import {
+  type Manuscript,
+  publishBook,
+} from '@css-bookends/self-publish';
 
 import type {
   Border,
   BorderOutput,
-  Borders,
   BordersConfig,
   BordersInput,
   BordersSpec,
@@ -19,7 +24,10 @@ import type {
   Side,
 } from './types';
 
-/* The book's built-in defaults. A project overrides these via makeBorders(config). */
+// The book binds its own color factory for built-in defaults (e.g. the default black).
+const color = publishBookColor();
+
+/* The book's built-in defaults. A project overrides these via publishBookBorders({ config }). */
 export const defaultConfig: BordersConfig = {
   width: m(1),
   style: 'solid',
@@ -28,12 +36,12 @@ export const defaultConfig: BordersConfig = {
   output: 'long',
 };
 
-/* ---------- internal store (page 2) ---------- */
+/* ---------- internal store (storage) ---------- */
 
 interface EdgeData {
   width: IMeasurement;
   style: BorderStyle;
-  color: ColorWrapper;
+  color: ResolvedColor;
   omitted: boolean;
 }
 
@@ -86,7 +94,7 @@ const renderCorner = (value: CornerRadius | undefined): string => {
   return (value as IMeasurement).css();
 };
 
-/* ---------- input (page 1): raw -> store ---------- */
+/* ---------- input: raw -> store ---------- */
 
 function applyEdge(
   edges: Record<Side, EdgeData>,
@@ -240,7 +248,7 @@ function parse(
   return { edges, corners };
 }
 
-/* ---------- output (page 3): store -> navigable ResolvedBorders ---------- */
+/* ---------- output: store -> navigable ResolvedBorders ---------- */
 
 function build(store: Store): ResolvedBorders {
   const edgeCss = (side: Side): BorderOutput => {
@@ -290,9 +298,9 @@ function build(store: Store): ResolvedBorders {
   };
 }
 
-/* ---------- the press + the factory ---------- */
+/* ---------- the manuscript + the factory ---------- */
 
-const bordersPress: Press<
+const bordersManuscript: Manuscript<
   BordersInput,
   Store,
   ResolvedBorders,
@@ -301,16 +309,12 @@ const bordersPress: Press<
   defaults: defaultConfig,
   input: (raw, cfg) => parse(raw, cfg),
   storage: (store) => store,
-  outputs: { default: (store) => build(store) },
-  default: 'default',
+  output: (store) => build(store),
 };
 
 /**
- * makeBorders: the borders factory. Give it defaults + output format, get a
- * borders book. A bare call renders the global defaults.
+ * publishBookBorders: the borders factory. `publishBookBorders({ config })` binds a
+ * borders book (defaults + output format); calling the book renders a `ResolvedBorders`.
+ * A bare book call renders the global defaults.
  */
-export function makeBorders(
-  config: Partial<BordersConfig> = {},
-): Borders {
-  return bookPress(bordersPress)({ config }) as Borders;
-}
+export const publishBookBorders = publishBook(bordersManuscript);

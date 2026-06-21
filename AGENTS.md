@@ -11,36 +11,34 @@ Every helper (lexicon or book) is produced by a factory. Consume the factory, or
 an instance the composition root made from it, never the raw helper/value-function
 imported straight from its module.
 
-- **Factory naming: `bookPress<BookName>`.** A book's factory is named with the
-  `bookPress` prefix plus the book's name, e.g. `bookPressColours`,
-  `bookPressBorders`, `bookPressShadows`. The metaphor: the `bookpress` package's
-  `bookPress` presses a book from its press. Do NOT use `make*` / `create*` for a
-  book factory.
+- **Factory naming: `publishBook<BookName>`.** A book's factory is named with the
+  `publishBook` prefix plus the book's name, e.g. `publishBookColor`,
+  `publishBookBorders`, `publishBookShadows`. The engine (`@css-bookends/self-publish`)
+  exposes `publishBook`, which binds a book from its manuscript. Do NOT use
+  `make*` / `create*` for a book factory.
 
-There are two levels of composition, both of which call factories and re-export
-configured instances:
+The public surface of a package is its factory; there is no per-package default instance.
 
-- **Per-package default instance.** Each helper package ships a file that calls its
-  own factory once with the built-in defaults and exports the configured instance
-  (e.g. `lexicons/colours/src/default.ts` exports `colours = bookPressColours()`). Import
-  that instance, not the raw helper. This file is the helper's stable footprint:
-  rewire it and every call site follows.
-- **The shelf (aggregate root).** Importing `@css-bookends/shelf` gives you a file
-  that pulls in every helper's default instance and re-exports them, so one import
-  gets the whole preconfigured set. It does NOT flat re-export raw helpers, so the
-  raw value-helper is not reachable through it (e.g. `colours` and `bookPressColours` are
-  exposed; `color()` is not).
-- **Call sites use the instance** (`colours('#fff').css()`), from the shelf or the
-  package's default file, or call the factory for a differently-configured one
-  (`bookPressColours({ ... })`).
-- **Never reach past the factory** to import the underlying helper, even when it is
-  exported from its own package for the factory's use.
+- **A book package exports its `publishBook<Name>` factory** (plus value builders and
+  composition helpers where useful, e.g. `anchorSize`, or margin/padding's `parse*`/`store*`),
+  never a pre-made instance as the consumer entry. A consumer binds a book once
+  (`const color = publishBookColor()`) and calls it.
+- **The shelf (aggregate root).** Importing `@css-bookends/shelf` gives you
+  `publishShelf(config?)`, which returns every book bound in one object. It does NOT
+  re-export raw helpers, so a raw value-helper is not reachable through it.
+- **Call sites bind, then call** (`const color = publishBookColor(); color('#fff').css()`),
+  or pull a bound book off `publishShelf()`. Pass config at bind time
+  (`publishBookColor({ config })`).
+- **Never reach past the factory** to import the underlying value-helper as the consumer
+  entry, even when it is exported from its own package for the factory's use.
+- **Exception: `@css-bookends/css-calipers`** (a lexicon with a different structure) is
+  consumed directly (`m()`), not via a `publishBook` factory.
 
-Why: the factory is the override seam. It lets you rewrite any page (input,
-storage, output) or the whole press, and swap internals (libraries, sources) with
-zero changes at call sites (see `bookpress/composition.md` and `bookPress`). A direct
-import bypasses that seam and freezes every call site to one implementation, which
-is exactly what this architecture exists to prevent.
+Why: the factory is the override seam. It lets you rewrite any step (input, storage,
+output), wrap a step (onion-style), or replace the whole manuscript, and swap internals
+(libraries, sources) with zero changes at call sites (see `self-publish/composition.md`
+and `publishBook`). A direct import bypasses that seam and freezes every call site to one
+implementation, which is exactly what this architecture exists to prevent.
 
 ### Output is always `.css()` (absolute)
 
@@ -51,18 +49,18 @@ single `.css()` terminal. This is universal and not negotiable per helper.
   through `.css()`. No method may return a rendered string per format (no
   `.hex(): string`, `.toLong(): string`, etc.).
 - **The variant is a typed object, never a magic string.** Each book exports a
-  named preset namespace of typed format objects (e.g. colours `colorFormats.hex`,
-  `colorFormats.rgbLegacy`; a true book would have `borderFormats.long`). The
+  named preset namespace of typed format objects (e.g. color's `colorFormats.hex`,
+  `colorFormats.rgb`; a true book would have `borderFormats.long`). The
   format type is a discriminated union, so each variant can carry its own typed
   options. Do NOT accept a bare string literal as the format.
 - **The variant is chosen by factory config.** The output format is set at factory
-  time via the press config (`output: colorFormats.hex`). `.css()` with no
+  time via the manuscript config (`output: colorFormats.hex`). `.css()` with no
   argument renders the configured variant.
 - **Two ways to pick a one-off variant, both ending in `.css()`:**
-  - **As an argument:** `colour(x).css(colorFormats.hex)`.
-  - **As a format selector:** a method like `colour(x).hex()` that returns the
+  - **As an argument:** `color(x).css(colorFormats.hex)`.
+  - **As a format selector:** a method like `color(x).hex()` that returns the
     navigable result configured to that format (it does NOT render), so you still
-    finish with `.css()`: `colour(x).hex().css()`. Selectors return the helper's
+    finish with `.css()`: `color(x).hex().css()`. Selectors return the helper's
     resolved type, never a string, and the chosen format persists through later
     modifications. This is the line that keeps selectors compatible with the rule.
   The configured default still wins when no override is given.
@@ -77,11 +75,12 @@ render method per package.
 Examples:
 
 ```ts
+// (color is a book bound once: `const color = publishBookColor()`)
 borders(spec).css();                       // configured variant per factory config
-colour('#3366cc').css();                   // configured format (default colorFormats.css)
-colour('#3366cc').css(colorFormats.hex);   // one-off override (argument) -> '#3366cc'
-colour('#3366cc').hex().css();             // one-off override (selector) -> '#3366cc'
-colour('red').darken(0.2).css();           // navigate/modify, then render via .css()
+color('#3366cc').css();                    // configured format (default colorFormats.rgba)
+color('#3366cc').css(colorFormats.hex);    // one-off override (argument) -> '#3366cc'
+color('#3366cc').hex().css();              // one-off override (selector) -> '#3366cc'
+color('red').darken(0.2).css();            // navigate/modify, then render via .css()
 ```
 
 ### The typesetter is a code generator, not a runtime helper (planned)
@@ -91,7 +90,7 @@ A third construct is planned (not built yet): the **typesetter** (see
 design-token document into typed lexicon vars at build time. It is not a runtime
 helper, so the two rules above do not apply to it directly:
 
-- It is **not consumed from a factory** and is not pressed by `bookPress`; it is an
+- It is **not consumed from a factory** and is not bound by `publishBook`; it is an
   on-demand script the dev runs when the design updates.
 - It **does not render `.css()`**. Its output is TS source: `export const`
   declarations whose values are lexicon-factory calls (`m()`, `color()`). The

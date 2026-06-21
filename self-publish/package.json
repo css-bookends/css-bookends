@@ -1,12 +1,12 @@
 {
-  "name": "@css-bookends/bookpress",
+  "name": "@css-bookends/self-publish",
   "version": "0.1.0",
-  "description": "The press that binds books. The publishBook engine combines the three pages (input, storage, output) of a CSS helper into a workable, overridable library. The composition machinery of CSS-Bookends.",
+  "description": "The self-publish engine: publishBook binds a book's three steps (input, storage, output) into a workable, overridable library. The composition machinery of CSS-Bookends.",
   "license": "MIT",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/slafleche/css-bookends.git",
-    "directory": "bookpress"
+    "directory": "self-publish"
   },
   "author": "slafleche",
   "publishConfig": {
@@ -44,7 +44,7 @@
     "build:cjs": "tsc -p tsconfig.build.cjs.json",
     "build:esm": "tsc -p tsconfig.build.esm.json && node scripts/emit-esm-package.mts",
     "test": "npm run build && npm run test:src && npm run test:tsc && npm run lint",
-    "test:src": "vitest run tests/runtime/bookpress.src.test.ts",
+    "test:src": "vitest run tests/runtime/self-publish.src.test.ts",
     "test:tsc": "tsc -p tsconfig.json --noEmit",
     "lint": "eslint . --max-warnings=0"
   }

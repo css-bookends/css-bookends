@@ -1,10 +1,11 @@
-import { color } from '@css-bookends/color';
+import { publishBookColor } from '@css-bookends/color';
 import { m } from '@css-bookends/css-calipers';
 import { describe, expect, it } from 'vitest';
 
-import { makeBorders } from '../../src';
+import { publishBookBorders } from '../../src';
 
-const borders = makeBorders();
+const color = publishBookColor();
+const borders = publishBookBorders();
 const red = color('red');
 
 describe('borders — happy paths', () => {
@@ -56,10 +57,12 @@ describe('borders — happy paths', () => {
   });
 
   it('a bare call renders the global defaults', () => {
-    const themed = makeBorders({
-      width: m(1),
-      style: 'solid',
-      color: color('black'),
+    const themed = publishBookBorders({
+      config: {
+        width: m(1),
+        style: 'solid',
+        color: color('black'),
+      },
     });
     expect(themed().css()).toMatchObject({
       borderTopWidth: '1px',
@@ -78,7 +81,7 @@ describe('borders — edge overrides', () => {
     }).css();
     expect(b.borderTopWidth).toBe('1px');
     expect(b.borderBottomWidth).toBe('2px');
-    expect(b.borderBottomColor).toBe(red.css()); // keeps the shorthand colour
+    expect(b.borderBottomColor).toBe(red.css()); // keeps the shorthand color
   });
 
   it('an axis override hits both edges (x = left + right)', () => {

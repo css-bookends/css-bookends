@@ -1,7 +1,7 @@
 import {
   type Manuscript,
   publishBook,
-} from '@css-bookends/bookpress';
+} from '@css-bookends/self-publish';
 import {
   anchorSize,
   defaultSpacingConfig,

@@ -8,7 +8,7 @@ import {
 } from '../../src/margin';
 
 /*
- * The margin BOOK's factory (the OUTPUT step wired through bookpress): publishBookMargin binds
+ * The margin BOOK's factory (the OUTPUT step wired through self-publish): publishBookMargin binds
  * a book; calling it runs input -> storage -> output. The 2x2 (emit x format) is covered by the
  * lexicon output suite; here we assert the wiring, the config overrides, and margin's
  * first-class `auto` / `anchor-size()`.

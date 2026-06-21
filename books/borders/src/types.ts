@@ -1,11 +1,11 @@
-import type { ColorWrapper } from '@css-bookends/color';
+import type { ResolvedColor } from '@css-bookends/color';
 import type { IMeasurement } from '@css-bookends/css-calipers';
 import type { Property } from 'csstype';
 
 /* ---------- value primitives ---------- */
 
-/** A border colour is always whatever the colours `color()` helper returns. */
-export type BorderColor = ColorWrapper;
+/** A border color is always whatever the color book's `publishBookColor()` returns. */
+export type BorderColor = ResolvedColor;
 /** A border width: a measurement, or 0 / null for "no width". */
 export type BorderWidth = IMeasurement | 0 | null;
 /** A border line style (solid, dashed, dotted, ...). */
@@ -127,7 +127,7 @@ export interface BorderOutput
 export interface ResolvedEdge {
   width: IMeasurement;
   style: BorderStyle;
-  color: ColorWrapper;
+  color: ResolvedColor;
   /** this edge as a style object, in the configured format. */
   css(): BorderOutput;
 }

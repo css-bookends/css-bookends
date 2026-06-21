@@ -50,7 +50,7 @@ CSS-Bookends is split into two kinds of package:
 
 - **Lexicons** are the foundational vocabularies. A lexicon defines typed values
   and the operations on them, and depends on little or nothing else.
-  `css-calipers` (measurement) is a lexicon; `colours` and `spacing` will be too.
+  `css-calipers` (measurement) is a lexicon; `color` and `spacing` are too.
   Lexicons can build on one another (a `spacing` lexicon builds on `css-calipers`).
 - **Books** are the standalone helper libraries built on top of one or more
   lexicons. A book takes typed tokens and emits plain CSS for a single concern.
@@ -79,8 +79,8 @@ alike (for example `@css-bookends/css-calipers` and `@css-bookends/media-queries
 - **`@css-bookends/media-queries`** — typed, unit-safe media query strings, built
   on `@css-bookends/css-calipers`. Experimental 0.x.
 
-More lexicons (`spacing`, `colours`) and books (`borders`, `shadow`, `margins`)
-are being brought in.
+More lexicons (`spacing`, `color`) and books (`borders`, `shadows`, `margin`,
+`padding`) are being brought in.
 
 ## Concepts
 
@@ -100,37 +100,10 @@ inspectable CSS.
 
 ## Terminology
 
-A glossary of the architecture terms used across this repo. See `ARCHITECTURE.md`
-for the model and `AGENTS.md` for the rules that enforce these.
-
-- **lexicon** : a foundational vocabulary, typed values and the operations on them
-  (measurement, colours, spacing). Depends on little or nothing else.
-- **book** : a standalone helper for one CSS concern (borders, shadows, ...),
-  built on one or more lexicons. Takes typed tokens, emits plain CSS.
-- **typesetter** (planned) : a construct that converts a DTCG design-token document
-  into typed lexicon vars (`m()`, `color()`, ...) for the books to consume. It is
-  the input-edge boundary for external design tokens; it generates vars, it is not
-  a runtime helper and does not render CSS itself. See `design-tokens.md`.
-- **page** : one of a book's three stages, `input` (accept many shapes) ->
-  `storage` (one canonical internal shape) -> `output` (render to CSS).
-- **press** : the definition of a book, its three pages plus config defaults.
-- **bookPress** : the factory engine in `@css-bookends/bookpress` that stamps a book
-  from a press, able to override any single page or the whole press.
-- **bookpress** : the package that provides the `bookPress` and the press types.
-- **`bookPress<BookName>`** : a book's factory function, named with the `bookPress`
-  prefix (for example `bookPressColours`, `bookPressBorders`). The metaphor: the
-  bookPress presses a book from its press. Calling it returns a configured book. This
-  is the only sanctioned way to obtain a helper; the raw value-helper is never
-  imported directly.
-- **default instance** : each package calls its own factory once with the built-in
-  defaults and exports the result (for example `colours`). Import this instance,
-  not the raw helper.
-- **shelf** (`@css-bookends/shelf`) : the aggregate composition root. It pulls in
-  every book's default instance and re-exports them, so a single import gives you
-  the whole preconfigured set.
-- **`.css()`** : the single render terminal. Every helper renders its final output
-  through `.css()`; the output variant is chosen by config or a typed format object
-  (for example `colorFormats.hex`), never by a per-format render method.
+The architecture terms (lexicon, book, the three steps, manuscript, `publishBook` /
+`publishBook<Name>`, shelf / `publishShelf()`, `.css()`) live in one place. See
+**[`ARCHITECTURE.md`](./ARCHITECTURE.md)** for the model and the canonical glossary, and
+`AGENTS.md` for the rules that enforce them.
 
 ## Installation
 

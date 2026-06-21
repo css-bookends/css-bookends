@@ -1,6 +1,6 @@
-import type { Manuscript } from '@css-bookends/bookpress';
-import { publishBook } from '@css-bookends/bookpress';
 import type { DegMeasurement } from '@css-bookends/css-calipers';
+import type { Manuscript } from '@css-bookends/self-publish';
+import { publishBook } from '@css-bookends/self-publish';
 import type {
   Color,
   Hsl,

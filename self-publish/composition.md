@@ -1,29 +1,33 @@
-# Page composition: overriding without overwriting
+# Step composition: overriding without overwriting
 
-A design record for two open bookpress questions:
+> **Status: IMPLEMENTED.** The wrap channel below now ships as
+> `ManuscriptWrap` / `ManuscriptOverrides.wrap` in `types.ts` + `publishBook.ts`
+> (onion, newest ring outermost). This doc is kept as the design record + survey.
 
-- **a)** how to override a page (input / storage / output) without overwriting the
+A design record for two self-publish questions (now resolved):
+
+- **a)** how to override a step (input / storage / output) without overwriting the
   whole thing, and
-- **b)** how that mechanism fits into the bookPress (the factory).
+- **b)** how that mechanism fits into `publishBook` (the factory).
 
 Backed by a survey of how mainstream libraries solve the same problem. Sources are
 listed once at the bottom; inline pointers reference them by name.
 
 ## The problem
 
-`bookPress` resolves overrides replace-only today (`bookPress.ts`):
+`publishBook` originally resolved overrides replace-only:
 
 ```
-input:   over.input ?? base.input        // whole page swapped
-storage: over.storage ?? base.storage    // whole page swapped
-outputs: { ...base.outputs, ...over.outputs }  // merge by key; same key overwrites
+input:   over.input ?? base.input        // whole step swapped
+storage: over.storage ?? base.storage    // whole step swapped
+output:  over.output ?? base.output      // whole step swapped
 config:  { ...base.defaults, ...over.config }   // shallow merge
 ```
 
-So to "accept one extra input shape" you must reimplement the entire input page.
-`ARCHITECTURE.md` already promises composable pages ("accept a different or extra
-set of shapes, keeping the standard store"), but the mechanism for *extending* a
-page (rather than replacing it) does not exist yet.
+So to "accept one extra input shape" you had to reimplement the entire input step.
+`ARCHITECTURE.md` promises composable steps ("accept a different or extra set of
+shapes, keeping the standard store"); the wrap channel is the mechanism for
+*extending* a step rather than replacing it.
 
 ## What best practice says
 
@@ -39,41 +43,38 @@ config. (Pipeline pattern, LangChain middleware.)
 **The wrap primitive already has a battle-tested shape: the Redux store enhancer**,
 `(createStore) => createStore'` — a higher-order function that wraps the creation
 step with access to the original. Our proposed `(base) => newPage` is the same
-shape applied per page. Redux also settled composition: multiple enhancers compose
+shape applied per step. Redux also settled composition: multiple enhancers compose
 right-to-left via `compose`. (Redux store enhancers, Redux compose.)
 
 **Two hook styles, offer the wrapping one.** LangChain splits simple `before_*`
 hooks from `wrap_*` hooks (used when you must wrap the whole call). The `(base) =>
-page` form covers both: call `base` first = decorator; call `base` in the `else`
-= fallback. So the author picks per page; we do not have to choose a default.
+step` form covers both: call `base` first = decorator; call `base` in the `else`
+= fallback. So the author picks per step; we do not have to choose a default.
 (LangChain middleware.)
 
 **Plain values stay a `Partial` merge.** For config / defaults, the sanctioned
 pattern is `Partial<T>` + factory merge (override the parts you name, keep the
-rest), which is what we already do. Only the *pages* need the enhancer form.
+rest), which is what we already do. Only the *steps* need the enhancer form.
 (Mock-factory-pattern, Extendable factory pattern.)
 
 ## Decision
 
-1. **Keep pure-replace, add a wrap channel.** A page override may be a page (replace,
-   today's behaviour) or `(base) => page` (wrap). Both are sanctioned: replace =
+1. **Keep pure-replace, add a wrap channel.** A step override may be a step (replace,
+   today's behaviour) or `(base) => step` (wrap). Both are sanctioned: replace =
    factory-method override; wrap = decorator / enhancer.
-2. **The wrap primitive is the enhancer shape** `(base) => page`, one shape for
-   input, storage, and each named output.
+2. **The wrap primitive is the enhancer shape** `(base) => step`, one shape for
+   input, storage, and output.
 3. **Decorator-vs-fallback is the author's choice**, expressed by where they call
-   `base` inside the wrapper. bookpress does not impose a default.
-4. **Composition order = re-print stacking.** `bookPress(book.press)(...)` is the
-   compose step; each re-print adds one onion layer, newest outermost. Document
+   `base` inside the wrapper. self-publish does not impose a default.
+4. **Composition order = re-publish stacking.** `publishBook(book.manuscript)(...)` is the
+   compose step; each re-publish adds one onion layer, newest outermost. Document
    this, because order is the #1 decorator footgun.
-5. **Config keeps shallow `Partial` merge.** Only pages get the enhancer form.
+5. **Config keeps shallow `Partial` merge.** Only steps get the enhancer form.
 
 ## Open follow-ups
 
-- Exact `PressOverrides` surface for the wrap channel (a parallel `wrap` field vs.
-  a union on the existing page keys) — to be sketched against `types.ts` +
-  `bookPress.ts`, weighing the type cost against borders' function-valued outputs.
-- How this subsumes the `notes.md` "output access per call" question (once outputs
-  can be wrapped + selected, picking an output is just config feeding the pick).
+- (Shipped) The `ManuscriptOverrides` surface uses a parallel `wrap` field (not a union on
+  the existing step keys), sketched against `types.ts` + `publishBook.ts`.
 
 ## Sources
 

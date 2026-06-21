@@ -168,7 +168,7 @@ export interface SideAccessor<P extends SpacingProperty> {
  * `bottom`/`left` and `x`/`y` accessors expose individual sides/axes.
  *
  * `.css()` is `SpacingStyle<P> | string` (a union, not format-precise) because `format` is a
- * runtime config value that the bookpress engine does not thread into this output type;
+ * runtime config value that the self-publish engine does not thread into this output type;
  * callers narrow.
  */
 export interface SpacingResult<P extends SpacingProperty> {

@@ -1,5 +1,5 @@
 packages:
-  - 'bookpress'
+  - 'self-publish'
   - 'lexicons/*'
   - 'books/*'
   - 'packages/*'

@@ -11,9 +11,9 @@ peer (`lexicons/spacing` for a lexicon, `books/transforms` for a book) and renam
 ## Decide first
 
 - **lexicon or book?** A lexicon is *primitives for CSS use*; a book is a *workable
-  library for one concern*, built from three pages (see `authoring-a-book`).
+  library for one concern*, built from three steps (see `authoring-a-book`).
 - **location:** lexicons -> `lexicons/<name>`, books -> `books/<name>`, shared
-  machinery -> repo root (like `bookpress`). Root packages must be added to
+  machinery -> repo root (like `self-publish`). Root packages must be added to
   `pnpm-workspace.yaml` (`lexicons/*` and `books/*` are globbed; root names are not).
 
 ## Files (copy from a peer, then edit)

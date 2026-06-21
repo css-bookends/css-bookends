@@ -1,55 +1,59 @@
 ---
 name: authoring-a-book
-description: How to build or rework a CSS-Bookends book with bookpress, the bookPress, the press, and the three pages (input, storage, output). Use whenever adding or changing a book/helper in this repo.
+description: How to build or rework a CSS-Bookends book with self-publish, the publishBook engine, the manuscript, and the three steps (input, storage, output). Use whenever adding or changing a book/helper in this repo.
 ---
 
 # authoring-a-book
 
 A **book** is a workable library for one CSS concern (borders, shadows, spacing).
-Every book is stamped out by the **bookPress** from `@css-bookends/bookpress`, from a
-**press** definition made of three **pages**. See `/ARCHITECTURE.md` and
-`/bookpress/README.md` for the canonical model.
+Every book is bound by **publishBook** from `@css-bookends/self-publish`, from a
+**manuscript** definition made of three **steps**. See `/ARCHITECTURE.md` and
+`/self-publish/README.md` for the canonical model.
 
-## The press: three pages + defaults
+## The manuscript: three steps + defaults
 
 ```ts
-import { bookPress, type Press } from '@css-bookends/bookpress';
+import { publishBook, type Manuscript } from '@css-bookends/self-publish';
 
-const press: Press<Raw, Store, Out, Cfg, Opts> = {
+const bordersManuscript: Manuscript<Raw, Store, Out, Cfg, Opts> = {
   defaults: { /* config defaults */ },
-  input:   (raw, cfg) => store,    // page 1
-  storage: (store, cfg) => store,  // page 2
-  outputs: { long, short },        // page 3 (one or many renderers)
-  default: 'short',
+  input:   (raw, cfg) => store,    // input step
+  storage: (store, cfg) => store,  // storage step
+  output:  (store, cfg) => result, // output step (result exposes .css())
 };
 
-export const makeBorders = bookPress(press);
+export const publishBookBorders = publishBook(bordersManuscript);
 ```
 
-## The three pages
+## The three steps
 
 1. **input** : accept many raw shapes (shorthand, per-side, complex) and *parse*
    them into the canonical store. Parse, do not validate: the store cannot
    represent an invalid state, so storage and output never re-check.
 2. **storage** : normalize the canonical store (apply defaults, merge shorthands,
    resolve). One standardized shape, whatever the input looked like.
-3. **output(s)** : render the store to CSS. There may be several valid renderings
-   (longform vs shorthand); a bare call uses `default`.
+3. **output** : render the store into the book's result, which exposes `.css()`.
+   The output variant (longform vs shorthand, etc.) is chosen by config.
 
 ## Rules
 
 - **Compiler-agnostic (hard rule).** No core package imports a CSS compiler
-  (vanilla-extract etc.). Pages return plain data and strings; tools consume them.
+  (vanilla-extract etc.). Steps return plain data and strings; tools consume them.
   Examples MAY use a compiler, as a devDependency only.
-- **Pages are overridable and composable.** The bookPress can rewrite any page or the
-  whole press: `makeBorders({ storage: mine })`, or reuse another book's pages via
-  `book.store` / `book.outputs`, or `bookPress(book.press)({ ... })`.
+- **The factory is the public surface.** Export `publishBook<Name>` (plus value
+  builders / composition helpers where useful), never a pre-made instance as the
+  consumer entry. See `AGENTS.md`.
+- **Steps are overridable and composable.** A re-publish can replace a step
+  (`publishBookBorders({ storage: mine })`), wrap it onion-style
+  (`{ wrap: { output: (base) => (s, c) => base(s, c) } }`), reuse another book's
+  store (`book.store`), or re-publish the whole manuscript
+  (`publishBook(book.manuscript)({ ... })`).
 - **Types, tests, notes.** Put the input contract and store/output types in
   `src/types.ts` (lock big input designs in a `design.md`, see `books/borders/`).
   Bring a runtime test under `tests/runtime/`. Add a `notes.md` of known debt.
 
 ## Where books depend
 
-A book peer-depends on `@css-bookends/css-calipers` and any lexicon it consumes
-(`workspace:^`), plus the same as a workspace devDependency (`workspace:*`).
-bookpress itself has no runtime dependencies.
+A book peer-depends on `@css-bookends/self-publish`, `@css-bookends/css-calipers`,
+and any lexicon it consumes (`workspace:^`), plus the same as workspace
+devDependencies (`workspace:*`). self-publish itself has no runtime dependencies.

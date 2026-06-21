@@ -14,11 +14,11 @@
     "node": ">=24"
   },
   "scripts": {
-    "//temp-exclude": "TEMP: color & borders are excluded from lint/typecheck below while they are rewritten against the new bookpress publishBook API. Restore by deleting the two `--filter='!...'` flags (and the matching set in lint-staged.config.mts).",
+    "//temp-exclude": "TEMP: color is excluded from lint/typecheck below pending its documented culori-rewrite gaps. Restore by deleting the `--filter='!...'` flags (and the matching set in lint-staged.config.mts). borders was restored once migrated onto self-publish.",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
-    "lint": "pnpm --filter='!@css-bookends/color' --filter='!@css-bookends/borders' -r lint",
-    "typecheck": "pnpm --filter='!@css-bookends/color' --filter='!@css-bookends/borders' -r run test:tsc",
+    "lint": "pnpm --filter='!@css-bookends/color' -r lint",
+    "typecheck": "pnpm --filter='!@css-bookends/color' -r run test:tsc",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "changeset": "changeset",

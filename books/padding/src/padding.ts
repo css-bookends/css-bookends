@@ -1,8 +1,8 @@
+import { nonNegative } from '@css-bookends/css-calipers';
 import {
   type Manuscript,
   publishBook,
-} from '@css-bookends/bookpress';
-import { nonNegative } from '@css-bookends/css-calipers';
+} from '@css-bookends/self-publish';
 import {
   defaultSpacingConfig,
   makeSpacingResult,
