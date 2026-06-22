@@ -11,14 +11,7 @@ import type {
   Oklch,
   Rgb,
 } from 'culori';
-import {
-  clampChroma,
-  converter,
-  formatHex,
-  formatHex8,
-  interpolate,
-  parse,
-} from 'culori';
+import { interpolate, parse } from 'culori';
 
 import type {
   ColorConfig,
@@ -30,9 +23,17 @@ import type {
   FormatName,
   ResolvedColor,
   Store,
-  Strictness,
   SymbolicColor,
 } from './types';
+
+import { colorFormats, type ColorSpaceDescriptor } from './formats';
+import { chooseFormat } from './formats/escalate';
+import {
+  alphaOf,
+  clamp01,
+  toOklch,
+  violate,
+} from './formats/internals';
 
 export * from './types';
 
@@ -260,8 +261,6 @@ export const parseColor = (input: ColorInput | Color): Store => {
  * (which format you emit), not a storage concern.
  * ==========================================================================*/
 
-const toOklch = converter('oklch');
-
 /** Normalize a parsed store into the canonical OKLCH working space. */
 export const storeColor = (store: Store): Store => {
   if (store.kind === 'symbolic') {
@@ -280,163 +279,22 @@ export const storeColor = (store: Store): Store => {
  * best-effort value (clamped chroma) still produced in the warn case.
  * ==========================================================================*/
 
-const notRelease = (): boolean =>
-  (globalThis as { process?: { env?: { NODE_ENV?: string } } })
-    .process?.env?.NODE_ENV !== 'production';
+// The unified format registry (each entry a descriptor: render + metadata) lives in
+// `./formats`; re-export it so `colorFormats.hex` stays the public output selector.
+export { colorFormats };
 
-/** Named format presets - prefer these over raw `{ format }` objects. */
-export const colorFormats = {
-  rgba: { format: 'rgba' },
-  rgb: { format: 'rgb' },
-  hex: { format: 'hex' },
-  hexAlpha: { format: 'hexAlpha' },
-  hsl: { format: 'hsl' },
-  hwb: { format: 'hwb' },
-  lab: { format: 'lab' },
-  lch: { format: 'lch' },
-  oklab: { format: 'oklab' },
-  oklch: { format: 'oklch' },
-  displayP3: { format: 'displayP3' },
-} as const satisfies Record<FormatName, CssFormat>;
-
-const violate = (message: string, strictness: Strictness): void => {
-  const mode =
-    strictness === 'auto'
-      ? notRelease()
-        ? 'throw'
-        : 'warn'
-      : strictness;
-  if (mode === 'throw') throw new Error(message);
-  if (mode === 'warn') console.warn(message);
-};
-
-const round = (value: number, precision = 3): number => {
-  const factor = 10 ** precision;
-  return Math.round(value * factor) / factor;
-};
-const clamp01 = (value: number): number =>
-  Math.min(1, Math.max(0, value));
-const channel255 = (value: number): number =>
-  Math.round(clamp01(value) * 255);
-const hueOf = (h: number | undefined): number =>
-  round((((h ?? 0) % 360) + 360) % 360, 2);
-const pct = (value: number): number => round(value * 100, 2);
-const alphaOf = (color: Color): number => round(color.alpha ?? 1, 3);
-
-const toRgb = converter('rgb');
-const toHsl = converter('hsl');
-const toHwb = converter('hwb');
-const toLab = converter('lab');
-const toLch = converter('lch');
-const toOklab = converter('oklab');
-const toOklchOut = converter('oklch');
-const toP3 = converter('p3');
-
-// Tolerant gamut check: a color round-tripped through OKLCH can drift a hair past a
-// channel bound (e.g. sRGB `red` -> 1.0000001), so allow a tiny epsilon before
-// calling it out-of-gamut. Genuinely out-of-gamut colors miss by far more.
-const GAMUT_EPSILON = 1e-4;
-const within01 = (n: number): boolean =>
-  n >= -GAMUT_EPSILON && n <= 1 + GAMUT_EPSILON;
-const inSrgb = (color: Color): boolean => {
-  const c = toRgb(color);
-  return within01(c.r) && within01(c.g) && within01(c.b);
-};
-const inP3 = (color: Color): boolean => {
-  const c = toP3(color);
-  return within01(c.r) && within01(c.g) && within01(c.b);
-};
-
-/** Bring a color into a target gamut, surfacing a violation if it wasn't inside. */
-const fitGamut = (
-  color: Color,
-  within: (c: Color) => boolean,
-  gamut: 'rgb' | 'p3',
-  strictness: Strictness,
-): Color => {
-  if (within(color)) {
-    return color;
-  }
-  violate(
-    `color: out of ${gamut === 'rgb' ? 'sRGB' : 'display-p3'} gamut; chroma clamped to fit`,
-    strictness,
-  );
-  return clampChroma(color, 'oklch', gamut);
-};
-
-const hasRealAlpha = (color: Color): boolean =>
-  color.alpha !== undefined && color.alpha !== 1;
-
-// Serialize a (non-fully-transparent) color in the requested format. The modern
-// slot formats omit `/ alpha` when opaque + `omitOpaqueAlpha`; rgba collapses to rgb.
+// Render a (non-fully-transparent) color in the requested format by dispatching to
+// that format's descriptor. The descriptors own the per-format render; this single
+// dispatch replaced the old per-format switch.
 const serialize = (
   color: Color,
   format: CssFormat,
   cfg: ColorConfig,
-): string => {
-  const { strictness } = cfg;
-  const alpha = alphaOf(color);
-  const dropOpaque = cfg.omitOpaqueAlpha && alpha === 1;
-  const slot = dropOpaque ? '' : ` / ${alpha}`;
-  switch (format.format) {
-    case 'rgba':
-    case 'rgb': {
-      if (format.format === 'rgb' && hasRealAlpha(color)) {
-        violate(
-          `color: alpha ${alpha} dropped by 'rgb' (no alpha channel); use rgba or solid()`,
-          strictness,
-        );
-      }
-      const c = toRgb(fitGamut(color, inSrgb, 'rgb', strictness));
-      const body = `${channel255(c.r)}, ${channel255(c.g)}, ${channel255(c.b)}`;
-      // rgb never shows alpha; rgba collapses to rgb when opaque + omitOpaqueAlpha.
-      return format.format === 'rgb' || dropOpaque
-        ? `rgb(${body})`
-        : `rgba(${body}, ${alpha})`;
-    }
-    case 'hex':
-    case 'hexAlpha': {
-      if (format.format === 'hex' && hasRealAlpha(color)) {
-        violate(
-          `color: alpha ${alpha} dropped by 'hex' (no alpha channel); use hexAlpha or solid()`,
-          strictness,
-        );
-      }
-      const c = toRgb(fitGamut(color, inSrgb, 'rgb', strictness));
-      return format.format === 'hexAlpha'
-        ? formatHex8(c)
-        : formatHex(c);
-    }
-    case 'hsl': {
-      const c = toHsl(fitGamut(color, inSrgb, 'rgb', strictness));
-      return `hsl(${hueOf(c.h)} ${pct(c.s)}% ${pct(c.l)}%${slot})`;
-    }
-    case 'hwb': {
-      const c = toHwb(fitGamut(color, inSrgb, 'rgb', strictness));
-      return `hwb(${hueOf(c.h)} ${pct(c.w)}% ${pct(c.b)}%${slot})`;
-    }
-    case 'lab': {
-      const c = toLab(color);
-      return `lab(${round(c.l, 3)} ${round(c.a, 3)} ${round(c.b, 3)}${slot})`;
-    }
-    case 'lch': {
-      const c = toLch(color);
-      return `lch(${round(c.l, 3)} ${round(c.c, 3)} ${hueOf(c.h)}${slot})`;
-    }
-    case 'oklab': {
-      const c = toOklab(color);
-      return `oklab(${round(c.l, 4)} ${round(c.a, 4)} ${round(c.b, 4)}${slot})`;
-    }
-    case 'oklch': {
-      const c = toOklchOut(color);
-      return `oklch(${round(c.l, 4)} ${round(c.c, 4)} ${hueOf(c.h)}${slot})`;
-    }
-    case 'displayP3': {
-      const c = toP3(fitGamut(color, inP3, 'p3', strictness));
-      return `color(display-p3 ${round(c.r, 5)} ${round(c.g, 5)} ${round(c.b, 5)}${slot})`;
-    }
-  }
-};
+): string =>
+  (colorFormats[format.format] as ColorSpaceDescriptor).render(
+    color,
+    cfg,
+  );
 
 const renderColor = (
   color: Color,
@@ -457,19 +315,24 @@ const renderColor = (
 
 const render = (
   store: Store,
-  format: CssFormat,
+  output: CssFormat | CssFormat[],
   cfg: ColorConfig,
 ): CssColor => {
   // symbolic colors pass through: their keyword emits for any requested format.
   if (store.kind === 'symbolic') {
     return store.keyword;
   }
+  // resolve the output (a single format, or a priority list) to one faithful format.
+  const format = chooseFormat(store.color, output);
   return renderColor(store.color, format, cfg);
 };
 
 const wrapHue = (h: number): number => ((h % 360) + 360) % 360;
 
-const resolve = (store: Store, cfg: ColorConfig): ResolvedColor => {
+const resolve = <F extends FormatName = FormatName>(
+  store: Store,
+  cfg: ColorConfig,
+): ResolvedColor<F> => {
   // a format selector: same color, new configured output, still finished via .css().
   const withFormat = (output: CssFormat): ResolvedColor =>
     resolve(store, { ...cfg, output });
@@ -524,7 +387,7 @@ const resolve = (store: Store, cfg: ColorConfig): ResolvedColor => {
     )(clamp01(ratio));
   };
 
-  const result: ResolvedColor = {
+  const result = {
     css: (format?: CssFormat) =>
       render(store, format ?? cfg.output, cfg),
     rgba: () => withFormat(colorFormats.rgba),
@@ -584,15 +447,28 @@ const resolve = (store: Store, cfg: ColorConfig): ResolvedColor => {
           });
     },
 
-    mix: (target, ratio = 0.5, mode = 'oklch') => {
+    mix: (
+      target: ColorInput,
+      ratio = 0.5,
+      mode: ColorSpace = 'oklch',
+    ) => {
       const mixed = blend('mix', target, ratio, mode, false);
       return mixed === undefined ? self() : withColor(mixed);
     },
-    mixSolid: (target, ratio = 0.5, mode = 'oklch') => {
+    mixSolid: (
+      target: ColorInput,
+      ratio = 0.5,
+      mode: ColorSpace = 'oklch',
+    ) => {
       const mixed = blend('mix', target, ratio, mode, true);
       return mixed === undefined ? self() : withColor(mixed);
     },
-    mixWithAlpha: (target, ratio = 0.5, alpha, mode = 'oklch') => {
+    mixWithAlpha: (
+      target: ColorInput,
+      ratio = 0.5,
+      alpha?: number,
+      mode: ColorSpace = 'oklch',
+    ) => {
       const c = modifiable('mix');
       if (c === undefined) return self();
       const mixed = blend('mix', target, ratio, mode, true);
@@ -609,12 +485,31 @@ const resolve = (store: Store, cfg: ColorConfig): ResolvedColor => {
 
   // carry the store privately so this result can be re-wrapped via `color(result)`.
   Object.defineProperty(result, STORED, { value: store });
-  return result;
+  return result as unknown as ResolvedColor<F>;
 };
+
+/**
+ * The default output priority: the simplest faithful format first. With no argument
+ * `.css()` escalates down this ladder to the first format that holds the color (see
+ * `formats/README.md`). Overridable per book via `publishBookColor({ config })`.
+ */
+export const defaultFormatPriority: CssFormat[] = [
+  colorFormats.hex,
+  colorFormats.rgb,
+  colorFormats.hexAlpha,
+  colorFormats.rgba,
+  colorFormats.hsl,
+  colorFormats.hwb,
+  colorFormats.displayP3,
+  colorFormats.lab,
+  colorFormats.lch,
+  colorFormats.oklab,
+  colorFormats.oklch,
+];
 
 /** The book's defaults. */
 export const defaultColorConfig: ColorConfig = {
-  output: colorFormats.rgba,
+  output: defaultFormatPriority,
   strictness: 'auto',
   transparent: 'keyword',
   omitOpaqueAlpha: false,

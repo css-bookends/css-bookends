@@ -25,7 +25,7 @@ describe('color — factory-only contract (no pre-built instance)', () => {
   it('the factory yields a usable, callable book', () => {
     const color = publishBookColor();
     expect(typeof color).toBe('function');
-    expect(color('#3366cc').css()).toBe('rgba(51, 102, 204, 1)');
+    expect(color('#3366cc').css()).toBe('#3366cc');
   });
 });
 
@@ -37,10 +37,8 @@ describe('color — factory config #1: output (default format)', () => {
     expect(color('#3366cc').css()).toBe('#3366cc');
   });
 
-  it('defaults to rgba (alpha slot always shown)', () => {
-    expect(publishBookColor()('#3366cc').css()).toBe(
-      'rgba(51, 102, 204, 1)',
-    );
+  it('defaults to the escalation ladder (opaque sRGB -> hex)', () => {
+    expect(publishBookColor()('#3366cc').css()).toBe('#3366cc');
   });
 });
 
@@ -59,20 +57,20 @@ describe('color — factory config #2: transparent (alpha-0 rendering)', () => {
     const color = publishBookColor({
       config: { transparent: 'white' },
     });
-    expect(color(transparent).css()).toBe('rgba(255, 255, 255, 0)');
+    expect(color(transparent).css()).toBe('#ffffff00');
   });
 
   it("'black' renders black at alpha 0", () => {
     const color = publishBookColor({
       config: { transparent: 'black' },
     });
-    expect(color(transparent).css()).toBe('rgba(0, 0, 0, 0)');
+    expect(color(transparent).css()).toBe('#00000000');
   });
 });
 
 describe('color — factory config #3: omitOpaqueAlpha', () => {
   it('off by default: opaque still shows the alpha slot', () => {
-    expect(publishBookColor()('#3366cc').css()).toBe(
+    expect(publishBookColor()('#3366cc').css(colorFormats.rgba)).toBe(
       'rgba(51, 102, 204, 1)',
     );
     expect(
@@ -84,7 +82,9 @@ describe('color — factory config #3: omitOpaqueAlpha', () => {
     const color = publishBookColor({
       config: { omitOpaqueAlpha: true },
     });
-    expect(color('#3366cc').css()).toBe('rgb(51, 102, 204)');
+    expect(color('#3366cc').css(colorFormats.rgba)).toBe(
+      'rgb(51, 102, 204)',
+    );
     expect(color('#3366cc').css(colorFormats.oklch)).not.toContain(
       '/',
     );
@@ -94,7 +94,7 @@ describe('color — factory config #3: omitOpaqueAlpha', () => {
     const color = publishBookColor({
       config: { omitOpaqueAlpha: true, transparent: 'black' },
     });
-    expect(color('#3366cc80').css()).toBe(
+    expect(color('#3366cc80').css(colorFormats.rgba)).toBe(
       'rgba(51, 102, 204, 0.502)',
     );
   });

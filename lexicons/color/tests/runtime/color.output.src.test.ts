@@ -11,15 +11,13 @@ import { colorFormats, publishBookColor } from '../../src/color';
 
 const color = publishBookColor();
 
-describe('color output — default format is rgba, alpha slot always shown', () => {
-  it('opaque color shows alpha 1', () => {
-    expect(color('#3366cc').css()).toBe('rgba(51, 102, 204, 1)');
+describe('color output — default escalates to the simplest faithful format', () => {
+  it('opaque, in sRGB -> hex', () => {
+    expect(color('#3366cc').css()).toBe('#3366cc');
   });
 
-  it('transparent color shows its real alpha', () => {
-    expect(color('#3366cc80').css()).toBe(
-      'rgba(51, 102, 204, 0.502)',
-    );
+  it('with alpha -> hexAlpha (escalates past no-alpha hex/rgb)', () => {
+    expect(color('#3366cc80').css()).toBe('#3366cc80');
   });
 });
 

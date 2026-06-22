@@ -135,6 +135,16 @@ export type ColorInput = string | ColorObject | ResolvedColor;
 export type CssColor = Property.Color;
 
 /**
+ * A CSS color string hardened to the format that produced it. A specific format
+ * selector (`color(x).hex()`) yields a value typed `ColorString<'hex'>`, so "this is
+ * a hex color" survives in the type, not just at runtime. Stays assignable to a plain
+ * `CssColor`.
+ */
+export type ColorString<F extends string = string> = CssColor & {
+  readonly __colorFormat: F;
+};
+
+/**
  * The output formats. Every alpha-capable format always renders its alpha slot;
  * `rgb` / `hex` (hex6) carry no alpha and warn if they would drop a non-opaque one.
  */
@@ -166,8 +176,11 @@ export type TransparentRendering = 'keyword' | 'white' | 'black';
 
 /** The color book's config (factory-settable via `publishBookColor`). */
 export interface ColorConfig {
-  /** the format `.css()` renders when given no argument. */
-  output: CssFormat;
+  /**
+   * What `.css()` renders with no argument: a single format, or a priority list that
+   * escalates to the first format faithfully holding the color (simplest first).
+   */
+  output: CssFormat | CssFormat[];
   /** how violations are surfaced (strict by default; relaxed only in production). */
   strictness: Strictness;
   /**
@@ -187,50 +200,50 @@ export interface ColorConfig {
  * format and return a new result; you still finish with `.css()`. Rendering only
  * ever happens through `.css()`.
  */
-export interface ResolvedColor {
-  /** the single render terminal: a CSS color string in the configured format, or in
-   * `format` for a one-off. */
-  css(format?: CssFormat): CssColor;
-  rgba(): ResolvedColor;
-  rgb(): ResolvedColor;
-  hex(): ResolvedColor;
-  hexAlpha(): ResolvedColor;
-  hsl(): ResolvedColor;
-  hwb(): ResolvedColor;
-  lab(): ResolvedColor;
-  lch(): ResolvedColor;
-  oklab(): ResolvedColor;
-  oklch(): ResolvedColor;
-  displayP3(): ResolvedColor;
+export interface ResolvedColor<F extends FormatName = FormatName> {
+  /** the single render terminal: a CSS color string hardened to this result's format
+   * (`ColorString<F>`), or in `format` for a one-off. */
+  css(format?: CssFormat): ColorString<F>;
+  rgba(): ResolvedColor<'rgba'>;
+  rgb(): ResolvedColor<'rgb'>;
+  hex(): ResolvedColor<'hex'>;
+  hexAlpha(): ResolvedColor<'hexAlpha'>;
+  hsl(): ResolvedColor<'hsl'>;
+  hwb(): ResolvedColor<'hwb'>;
+  lab(): ResolvedColor<'lab'>;
+  lch(): ResolvedColor<'lch'>;
+  oklab(): ResolvedColor<'oklab'>;
+  oklch(): ResolvedColor<'oklch'>;
+  displayP3(): ResolvedColor<'displayP3'>;
 
-  /* modifications: immutable - each returns a NEW resolved color. Amounts are
-   * 0..1 fractions, relative (toward the extreme); they operate in OKLCH. */
+  /* modifications: immutable - each returns a NEW resolved color in the SAME format
+   * (the configured output threads through). Amounts are 0..1 fractions, in OKLCH. */
   alpha: {
     (): number;
-    (value: number): ResolvedColor;
+    (value: number): ResolvedColor<F>;
   };
-  darken(amount?: number): ResolvedColor;
-  lighten(amount?: number): ResolvedColor;
-  brighten(amount?: number): ResolvedColor;
-  saturate(amount?: number): ResolvedColor;
-  desaturate(amount?: number): ResolvedColor;
-  hueShift(value: DegMeasurement): ResolvedColor;
+  darken(amount?: number): ResolvedColor<F>;
+  lighten(amount?: number): ResolvedColor<F>;
+  brighten(amount?: number): ResolvedColor<F>;
+  saturate(amount?: number): ResolvedColor<F>;
+  desaturate(amount?: number): ResolvedColor<F>;
+  hueShift(value: DegMeasurement): ResolvedColor<F>;
   mix(
     target: ColorInput,
     ratio?: number,
     mode?: ColorSpace,
-  ): ResolvedColor;
+  ): ResolvedColor<F>;
   mixSolid(
     target: ColorInput,
     ratio?: number,
     mode?: ColorSpace,
-  ): ResolvedColor;
+  ): ResolvedColor<F>;
   mixWithAlpha(
     target: ColorInput,
     ratio?: number,
     alpha?: number,
     mode?: ColorSpace,
-  ): ResolvedColor;
-  solid(): ResolvedColor;
-  clone(): ResolvedColor;
+  ): ResolvedColor<F>;
+  solid(): ResolvedColor<F>;
+  clone(): ResolvedColor<F>;
 }

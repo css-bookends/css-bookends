@@ -3,6 +3,7 @@ import { converter, parse } from 'culori';
 import { describe, expect, it } from 'vitest';
 
 import {
+  colorFormats,
   publishBookColor,
   type ResolvedColor,
 } from '../../src/color';
@@ -25,7 +26,7 @@ describe('color modify — alpha', () => {
     expect(color('#3366cc80').alpha()).toBeCloseTo(0.5, 2);
   });
   it('alpha(v) returns a new color with that alpha', () => {
-    expect(color('#3366cc').alpha(0.5).css()).toBe(
+    expect(color('#3366cc').alpha(0.5).css(colorFormats.rgba)).toBe(
       'rgba(51, 102, 204, 0.5)',
     );
   });
@@ -107,8 +108,8 @@ describe('color modify — solid / clone', () => {
 describe('color modify — immutability + chaining', () => {
   it('chains darken -> alpha -> css without mutating the source', () => {
     const c = color('#3366cc');
-    const chained = c.darken(0.2).alpha(0.5).css();
+    const chained = c.darken(0.2).alpha(0.5).css(colorFormats.rgba);
     expect(chained).toMatch(/^rgba\(\d+, \d+, \d+, 0\.5\)$/);
-    expect(c.css()).toBe('rgba(51, 102, 204, 1)'); // original untouched
+    expect(c.css()).toBe('#3366cc'); // original untouched (default escalates to hex)
   });
 });
