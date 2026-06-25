@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 
-import { colorFormats, publishBookColor } from '../../src/color';
+import {
+  color as colorValue,
+  colorFormats,
+  type ColorInput,
+} from '../../../src/color';
 
 /**
  * Output escalation: when `output` is a priority list, `.css()` emits the FIRST
@@ -23,7 +27,9 @@ const PRIORITY = [
   colorFormats.oklab,
   colorFormats.oklch,
 ];
-const color = publishBookColor({ config: { output: PRIORITY } });
+// Bind the explicit priority-list config, mirroring the old factory-bound book.
+const color = (input: ColorInput) =>
+  colorValue(input, { output: PRIORITY });
 
 describe('output escalation — emit the simplest faithful format', () => {
   it('opaque, in sRGB -> hex (the simplest)', () => {
@@ -45,9 +51,8 @@ describe('output escalation — emit the simplest faithful format', () => {
   });
 
   it('a single-format config does not escalate', () => {
-    const rgbaOnly = publishBookColor({
-      config: { output: colorFormats.rgba },
-    });
-    expect(rgbaOnly('#3366cc').css()).toBe('rgba(51, 102, 204, 1)');
+    expect(
+      colorValue('#3366cc', { output: colorFormats.rgba }).css(),
+    ).toBe('rgba(51, 102, 204, 1)');
   });
 });

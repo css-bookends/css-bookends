@@ -6,7 +6,7 @@ import { hasRealAlpha, inP3, inSrgb } from './internals';
 import type { ColorSpaceDescriptor } from './types';
 
 const descriptorFor = (format: CssFormat): ColorSpaceDescriptor =>
-  colorFormats[format.format] as ColorSpaceDescriptor;
+  colorFormats[format.format];
 
 /**
  * Whether a format can FAITHFULLY hold the color: its gamut contains the color, and

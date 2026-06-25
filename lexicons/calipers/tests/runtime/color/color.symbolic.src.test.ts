@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { colorFormats, publishBookColor } from '../../src/color';
+import { color, colorFormats } from '../../../src/color';
 
 /*
  * The SPECIAL (symbolic) color words: keywords with no fixed value. Separate suite
@@ -10,8 +10,6 @@ import { colorFormats, publishBookColor } from '../../src/color';
  * Passthrough is implemented. Modification of a symbolic color is the NEXT step, so
  * those stay real failing placeholders (never `it.todo`).
  */
-const color = publishBookColor();
-
 const SYMBOLIC = [
   'currentColor',
   // system colors (current, CSS Color 4)

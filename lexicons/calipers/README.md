@@ -5,7 +5,7 @@
 [![license](https://img.shields.io/npm/l/@css-bookends/css-calipers.svg)](./LICENSE.txt)
 
 **CSS is code. Treat it that way.**
-Compile-time unit safety for numeric, unit-bearing CSS values, with no surprises at runtime.
+The missing typed inputs for CSS: build-time-validated measurements, ratios, integers, and floats, with no surprises at runtime.
 
 ```ts
 // Before: pull the number AND the unit apart, do the math, glue them back
@@ -19,9 +19,10 @@ const base = m(8);                 // or m(8, "rem"), m(1.5, "em"), etc.
 const pad = base.add(4).css();     // type error if units don't match
 ```
 
-A small TypeScript library for **type-safe CSS measurements**. Do arithmetic on real numbers
-with the unit attached, let the compiler catch `px`-vs-`rem` mistakes, and emit a CSS string
-only at the edge.
+A small TypeScript library for **typed CSS inputs**. csstype types CSS property names and
+keywords; CSS-Calipers types the values: measurements (number + unit), ratios, and plain
+numbers (integers and floats). Do typed arithmetic, let the compiler catch unit and range
+mistakes, and emit a CSS string only at the edge.
 
 ## Install
 
@@ -51,6 +52,35 @@ Every standard CSS unit also has a named helper (`mPx`, `mPercent`, `mVw`, `mEm`
 `mFr`, …), equivalent to `m(value, 'unit')`. Helpers are importable from the root, from
 `@css-bookends/css-calipers/units`, or per-family subpaths.
 
+## Ratios and plain numbers
+
+Not every CSS value carries a unit. Aspect ratios, opacity, z-index, line-height, and
+font-weight are plain numbers, and csstype waves any number through. CSS-Calipers types
+those too.
+
+```ts
+import { r, i, f, hardenFloat, hardenInteger } from "@css-bookends/css-calipers";
+
+r(16, 9).css();   // "16/9"  aspect-ratio
+i(3).css();       // "3"     a whole number
+f(0.5).css();     // "0.5"   a real number
+
+// Harden once, reuse: bind a constraint and get a bound factory
+const opacity = hardenFloat({ min: 0, max: 1 });
+opacity(1.5);                 // throws: 1.5 is above the maximum 1
+opacity(0.4).css();           // "0.4"
+
+const fontWeight = hardenInteger({ min: 1, max: 1000 });
+fontWeight(700).css();        // "700"
+
+// ratio composes from the primitives and respects their hardening
+r(i(16), i(9)).css();         // "16/9"
+```
+
+`i()` rejects non-integers, `f()` rejects non-finite values, and both enforce optional
+`{ min, max }` bounds that survive arithmetic (a result that breaks the constraint throws).
+See **[The number space](docs/number-space.md)** for which CSS values map to which primitive.
+
 ## Value hardening
 
 Many CSS values have a restricted domain (padding `>= 0`, opacity `0..1`). Refinements
@@ -73,19 +103,20 @@ Each exposes `is` / `ensure` / `check` / `hardenWith`. Full guide:
 
 - **Compile-time unit validation.** Prevents mixing incompatible units.
 - **Arithmetic safety.** Operate only within matching units; conversions are explicit.
+- **Typed scalars and ratios.** Integers (`i`), floats (`f`), and ratios (`r`) with optional range bounds that survive arithmetic.
 - **Value hardening.** Runtime constraints (non-negative, ranges) that also narrow the type.
 - **Explicit emission.** `.css()` outputs a typed string only when needed.
 - **Light runtime footprint.** Near-zero cost when emitted at build time.
 - **Framework-agnostic.** Works anywhere TypeScript does.
 
-`m` accepts any unit string you'd use in CSS. CSS-Calipers focuses exclusively on numeric,
-unit-bearing values; keywords (`auto`, `fit-content`), shorthand strings, `var(--token)`,
-and `calc(...)` stay as explicit strings in your styling layer (see
-[Philosophy](docs/integration.md#philosophy-and-boundaries)).
+`m` accepts any unit string you'd use in CSS. CSS-Calipers types the numeric inputs to CSS:
+unit-bearing measurements, ratios, and plain integers and floats. Keywords (`auto`,
+`fit-content`), shorthand strings, `var(--token)`, and `calc(...)` stay as explicit strings
+in your styling layer (see [Philosophy](docs/integration.md#philosophy-and-boundaries)).
 
 ## Status & support
 
-- Stable `1.0` release of the measurement layer, part of the
+- Stable `1.0` core (measurements, ratios, and the integer/float scalars), part of the
   [CSS-Bookends](https://github.com/css-bookends/css-bookends) umbrella.
 - Tested with TypeScript 5.6+ on Node 18+.
 - Solo, early-stage project. If it saves you time, you can
@@ -129,8 +160,9 @@ See [examples/factory-wrapper.example.ts](examples/factory-wrapper.example.ts).
 
 ## Philosophy
 
-Measurement math lives here; string composition lives elsewhere. `.css()` is an edge, not a
-habit. Numbers are operands, not values (no unit, no measurement). Keywords and
+Typed CSS inputs live here; string composition lives elsewhere. `.css()` is an edge, not a
+habit. Plain numbers that ARE CSS values (opacity, z-index, ratios) are typed via `i()` /
+`f()` / `r()`; a number used only as an arithmetic operand needs no wrapper. Keywords and
 `var(--token)` coexist but stay outside the library. Details and integration patterns:
 **[Integration & philosophy](docs/integration.md)**.
 
@@ -140,6 +172,7 @@ habit. Numbers are operands, not values (no unit, no measurement). Keywords and
 - [Errors](docs/errors.md) — error behavior, common codes, stack hints.
 - [Integration & philosophy](docs/integration.md) — worked example, patterns, boundaries.
 - [Measurements core](README_MEASUREMENT.md) — the measurement API in depth.
+- [The number space](docs/number-space.md) — which CSS values map to integer / float / ratio.
 - [Testing](TESTING.md) — testing patterns and dev-only guards.
 
 ## Examples

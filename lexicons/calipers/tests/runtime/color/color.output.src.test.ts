@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { colorFormats, publishBookColor } from '../../src/color';
+import { color, colorFormats } from '../../../src/color';
 
 /*
  * OUTPUT step (Part 3): formats + `.css()`. Default is rgba with the alpha slot always
@@ -8,8 +8,6 @@ import { colorFormats, publishBookColor } from '../../src/color';
  * dropping a real alpha is a strictness-governed violation; out-of-gamut on a narrow
  * format is likewise a violation. Real assertions (no `it.todo`).
  */
-
-const color = publishBookColor();
 
 describe('color output — default escalates to the simplest faithful format', () => {
   it('opaque, in sRGB -> hex', () => {
@@ -53,12 +51,11 @@ describe('color output — selectors and one-off .css(format)', () => {
   });
 });
 
-describe('color output — factory binds the default format', () => {
-  it('publishBookColor config overrides the default output', () => {
-    const hexColor = publishBookColor({
-      config: { output: colorFormats.hex },
-    });
-    expect(hexColor('#3366cc').css()).toBe('#3366cc');
+describe('color output — config binds the default format', () => {
+  it('per-call config overrides the default output', () => {
+    expect(color('#3366cc', { output: colorFormats.hex }).css()).toBe(
+      '#3366cc',
+    );
   });
 });
 
@@ -72,12 +69,11 @@ describe('color output — never silently drop alpha', () => {
   });
 
   it("strictness 'silent' drops the alpha without complaint", () => {
-    const lax = publishBookColor({
-      config: { strictness: 'silent' },
-    });
-    expect(lax('#3366cc80').css(colorFormats.rgb)).toBe(
-      'rgb(51, 102, 204)',
-    );
+    expect(
+      color('#3366cc80', { strictness: 'silent' }).css(
+        colorFormats.rgb,
+      ),
+    ).toBe('rgb(51, 102, 204)');
   });
 
   it('opaque color into rgb is fine (no alpha to drop)', () => {
@@ -95,12 +91,9 @@ describe('color output — out-of-gamut is a strictness-governed violation', () 
   });
 
   it("strictness 'silent' clamps to a valid in-gamut value", () => {
-    const lax = publishBookColor({
-      config: { strictness: 'silent' },
-    });
-    expect(lax(wide).css(colorFormats.rgb)).toMatch(
-      /^rgb\(\d+, \d+, \d+\)$/,
-    );
+    expect(
+      color(wide, { strictness: 'silent' }).css(colorFormats.rgb),
+    ).toMatch(/^rgb\(\d+, \d+, \d+\)$/);
   });
 
   it('wide-gamut formats (oklch) keep it without complaint', () => {

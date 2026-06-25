@@ -129,8 +129,8 @@ string keywords for symbolic values, without reintroducing vague unions.
 
 You don't have to convert everything at once, or at all. Write small adapters that accept
 existing CSS strings, CSS-Calipers measurements, or plain numbers and turn them into CSS
-values. CSS-Calipers focuses narrowly on numeric, unit-bearing values and leaves the rest
-of your styling approach up to you.
+values. CSS-Calipers types the numeric inputs to CSS, measurements, ratios, integers, floats,
+colour, and per-property value helpers, and leaves the rest of your styling approach up to you.
 
 For a worked adapter that normalizes mixed inputs (numbers, numeric strings with units,
 keywords like `"normal"`, CSS variables like `"var(--body-line-height)"`) into a single
@@ -147,9 +147,10 @@ CSS strings owned by your styling layer.
   pure.
 - **`.css()` at runtime is an edge, not a habit.** You can call `.css()` at runtime, but
   prefer emitting once to avoid hot-path string churn.
-- **Numbers are operands, not CSS-Calipers values.** You cannot create a measurement without
-  a unit. Pass plain numbers as operands or combine with another `IMeasurement`, but never
-  store bare numbers inside library state.
+- **Typed values vs operands.** Numbers that ARE CSS values (opacity, z-index, ratios) are
+  typed via `i()` / `f()` / `r()` and the per-property helpers; a number used only as an
+  arithmetic operand (a multiplier) needs no wrapper. A measurement still requires a unit:
+  `m()` covers the unit-bearing values, the scalar primitives cover the unitless ones.
 - **Model keywords explicitly (not "escape hatches").** If a helper needs symbolic CSS
   (`'auto'`, `'fit-content'`), define a precise keyword type and exclude the emitted string
   type so numeric values remain the default path.

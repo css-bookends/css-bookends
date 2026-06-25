@@ -98,6 +98,26 @@ CSS remains the final specification. This system does not replace it, restrict
 it, or redefine it. It enforces correctness at authoring time and emits fully
 inspectable CSS.
 
+## Wrapping at the edges, not reinventing
+
+The metaphors (lexicon, book, typesetter, gilding, shelf) name one consistent
+architecture. They are a mental model, not the substance, and they are not cute
+labels stuck on existing tools. Two things here are genuinely different, and neither
+is a rename:
+
+1. **The typed authoring contract.** You compose CSS values as typed, branded,
+   autocompleting TypeScript that catches mistakes before they ship, and plain CSS
+   comes out. That seam, typed in and plain CSS out, is what utility libraries,
+   naming methodologies, and post-processors do not give you.
+2. **Deliberate wrapping at the edges, credited plainly.** Where a mature tool already
+   solves a problem, we wrap it instead of reinventing it, and we say so. The
+   typesetter (planned) wraps a W3C Design Tokens parser at the input edge;
+   **gilding** wraps [Lightning CSS](https://lightningcss.dev/) at the output edge to
+   complete browser compatibility (older-browser fallbacks and vendor prefixes). We do
+   not reimplement or take credit for their work. What CSS-Bookends adds is the
+   coherent typed system around those edges, one factory model and one `.css()` output
+   with swappable internals, not the wrapped tool's transformation.
+
 ## Terminology
 
 The architecture terms (lexicon, book, the three steps, manuscript, `publishBook` /

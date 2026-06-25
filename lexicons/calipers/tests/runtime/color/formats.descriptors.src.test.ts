@@ -1,26 +1,26 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  color,
   type ColorInput,
   defaultColorConfig,
   parseColor,
-  publishBookColor,
   storeColor,
-} from '../../src/color';
-import { displayP3 } from '../../src/formats/display-p3/display-p3';
-import { hex } from '../../src/formats/hex/hex';
-import { hexAlpha } from '../../src/formats/hexAlpha/hexAlpha';
-import { hsl } from '../../src/formats/hsl/hsl';
-import { hwb } from '../../src/formats/hwb/hwb';
-import { lab } from '../../src/formats/lab/lab';
-import { lch } from '../../src/formats/lch/lch';
-import { oklab } from '../../src/formats/oklab/oklab';
-import { rgb } from '../../src/formats/rgb/rgb';
-import { rgba } from '../../src/formats/rgba/rgba';
+} from '../../../src/color';
+import { displayP3 } from '../../../src/color/formats/display-p3/display-p3';
+import { hex } from '../../../src/color/formats/hex/hex';
+import { hexAlpha } from '../../../src/color/formats/hexAlpha/hexAlpha';
+import { hsl } from '../../../src/color/formats/hsl/hsl';
+import { hwb } from '../../../src/color/formats/hwb/hwb';
+import { lab } from '../../../src/color/formats/lab/lab';
+import { lch } from '../../../src/color/formats/lch/lch';
+import { oklab } from '../../../src/color/formats/oklab/oklab';
+import { rgb } from '../../../src/color/formats/rgb/rgb';
+import { rgba } from '../../../src/color/formats/rgba/rgba';
 import type {
   ColorSpaceDescriptor,
   Gamut,
-} from '../../src/formats/types';
+} from '../../../src/color/formats/types';
 
 /**
  * Per-format descriptor coverage: each descriptor's `render` must match the book's
@@ -31,7 +31,6 @@ import type {
  * format holds it without a violation.
  */
 
-const color = publishBookColor();
 type Resolved = ReturnType<typeof color>;
 const OPAQUE = '#3366cc';
 

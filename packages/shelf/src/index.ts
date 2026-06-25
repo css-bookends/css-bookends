@@ -18,18 +18,23 @@ export interface ShelfConfig {
   color?: Partial<ColorConfig>;
 }
 
-/** The bound shelf: each book under its name + the lexicons spread by name. */
+/**
+ * The bound shelf: each book under its name + the lexicons spread by name. `color`
+ * is the bound color BOOK (the factory result), so it shadows the calipers `color`
+ * value primitive of the same name (excluded from the spread surface here).
+ */
 export type Shelf = {
   color: ReturnType<typeof publishBookColor>;
-} & typeof calipers &
+} & Omit<typeof calipers, 'color'> &
   typeof mediaQueries;
 
 /**
  * Bind the whole shelf: each book via its own factory (under its name), with the
- * lexicons (`css-calipers`, `media-queries`) spread straight up by their names.
+ * lexicons (`css-calipers`, `media-queries`) spread straight up by their names. The
+ * color book is assigned last so it wins the `color` slot over the calipers value fn.
  */
 export const publishShelf = (config: ShelfConfig = {}): Shelf => ({
-  color: publishBookColor({ config: config.color }),
   ...calipers,
   ...mediaQueries,
+  color: publishBookColor({ config: config.color }),
 });

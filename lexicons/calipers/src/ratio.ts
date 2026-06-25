@@ -1,11 +1,23 @@
+import { type IFloat, isFloat } from './float';
+import { type IInteger, isInteger } from './integer';
+
+/** A value `ratio` can consume: a raw number or a typed scalar primitive. */
+export type RatioValue = number | IInteger | IFloat;
+
+const ratioValueToNumber = (value: RatioValue): number =>
+  typeof value === 'number' ? value : value.valueOf();
+
+const isRatioValue = (value: unknown): value is RatioValue =>
+  typeof value === 'number' || isInteger(value) || isFloat(value);
+
 export interface IRatio {
   css: () => string;
   toString: () => string;
   valueOf: () => number;
   numerator: () => number;
   denominator: () => number;
-  withNumerator: (numerator: number) => IRatio;
-  withDenominator: (denominator: number) => IRatio;
+  withNumerator: (numerator: RatioValue) => IRatio;
+  withDenominator: (denominator: RatioValue) => IRatio;
 }
 
 export type RatioParts = {
@@ -46,12 +58,18 @@ class RatioImpl implements IRatio {
     return this.#denominator;
   }
 
-  withNumerator(numerator: number): IRatio {
-    return new RatioImpl(numerator, this.#denominator);
+  withNumerator(numerator: RatioValue): IRatio {
+    return new RatioImpl(
+      ratioValueToNumber(numerator),
+      this.#denominator,
+    );
   }
 
-  withDenominator(denominator: number): IRatio {
-    return new RatioImpl(this.#numerator, denominator);
+  withDenominator(denominator: RatioValue): IRatio {
+    return new RatioImpl(
+      this.#numerator,
+      ratioValueToNumber(denominator),
+    );
   }
 
   valueOf(): number {
@@ -75,29 +93,27 @@ type RatioCreateOptions = {
 };
 
 export function r(
-  denominator: number,
+  denominator: RatioValue,
   options?: RatioCreateOptions,
 ): IRatio;
 export function r(
-  numerator: number,
-  denominator: number,
+  numerator: RatioValue,
+  denominator: RatioValue,
   options?: RatioCreateOptions,
 ): IRatio;
 export function r(
-  numeratorOrDenominator: number,
-  denominatorOrOptions?: number | RatioCreateOptions,
+  numeratorOrDenominator: RatioValue,
+  denominatorOrOptions?: RatioValue | RatioCreateOptions,
   options?: RatioCreateOptions,
 ): IRatio {
-  const hasOptionsArg =
-    typeof denominatorOrOptions === 'object' &&
-    denominatorOrOptions !== null;
-  const resolvedOptions = hasOptionsArg
-    ? denominatorOrOptions
-    : options;
-  const numerator = numeratorOrDenominator;
-  const resolvedDenominator = hasOptionsArg
-    ? 1
-    : (denominatorOrOptions ?? 1);
+  let resolvedDenominator = 1;
+  let resolvedOptions = options;
+  if (isRatioValue(denominatorOrOptions)) {
+    resolvedDenominator = ratioValueToNumber(denominatorOrOptions);
+  } else if (denominatorOrOptions !== undefined) {
+    resolvedOptions = denominatorOrOptions;
+  }
+  const numerator = ratioValueToNumber(numeratorOrDenominator);
   const ratio = new RatioImpl(numerator, resolvedDenominator);
   return resolvedOptions?.simplify ? simplifyRatio(ratio) : ratio;
 }
@@ -116,11 +132,17 @@ export const isRatio = (value: unknown): value is IRatio => {
 };
 
 export const parseRatio = (
-  value: number | string | IRatio,
+  value: number | string | IRatio | IInteger | IFloat,
 ): RatioParts | null => {
   if (typeof value === 'number') {
     return Number.isFinite(value)
       ? { numerator: value, denominator: 1 }
+      : null;
+  }
+  if (isInteger(value) || isFloat(value)) {
+    const numeric = value.valueOf();
+    return Number.isFinite(numeric)
+      ? { numerator: numeric, denominator: 1 }
       : null;
   }
   if (isRatio(value)) {

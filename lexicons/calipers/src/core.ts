@@ -1,9 +1,20 @@
-import { createCoreApi } from './internal/createCoreApi';
 import {
-  createErrorConfigStore,
-  type ErrorCode,
-  type ErrorConfig,
-} from './internal/errors';
+  f,
+  type FloatConstraints,
+  type FloatOptions,
+  hardenFloat,
+  type IFloat,
+  isFloat,
+} from './float';
+import {
+  hardenInteger,
+  i,
+  type IInteger,
+  type IntegerConstraints,
+  type IntegerOptions,
+  isInteger,
+} from './integer';
+import { type ErrorCode, type ErrorConfig } from './internal/errors';
 import {
   type IRatio,
   isRatio,
@@ -12,6 +23,7 @@ import {
   r,
   type RatioParts,
   ratioToFloat,
+  type RatioValue,
   reduceRatio,
   simplifyRatio,
   toFloat,
@@ -186,31 +198,13 @@ export type UnitAssertion<T extends UnitHelper> = (
   context?: string,
 ) => asserts value is MeasurementOf<T>;
 
-const defaultErrorStore = createErrorConfigStore();
-const coreApi = createCoreApi(defaultErrorStore);
-
-export const {
-  m,
-  isMeasurement,
-  assertMatchingUnits,
-  measurementMin,
-  measurementMax,
-  measurementUnitMetadata,
-  makeUnitHelper,
-  makeUnitHelperFromDefinition,
-  makeUnitGuard,
-  makeUnitAssert,
-  hasCssMethod,
-  assertUnit,
-  assertCondition,
-  makeMeasurementRefinement,
-  nonNegative,
-  nonPositive,
-  inRange,
-  getErrorConfig,
-  setErrorConfig,
-} = coreApi;
-
+// The package's bare, default-instance helpers (`m`, the refinements, the
+// unit-helper builders, the error-config accessors, ...) are NOT assembled here.
+// They live in `./default`, which builds them via the public `createCalipers()`
+// factory at its defaults, so there is a single construction path and the default
+// cannot drift from a custom instance. This module owns only the class/types and
+// the `createCoreApi`-level type surface; it must stay free of any default-instance
+// runtime assembly to keep `core <-> factory` cycle-free.
 export type MeasurementUnitDefinition = UnitDefinition;
 export type MeasurementUnitCategory = UnitCategory;
 export { type ErrorCode, type ErrorConfig };
@@ -224,4 +218,13 @@ export {
   simplifyRatio,
   toFloat,
 };
-export type { IRatio, RatioParts };
+export type { IRatio, RatioParts, RatioValue };
+export { f, hardenFloat, hardenInteger, i, isFloat, isInteger };
+export type {
+  FloatConstraints,
+  FloatOptions,
+  IFloat,
+  IInteger,
+  IntegerConstraints,
+  IntegerOptions,
+};

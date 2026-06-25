@@ -1,21 +1,19 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  color,
   type ColorInput,
   defaultColorConfig,
   parseColor,
-  publishBookColor,
   storeColor,
-} from '../../src/color';
-import { oklch } from '../../src/formats/oklch/oklch';
+} from '../../../src/color';
+import { oklch } from '../../../src/color/formats/oklch/oklch';
 
 /**
  * The oklch format descriptor. Two things: its fallback metadata, and that its
  * `render` matches the book's existing `oklch().css()` output (parity, so extracting
  * the per-format render cannot drift from `serialize`).
  */
-
-const color = publishBookColor();
 
 /** The canonical OKLCH store color for an input (what `descriptor.render` takes). */
 const stored = (input: ColorInput) => {

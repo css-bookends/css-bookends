@@ -122,8 +122,11 @@ describe('API surface (CJS)', () => {
   });
 
   it('exposes the full root runtime export map', () => {
+    // `__esModule` and `default` are CJS<->ESM interop artifacts on the namespace
+    // (the dynamic `import()` of a CJS bundle synthesizes a `default`), not part of the
+    // package's real named API surface.
     const rootKeys = Object.keys(cjsRoot).filter(
-      (key) => key !== '__esModule',
+      (key) => key !== '__esModule' && key !== 'default',
     );
 
     const coreRuntimeKeys = [
@@ -152,10 +155,71 @@ describe('API surface (CJS)', () => {
       'toFloat',
       'reduceRatio',
       'simplifyRatio',
+      'i',
+      'f',
+      'isInteger',
+      'isFloat',
+      'hardenInteger',
+      'hardenFloat',
       'isPercentMeasurement',
       'assertPercentMeasurement',
       'getErrorConfig',
       'setErrorConfig',
+      // colour value surface (re-exported from ./color)
+      'color',
+      'colorFormats',
+      'defaultColorConfig',
+      'defaultFormatPriority',
+      'defineColorSpace',
+      'parseColor',
+      'resolveColor',
+      'storeColor',
+      // css-value helper layer (the factory, the spec table, and the bare
+      // per-property helpers)
+      'createCssValues',
+      'CSS_VALUE_SPEC',
+      'animationIterationCount',
+      'columnCount',
+      'fillOpacity',
+      'flexGrow',
+      'flexShrink',
+      'floodOpacity',
+      'fontSizeAdjust',
+      'fontWeight',
+      'lineClamp',
+      'lineHeight',
+      'mathDepth',
+      'opacity',
+      'order',
+      'orphans',
+      'shapeImageThreshold',
+      'stopOpacity',
+      'strokeMiterlimit',
+      'strokeOpacity',
+      'widows',
+      'zIndex',
+      'zoom',
+      // multi-part css-value helpers (counters, grid lines, scale, tab-size)
+      'counterIncrement',
+      'counterReset',
+      'counterSet',
+      'gridColumnEnd',
+      'gridColumnStart',
+      'gridRowEnd',
+      'gridRowStart',
+      'scale',
+      'span',
+      'tabSize',
+      // number-or-length tier (border-image / mask-border edges, stroke)
+      'borderImageOutset',
+      'borderImageSlice',
+      'borderImageWidth',
+      'maskBorderOutset',
+      'maskBorderSlice',
+      'maskBorderWidth',
+      'strokeDasharray',
+      'strokeDashoffset',
+      'strokeWidth',
     ];
 
     const unitHelperKeys = Object.keys(

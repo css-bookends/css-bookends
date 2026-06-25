@@ -1,13 +1,35 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import * as colorPackage from '../../src';
-import { colorFormats, publishBookColor } from '../../src';
+import {
+  colorFormats,
+  parseColor,
+  publishBookColor,
+  storeColor,
+} from '../../src';
 
 /*
  * The factory contract: the book is consumed ONLY through `publishBookColor` (never a
  * pre-built instance), and the factory takes the config options output / strictness /
  * transparent / omitOpaqueAlpha.
  */
+
+describe('color — re-exports the calipers colour value surface', () => {
+  it('re-exports the value primitives + registry from css-calipers', () => {
+    // the value logic now lives in @css-bookends/css-calipers/color; this package
+    // re-exports it so its public API is unchanged for existing consumers.
+    expect(typeof parseColor).toBe('function');
+    expect(typeof storeColor).toBe('function');
+    expect(colorFormats).toBeDefined();
+    expect(colorFormats.hex.format).toBe('hex');
+  });
+
+  it('does NOT re-export the calipers bare `color()` convenience', () => {
+    // the factory-only contract forbids a ready-made bare `color` export; you bind
+    // a book via `publishBookColor`. (`color()` stays in @css-bookends/css-calipers.)
+    expect('color' in colorPackage).toBe(false);
+  });
+});
 
 describe('color — factory-only contract (no pre-built instance)', () => {
   it('exports the publishBookColor factory', () => {

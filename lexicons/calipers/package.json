@@ -1,7 +1,7 @@
 {
   "name": "@css-bookends/css-calipers",
   "version": "1.0.0",
-  "description": "Compile-time unit safety for numeric, unit-bearing CSS values via typed measurements.",
+  "description": "The missing typed inputs for CSS: build-time-validated measurements, ratios, integers, floats, colour, and per-property value helpers.",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -15,9 +15,13 @@
   "author": "slafleche",
   "keywords": [
     "css",
+    "typed-inputs",
     "units",
     "typescript",
     "measurement",
+    "ratio",
+    "integer",
+    "float",
     "safety",
     "calipers",
     "type-safe",
@@ -47,6 +51,11 @@
       "import": "./dist/esm/factory.js",
       "require": "./dist/cjs/factory.js"
     },
+    "./color": {
+      "types": "./dist/esm/color/index.d.ts",
+      "import": "./dist/esm/color/index.js",
+      "require": "./dist/cjs/color/index.js"
+    },
     "./units": {
       "types": "./dist/esm/units/index.d.ts",
       "import": "./dist/esm/units/index.js",
@@ -60,10 +69,12 @@
     "./package.json": "./package.json"
   },
   "dependencies": {
-    "csstype": "^3.1.3"
+    "csstype": "^3.2.3",
+    "culori": "^4.0.2"
   },
   "devDependencies": {
     "@css-bookends/eslint-config": "workspace:*",
+    "@types/culori": "^4.0.1",
     "@types/node": "^24.10.1",
     "@vanilla-extract/css": "^1.20.1",
     "@vitest/coverage-v8": "^4.1.7",
@@ -79,10 +90,16 @@
     "build:examples": "tsc -p tsconfig.examples.json --noEmit",
     "build:test": "npm run build && npm run test",
     "build:delete": "node -e \"const { existsSync, rmSync } = require('fs'); const paths = ['dist/cjs', 'dist/esm']; for (const p of paths) { console.log('Scanning', p + '...'); if (existsSync(p)) { console.log('Found', p + ', deleting...'); rmSync(p, { recursive: true, force: true }); console.log('Deleted', p); } else { console.log(p + ' not found, skipping.'); } }\"",
-    "test": "npm run build && npm run test:core && npm run test:refinement && npm run test:ratio && npm run test:factory && npm run test:dist && npm run test:types && npm run test:tsc && npm run lint && npm run test:internal",
+    "test": "npm run build && npm run test:core && npm run test:refinement && npm run test:ratio && npm run test:integer && npm run test:float && npm run test:css-values && npm run test:factory && npm run test:color && npm run test:dist && npm run test:types && npm run test:tsc && npm run lint && npm run test:internal",
     "test:core": "vitest run tests/runtime/core/core.src.test.ts",
     "test:refinement": "vitest run tests/runtime/core/refinement.src.test.ts",
     "test:ratio": "vitest run tests/runtime/ratio/ratio.src.test.ts",
+    "test:integer": "vitest run tests/runtime/integer/integer.src.test.ts",
+    "test:float": "vitest run tests/runtime/float/float.src.test.ts",
+    "test:css-values": "vitest run tests/runtime/css-values/css-values.src.test.ts && npm run test:css-values:multi && npm run test:css-values:coverage",
+    "test:css-values:multi": "vitest run tests/runtime/css-values/multi.src.test.ts",
+    "test:css-values:coverage": "vitest run tests/runtime/css-values/coverage.src.test.ts",
+    "test:color": "vitest run tests/runtime/color",
     "test:core:cjs": "vitest run tests/runtime/core/core.cjs.test.ts tests/runtime/api-surface/api-surface.cjs.test.ts",
     "test:core:esm": "vitest run tests/runtime/core/core.esm.test.ts tests/runtime/api-surface/api-surface.esm.test.ts",
     "test:core:dist": "npm run test:core:cjs && npm run test:core:esm",

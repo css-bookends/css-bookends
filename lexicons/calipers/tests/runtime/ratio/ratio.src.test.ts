@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
+import { f } from '../../../src/float';
+import { i } from '../../../src/integer';
 import {
   isRatio,
   normalizeRatio,
@@ -132,5 +134,22 @@ describe('Ratio helper (src)', () => {
     expect(() => normalizeRatio(r(2, 0))).toThrow(
       'Ratio denominator cannot be zero.',
     );
+  });
+
+  it('consumes integer and float primitives', () => {
+    expect(r(i(16), i(9)).css()).toBe('16/9');
+    expect(r(i(16), i(9)).valueOf()).toBeCloseTo(16 / 9);
+    expect(r(f(1.5), f(3)).css()).toBe('1.5/3');
+    expect(r(i(4)).css()).toBe('4/1');
+    expect(r(i(6), i(3), { simplify: true }).css()).toBe('2');
+    expect(r(2, 3).withNumerator(i(4)).css()).toBe('4/3');
+    expect(parseRatio(i(5))).toEqual({
+      numerator: 5,
+      denominator: 1,
+    });
+    expect(parseRatio(f(2.5))).toEqual({
+      numerator: 2.5,
+      denominator: 1,
+    });
   });
 });

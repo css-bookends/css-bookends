@@ -1,7 +1,11 @@
 import { converter } from 'culori';
 import { describe, expect, it } from 'vitest';
 
-import { parseColor, type Store, storeColor } from '../../src/color';
+import {
+  parseColor,
+  type Store,
+  storeColor,
+} from '../../../src/color';
 
 /*
  * STORAGE step (Part 2 of the color book): the canonical store normalizes every

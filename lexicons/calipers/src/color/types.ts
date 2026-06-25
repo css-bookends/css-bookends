@@ -1,6 +1,7 @@
-import type { DegMeasurement } from '@css-bookends/css-calipers';
 import type { Property } from 'csstype';
 import type { Color } from 'culori';
+
+import type { DegMeasurement } from '../units/angle';
 
 /**
  * The color book's TYPE contract: the live, library-agnostic surface for the

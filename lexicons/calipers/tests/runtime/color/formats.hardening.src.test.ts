@@ -1,7 +1,7 @@
 import { describe, expectTypeOf, it } from 'vitest';
 
-import { colorFormats, publishBookColor } from '../../src/color';
-import type { ColorString } from '../../src/formats';
+import { color, colorFormats } from '../../../src/color';
+import type { ColorString } from '../../../src/color/formats';
 
 /**
  * Selector hardening: a specific format selector hardens `.css()` to that format's
@@ -11,8 +11,6 @@ import type { ColorString } from '../../src/formats';
  */
 
 describe('selector hardening', () => {
-  const color = publishBookColor();
-
   it('hardens .css() to the selected format brand', () => {
     expectTypeOf(color('#fff').hex().css()).toEqualTypeOf<
       ColorString<'hex'>

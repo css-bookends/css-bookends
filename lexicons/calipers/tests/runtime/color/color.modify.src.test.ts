@@ -1,12 +1,12 @@
-import { mDeg } from '@css-bookends/css-calipers';
 import { converter, parse } from 'culori';
 import { describe, expect, it } from 'vitest';
 
 import {
+  color,
   colorFormats,
-  publishBookColor,
   type ResolvedColor,
-} from '../../src/color';
+} from '../../../src/color';
+import { mDeg } from '../../../src/units/angle';
 
 /*
  * MODIFY step: the immutable modification algebra. Amounts are 0..1 fractions,
@@ -14,7 +14,6 @@ import {
  * resolved color. Real assertions (no `it.todo`). The documented gaps (setLightness,
  * contrast, complement, invert, grayscale) and `blend` remain pending in the matrix.
  */
-const color = publishBookColor();
 const oklchOf = (rc: ResolvedColor): Record<string, number> =>
   converter('oklch')(parse(rc.oklch().css())) as unknown as Record<
     string,

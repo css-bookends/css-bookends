@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import type { FormatName } from '../../src/color';
-import { colorFormats } from '../../src/formats';
+import type { FormatName } from '../../../src/color';
+import { colorFormats } from '../../../src/color/formats';
 
 /**
  * The unified registry: one descriptor per known format name, keyed by that name.
