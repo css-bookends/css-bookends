@@ -54,7 +54,7 @@ Root `package.json` (private, so it never publishes):
 ```json
 {
   "name": "@css-bookends/root",
-  "private": true,
+  "private": false,
   "version": "0.0.0",
   "scripts": {
     "build": "pnpm -r build",

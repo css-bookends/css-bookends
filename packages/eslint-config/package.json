@@ -1,7 +1,7 @@
 {
   "name": "@css-bookends/eslint-config",
-  "version": "0.0.0",
-  "private": true,
+  "version": "0.1.0",
+  "private": false,
   "description": "Shared ESLint flat config for CSS-Bookends packages.",
   "license": "MIT",
   "author": "slafleche",
