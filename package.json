@@ -1,6 +1,6 @@
 {
   "name": "@css-bookends/monorepo",
-  "private": true,
+  "private": false,
   "version": "0.0.0",
   "description": "CSS-Bookends monorepo: typed, opt-in CSS helper books.",
   "license": "MIT",
