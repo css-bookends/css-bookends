@@ -63,6 +63,8 @@ Integers (`i`), floats (`f`), and custom colour formats round out the set.
 
 calipers is standalone and complete on its own. It is also Layer 1 of the larger CSS-Bookends project (helpers, then an opinionated framework, built on these primitives), and design-token (DTCG) documents convert to these primitives via the Bookends typesetter. Both are there if you want them, never required.
 
+A note on the names. The book metaphor (calipers, bookends, gilding, compendium) is deliberate, not just whimsy. Each name marks a ROLE, and intentionally hides the library currently filling it, because those internals are meant to be swappable. You import `color()`, not `culori`; the project's browser-compat finisher is `gilding`, not Lightning CSS. Swap the engine underneath and your call sites do not move.
+
 ## Install
 
 ```sh

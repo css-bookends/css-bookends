@@ -57,6 +57,5 @@ describe('per-primitive subpaths (src)', () => {
   it('corpus also exposes the factories', () => {
     expect(typeof corpus.createCalipers).toBe('function');
     expect(typeof corpus.createColor).toBe('function');
-    expect(typeof corpus.createCssValues).toBe('function');
   });
 });

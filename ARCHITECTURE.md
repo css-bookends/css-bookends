@@ -15,7 +15,7 @@ and `AGENTS.md`; keep this in sync with them.
    `f`, `color`). Usable STANDALONE, with no helpers at all. No helpers, no books, no
    `publishBook` engine, ever.
 2. **css-bookends (Layer 2), the helpers (books) that consume the primitives.** EVERY
-   helper is a book; the shelf is the full bundle of every active book; the typesetter
+   helper is a book; the compendium is the full bundle of every active book; the typesetter
    ingests DTCG design tokens; gilding is the output-edge finisher. Books consume
    calipers; calipers never depends on a book.
 3. **css-squire (Layer 3, TBD), the opinionated framework on top.** Built on the steady
@@ -48,12 +48,19 @@ must be extracted into the books layer. No further helpers go into calipers.
   prefix (for example `publishBookColor`, `publishBookBorders`, `publishBookMargin`).
   Calling it returns a configured book. This is the only sanctioned way to obtain a
   helper; the raw value-helper is never imported directly.
-- **shelf** + **`publishShelf()`** : the aggregate composition root. `publishShelf(config?)`
-  returns every book bound, in one object (no pre-built default instance is exported).
+- **compendium** + **`publishCompendium()`** : the aggregate composition root. Its ENTRY
+  is the `publishCompendium` factory, exported as the package's DEFAULT export (the entry
+  file IS the factory). A bare `publishCompendium()` binds every active book at its own
+  defaults (the lazy-defaults form); passing a master `CompendiumConfig` configures any
+  subset. `CompendiumConfig` is an amalgam: one OPTIONAL key per configurable book, each
+  keyed to that book's own config type (`{ color?: Partial<ColorConfig>; opacity?:
+  OpacityConfig; borders?: BordersConfig; ... }`). The factory fans each sub-config into
+  the matching `publishBook<Name>` and binds the rest at defaults.
 - **`.css()`** : the single render terminal required on every book's result.
 
-**The never-export rule:** a package's public surface is its `publishBook<Name>` factory
-(and `publishShelf()` for the shelf), never a raw value-helper or a pre-made instance. The
+**The never-export rule:** a per-book package's public surface is its `publishBook<Name>`
+factory, never a raw value-helper or a pre-made instance; the compendium adds an aggregate
+factory (`publishCompendium()`) on top, it does not change that per-book contract. The
 one exception is `@css-bookends/css-calipers` (a lexicon with a different structure). See
 `AGENTS.md` for the rule as enforced; this doc is the canonical glossary that `README.md`
 links to.
@@ -76,21 +83,25 @@ module-level exports.
 Precedent: `css-calipers` already works this way via `createCalipers({ errorConfig })`.
 This model generalizes that to every helper.
 
-## 2. The shelf factory (the composition root)
+## 2. The compendium factory (the composition root)
 
-`publishShelf()` wires up every helper with sensible defaults.
+`publishCompendium()` wires up every helper with sensible defaults. The compendium's
+entry IS this factory (the package default export).
 
-- **Everything, all defaults:** `const shelf = publishShelf()` returns all helpers
-  preconfigured. Re-export them from one file and the project imports its helpers
-  from there.
-- **One helper at a time:** export a single helper from the shelf, or call that
+- **Everything, all defaults:** a bare `const c = publishCompendium()` returns all
+  helpers bound at their own defaults (the lazy-defaults form). Re-export them from one
+  file and the project imports its helpers from there.
+- **Configure any subset:** pass a master `CompendiumConfig` (one optional key per
+  configurable book, keyed to that book's own config type). The factory fans each
+  sub-config into the matching `publishBook<Name>` and binds the rest at defaults.
+- **One helper at a time:** pull a single bound helper off the compendium, or call that
   helper's own factory directly, when you only want one.
 - **Multiple instances:** call a helper's factory more than once with different
   config to run differently-defaulted instances side by side.
 
 ## 3. Why the factory export is mandatory
 
-The file where you call `publishShelf()` / the per-helper factories and re-export
+The file where you call `publishCompendium()` / the per-helper factories and re-export
 the results is the **stable footprint**. When the library changes internally,
 only that one file might need updating; every consumer keeps its existing imports
 untouched. That seam is what makes large refactors safe, and why the factory

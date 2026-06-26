@@ -54,7 +54,7 @@ statement lives in `.claude/CLAUDE.md` and `AGENTS.md`):
    `r`, `i`, `f`, `color`). It is usable **standalone**, for someone who wants only
    typed CSS inputs and no helpers at all. No helpers, no books, ever.
 2. **css-bookends (Layer 2), the helpers (books) that consume the primitives.**
-   Every helper is a book; the shelf is the full bundle of every active book; the
+   Every helper is a book; the compendium is the full bundle of every active book; the
    typesetter ingests DTCG design tokens; gilding is the output-edge finisher.
    Books consume calipers; calipers never depends on a book.
 3. **css-squire (Layer 3, TBD), the opinionated framework on top.** Built on the
@@ -89,7 +89,7 @@ that you then feed to the books. See `design-tokens.md` for the boundary and the
 format reference.
 
 Every package publishes under the `@css-bookends/*` scope, lexicons and books
-alike (for example `@css-bookends/css-calipers` and `@css-bookends/shelf`).
+alike (for example `@css-bookends/css-calipers` and `@css-bookends/compendium`).
 
 ## What is available today
 
@@ -122,7 +122,7 @@ inspectable CSS.
 
 ## Wrapping at the edges, not reinventing
 
-The metaphors (lexicon, book, typesetter, gilding, shelf) name one consistent
+The metaphors (lexicon, book, typesetter, gilding, compendium) name one consistent
 architecture. They are a mental model, not the substance, and they are not cute
 labels stuck on existing tools. Two things here are genuinely different, and neither
 is a rename:
@@ -143,9 +143,13 @@ is a rename:
 ## Terminology
 
 The architecture terms (lexicon, book, the three steps, manuscript, `publishBook` /
-`publishBook<Name>`, shelf / `publishShelf()`, `.css()`) live in one place. See
+`publishBook<Name>`, compendium / `publishCompendium()`, `.css()`) live in one place. See
 **[`ARCHITECTURE.md`](./ARCHITECTURE.md)** for the model and the canonical glossary, and
 `AGENTS.md` for the rules that enforce them.
+
+## Factories (the override seam)
+
+Every book is consumed through its factory, never imported raw, because the factory is the configurable path and the override seam: it lets you rewrite or wrap any step (input, storage, output) onion-style, or swap the internals, with zero changes at call sites. A per-book package exports its `publishBook<Name>` factory and no pre-made instance, so a consumer binds it once (`const color = publishBookColor()`) and calls it. The compendium is the bundle's factory: `publishCompendium` is exported as the package's default export, a bare `publishCompendium()` binds every active book at its own defaults, and passing a master `CompendiumConfig` (one optional key per book) configures any subset.
 
 ## Installation
 
@@ -159,11 +163,11 @@ npm install @css-bookends/css-calipers
 # npm install @css-bookends/<book>
 ```
 
-Or take the whole bookshelf in one package, which re-exports every lexicon and
+Or take the whole compendium in one package, which re-exports every lexicon and
 book:
 
 ```bash
-npm install @css-bookends/shelf
+npm install @css-bookends/compendium
 ```
 
 ## Repository layout

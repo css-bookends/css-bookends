@@ -42,6 +42,5 @@ describe('per-primitive subpaths (ESM dist)', () => {
     expect(typeof esmCorpus.color).toBe('function');
     expect(typeof esmCorpus.createCalipers).toBe('function');
     expect(typeof esmCorpus.createColor).toBe('function');
-    expect(typeof esmCorpus.createCssValues).toBe('function');
   });
 });

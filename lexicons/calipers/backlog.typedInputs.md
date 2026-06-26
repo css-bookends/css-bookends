@@ -6,12 +6,12 @@ Tracking loose ends from making css-calipers the full typed-CSS-inputs package
 
 ## Colour fold loose ends (from Phase 1)
 
-- **3 pre-existing red tests** (`books/shadows` x1, `packages/shelf` x2) assert
+- **3 pre-existing red tests** (`books/shadows` x1, `packages/compendium` x2) assert
   `rgba(...)`, but the default colour priority is hex-first
   (`defaultFormatPriority = [hex, rgb, hexAlpha, rgba, ...]`). A 0.5-alpha colour
   renders `#5b419980` (hexAlpha), never reaching rgba. Stale assertions that
   predate the fold (verified failing at HEAD). Resolve one of three ways: flip the
-  assertions to the actual hex output, set those books'/shelf's colour config to
+  assertions to the actual hex output, set those books'/compendium's colour config to
   `output: colorFormats.rgba` if rgba is the intended product default, or fold it
   into the colour culori-rewrite. See the root `package.json` `//temp-exclude` note.
 - **Colour modification gaps: ALL filled (2026-06-25).** In

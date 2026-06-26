@@ -13,5 +13,5 @@ identity so a manuscript can omit it when input already yields the canonical sto
   `output:` step, so the per-call output-selection question is moot.
 - **Step wrapping (onion).** `ManuscriptOverrides.wrap` lets a re-publish decorate a step
   instead of replacing it (newest ring outermost).
-- **Shelf composition.** `publishShelf()` (in `@css-bookends/shelf`) is the project-level
-  composition root, binding many books with shared config.
+- **Compendium composition.** `publishCompendium()` (in `@css-bookends/compendium`) is the
+  project-level composition root, binding many books with shared config.

@@ -66,12 +66,14 @@ Keyword-only (no number at all):
 - `speak-as`: pronunciation keywords.
 - `vector-effect`: `none` / `non-scaling-stroke` and at-risk keywords.
 
-No standalone MDN page (not a documented CSS property):
+Rechecked 2026-06-25 (previously MDN 404; now documented, confirmed NOT bare-number):
 
-- `baseline-shift`: 404 on MDN. Exists as an SVG attribute, not a documented CSS
-  property page.
-- `column-height`: 404 on MDN. Listed in the index but no page to confirm a value
-  grammar.
+- `baseline-shift`: `<length-percentage> | sub | super | top | center | bottom`.
+  Length/percentage plus keywords, no bare unitless number. Out of scope (it is `m()`'s
+  length-percentage domain, not a `<number>`/`<integer>` helper). Applies only to SVG
+  `<tspan>` / `<textPath>`.
+- `column-height`: `auto | <length [0,∞]>`. A length plus the `auto` keyword, no bare
+  number. Out of scope (length domain, not a unitless-number helper).
 
 ## Shorthands of already-catalogued longhands (not separate findings)
 
@@ -86,13 +88,15 @@ already in the main catalogue. They are derivative, not new:
 
 ## Completeness statement
 
-With `reading-order` added, the catalogue covers every unitless-number property
-found by a full walk of the MDN CSS properties reference index as of June 2026.
-Caveat: the index includes experimental and recently-added properties whose value
-grammars can change. The two index entries with no MDN page (`baseline-shift`,
-`column-height`) could not be confirmed either way. If either grows a documented
-bare-number value later, it would need a re-check. The stable, documented surface
-is complete apart from the single `reading-order` gap.
+With `reading-order` identified, the catalogue covers every unitless-number property
+found by a full walk of the MDN CSS properties reference index. Rechecked 2026-06-25: the
+two formerly-404 entries (`baseline-shift`, `column-height`) are now documented and were
+confirmed length/percentage-based, NOT bare-number, so neither is a catalogue gap. The
+unitless-number surface is therefore complete. The single remaining gap, `reading-order`,
+is BLOCKED on tooling, not coverage: csstype has no `Property.ReadingOrder` key yet
+(verified 2026-06-25 against the installed csstype 3.2.x), so a typed helper cannot render
+against it. Add `reading-order` (same primitive as `order` / `z-index`) once csstype ships
+the key.
 
 ## Sources
 
@@ -124,7 +128,7 @@ Property pages opened and verified (one per property):
 - `vector-effect`: https://developer.mozilla.org/en-US/docs/Web/CSS/vector-effect
 - `speak-as`: https://developer.mozilla.org/en-US/docs/Web/CSS/speak-as
 
-No-page (404) entries, noted as unconfirmed:
+Rechecked 2026-06-25 (now documented; confirmed length-based, not bare-number):
 
 - `baseline-shift`: https://developer.mozilla.org/en-US/docs/Web/CSS/baseline-shift
 - `column-height`: https://developer.mozilla.org/en-US/docs/Web/CSS/column-height

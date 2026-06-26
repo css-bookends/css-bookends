@@ -14,12 +14,11 @@
     "node": ">=24"
   },
   "scripts": {
-    "//temp-exclude": "TEMP: color is excluded from lint/typecheck below pending its documented culori-rewrite gaps. Restore by deleting the `--filter='!...'` flags (and the matching set in lint-staged.config.mts). borders was restored once migrated onto self-publish.",
     "build": "pnpm -r build",
     "test": "pnpm -r test",
     "test:browser": "playwright test",
-    "lint": "pnpm --filter='!@css-bookends/color' -r lint",
-    "typecheck": "pnpm --filter='!@css-bookends/color' -r run test:tsc",
+    "lint": "pnpm -r lint",
+    "typecheck": "pnpm -r run test:tsc",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "changeset": "changeset",

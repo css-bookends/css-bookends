@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { f } from '../../../src/float';
-import { i } from '../../../src/integer';
+import { f, isFloat } from '../../../src/float';
+import { i, isInteger } from '../../../src/integer';
 import {
   isRatio,
   normalizeRatio,
@@ -150,6 +150,8 @@ describe('Ratio helper (src)', () => {
       valueOf: () => numerator / denominator,
       numerator: () => numerator,
       denominator: () => denominator,
+      numeratorScalar: () => i(0),
+      denominatorScalar: () => i(0),
       withNumerator: () => fakeRatio(numerator, denominator),
       withDenominator: () => fakeRatio(numerator, denominator),
     });
@@ -180,5 +182,26 @@ describe('Ratio helper (src)', () => {
       numerator: 2.5,
       denominator: 1,
     });
+  });
+
+  it('returns numerator and denominator back as typed i()/f() scalars', () => {
+    // typed operands come back INTACT (same kind that went in)
+    const typed = r(i(16), f(9));
+    expect(isInteger(typed.numeratorScalar())).toBe(true);
+    expect(typed.numeratorScalar().valueOf()).toBe(16);
+    expect(isFloat(typed.denominatorScalar())).toBe(true);
+    expect(typed.denominatorScalar().valueOf()).toBe(9);
+
+    // raw numbers reconstruct by value: whole -> i(), fractional -> f()
+    const raw = r(4, 2.5);
+    expect(isInteger(raw.numeratorScalar())).toBe(true);
+    expect(raw.numeratorScalar().valueOf()).toBe(4);
+    expect(isFloat(raw.denominatorScalar())).toBe(true);
+    expect(raw.denominatorScalar().valueOf()).toBe(2.5);
+
+    // a replaced side keeps the new operand's type
+    expect(
+      isInteger(r(2, 3).withNumerator(i(4)).numeratorScalar()),
+    ).toBe(true);
   });
 });

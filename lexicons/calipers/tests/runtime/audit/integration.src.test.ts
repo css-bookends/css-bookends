@@ -2,23 +2,19 @@ import { describe, expect, it } from 'vitest';
 
 import { createCalipers } from '../../../src/factory';
 import {
-  color,
-  fontWeight,
   inRange,
   m,
   nonNegative,
   nonPositive,
-  opacity,
-  zIndex,
 } from '../../../src/index';
 
 /*
  * Publish-readiness: CROSS-MODULE INTEGRATION.
  *
- * The unit primitives, the value-constraint refinements, the css-value helper
- * layer, and the colour value primitive are independent modules. These flows
- * exercise them TOGETHER, the way a consumer wires a design token, to catch a
- * regression that only shows up at a module boundary.
+ * The unit primitives, the value-constraint refinements, and the factory are
+ * independent modules. These flows exercise them TOGETHER, the way a consumer
+ * wires a design token, to catch a regression that only shows up at a module
+ * boundary.
  */
 
 describe('measurement + refinement + arithmetic in one flow', () => {
@@ -73,31 +69,6 @@ describe('measurement + refinement + arithmetic in one flow', () => {
     expect(() => nonPositive.ensure(crossed)).toThrow(
       /CALIPERS_E_CONSTRAINT/,
     );
-  });
-});
-
-describe('css-value helpers compose with the colour primitive for a token set', () => {
-  it('builds a coherent set of typed CSS declarations', () => {
-    const tokens = {
-      opacity: opacity(0.85).css(),
-      zIndex: zIndex(10).css(),
-      fontWeight: fontWeight(600).css(),
-      accent: color('#3366cc').hex().css(),
-      padding: m(8, 'px').multiply(2).css(),
-    };
-
-    expect(tokens.opacity).toBe('0.85');
-    expect(tokens.zIndex).toBe('10');
-    expect(tokens.fontWeight).toBe('600');
-    expect(tokens.accent).toBe('#3366cc');
-    expect(tokens.padding).toBe('16px');
-  });
-
-  it('clamp policy on a css-value helper still yields a renderable colour pairing', () => {
-    const faded = opacity(1.5, { outOfRange: 'clamp' }).css(); // '1'
-    const tinted = color('#3366cc').alpha(0.5).rgba().css();
-    expect(faded).toBe('1');
-    expect(tinted).toBe('rgba(51, 102, 204, 0.5)');
   });
 });
 

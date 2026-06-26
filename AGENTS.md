@@ -14,7 +14,7 @@ Keep them in sync. The stack is three strictly-separated layers, each with one j
    helpers at all. NO helpers, NO books, no `publishBook` engine, ever.
 2. **css-bookends (Layer 2), the helpers (books) that consume the primitives.** EVERY
    helper is a book (per-property: opacity, zIndex, ...; composed: borders, shadows,
-   margin, ...). The shelf is the full bundle of every active book; the typesetter
+   margin, ...). The compendium is the full bundle of every active book; the typesetter
    ingests DTCG design tokens; gilding is the output-edge finisher. Books consume
    calipers; calipers never depends on a book.
 3. **css-squire (Layer 3, TBD), the opinionated framework on top.** Built on the steady
@@ -39,18 +39,30 @@ imported straight from its module.
   exposes `publishBook`, which binds a book from its manuscript. Do NOT use
   `make*` / `create*` for a book factory.
 
-The public surface of a package is its factory; there is no per-package default instance.
+The public surface of a per-book package is its factory; a per-book package ships no
+pre-made default instance. The compendium is the one aggregate on top: its entry is the
+`publishCompendium` factory itself, and a bare `publishCompendium()` is the lazy-defaults
+form (every book bound at defaults). That aggregate does not change the per-book contract.
 
 - **A book package exports its `publishBook<Name>` factory** (plus value builders and
   composition helpers where useful, e.g. `anchorSize`, or margin/padding's `parse*`/`store*`),
   never a pre-made instance as the consumer entry. A consumer binds a book once
   (`const color = publishBookColor()`) and calls it.
-- **The shelf (aggregate root).** Importing `@css-bookends/shelf` gives you
-  `publishShelf(config?)`, which returns every book bound in one object. It does NOT
-  re-export raw helpers, so a raw value-helper is not reachable through it.
+- **The compendium (aggregate root).** `@css-bookends/compendium`'s entry IS the
+  `publishCompendium` factory, exported as the package's DEFAULT export (the entry file is
+  the factory). A bare `publishCompendium()` binds every active book at its own defaults
+  (the lazy-defaults form); passing a master `CompendiumConfig` configures any subset.
+  `CompendiumConfig` is an amalgam: one OPTIONAL key per configurable book, each keyed to
+  that book's own config type (`{ color?: Partial<ColorConfig>; opacity?: OpacityConfig;
+  borders?: BordersConfig; ... }`), and the factory fans each sub-config into the matching
+  `publishBook<Name>` and binds the rest at defaults. It returns every book bound in one
+  object and does NOT re-export raw helpers, so a raw value-helper is not reachable through
+  it. This aggregate sits ON TOP of the per-book factories; it does not change the per-book
+  contract (each package still exports only its `publishBook<Name>`, no pre-made instance).
 - **Call sites bind, then call** (`const color = publishBookColor(); color('#fff').css()`),
-  or pull a bound book off `publishShelf()`. Pass config at bind time
-  (`publishBookColor({ config })`).
+  or pull a bound book off `publishCompendium()`. Pass config at bind time
+  (`publishBookColor({ config })`), or via the matching `CompendiumConfig` key when
+  configuring through the compendium (`publishCompendium({ color: { config } })`).
 - **Never reach past the factory** to import the underlying value-helper as the consumer
   entry, even when it is exported from its own package for the factory's use.
 - **Exception: `@css-bookends/css-calipers`** (a lexicon with a different structure) is

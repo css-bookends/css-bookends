@@ -36,8 +36,8 @@ A typed-CSS stack in three layers. Each has one job. Keep them strictly separate
 - EVERY helper is a book. Per-property helpers (opacity, zIndex, fontWeight, ...) and
   composed helpers (borders, shadows, margin, padding, ...) are ALL Layer-2 books
   here. A helper NEVER lives in calipers.
-- The shelf (`packages/shelf`) is the full bundle: it always re-exports every active
-  book (the full "bookends"). The typesetter ingests design tokens (DTCG); gilding is
+- The compendium (`packages/compendium`) is the full bundle: it always re-exports every
+  active book (the full "bookends"). The typesetter ingests design tokens (DTCG); gilding is
   the output-edge finisher (browser-compat post-processing).
 
 ### Layer 3, css-squire (TBD) = the opinionated framework on top

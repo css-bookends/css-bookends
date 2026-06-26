@@ -1,7 +1,7 @@
 {
   "name": "@css-bookends/css-calipers",
   "version": "1.0.0",
-  "description": "The missing typed inputs for CSS: build-time-validated measurements, ratios, integers, floats, colour, and per-property value helpers.",
+  "description": "The missing typed inputs for CSS: build-time-validated measurements, ratios, integers, floats, and colour.",
   "license": "MIT",
   "repository": {
     "type": "git",
@@ -9,9 +9,9 @@
     "directory": "lexicons/calipers"
   },
   "bugs": {
-    "url": "https://github.com/slafleche/css-calipers/issues"
+    "url": "https://github.com/css-bookends/css-calipers/issues"
   },
-  "homepage": "https://github.com/slafleche/css-calipers#readme",
+  "homepage": "https://github.com/css-bookends/css-calipers#readme",
   "author": "slafleche",
   "keywords": [
     "css",
@@ -115,16 +115,13 @@
     "build:examples": "tsc -p tsconfig.examples.json --noEmit",
     "build:test": "npm run build && npm run test",
     "build:delete": "node -e \"const { existsSync, rmSync } = require('fs'); const paths = ['dist/cjs', 'dist/esm']; for (const p of paths) { console.log('Scanning', p + '...'); if (existsSync(p)) { console.log('Found', p + ', deleting...'); rmSync(p, { recursive: true, force: true }); console.log('Deleted', p); } else { console.log(p + ' not found, skipping.'); } }\"",
-    "test": "npm run build && npm run test:core && npm run test:refinement && npm run test:ratio && npm run test:integer && npm run test:float && npm run test:css-values && npm run test:factory && npm run test:subpaths && npm run test:color && npm run test:audit && npm run test:dist && npm run test:types && npm run test:tsc && npm run lint && npm run test:internal && npm run test:internal:run",
+    "test": "npm run build && npm run test:core && npm run test:refinement && npm run test:ratio && npm run test:integer && npm run test:float && npm run test:factory && npm run test:subpaths && npm run test:color && npm run test:audit && npm run test:dist && npm run test:types && npm run test:tsc && npm run lint && npm run test:internal && npm run test:internal:run",
     "test:subpaths": "vitest run tests/runtime/subpaths/subpaths.src.test.ts",
     "test:core": "vitest run tests/runtime/core/core.src.test.ts",
     "test:refinement": "vitest run tests/runtime/core/refinement.src.test.ts",
     "test:ratio": "vitest run tests/runtime/ratio/ratio.src.test.ts",
     "test:integer": "vitest run tests/runtime/integer/integer.src.test.ts",
     "test:float": "vitest run tests/runtime/float/float.src.test.ts",
-    "test:css-values": "vitest run tests/runtime/css-values/css-values.src.test.ts && npm run test:css-values:multi && npm run test:css-values:coverage",
-    "test:css-values:multi": "vitest run tests/runtime/css-values/multi.src.test.ts",
-    "test:css-values:coverage": "vitest run tests/runtime/css-values/coverage.src.test.ts",
     "test:color": "vitest run tests/runtime/color",
     "test:audit": "vitest run tests/runtime/audit",
     "test:core:cjs": "vitest run tests/runtime/core/core.cjs.test.ts tests/runtime/api-surface/api-surface.cjs.test.ts",

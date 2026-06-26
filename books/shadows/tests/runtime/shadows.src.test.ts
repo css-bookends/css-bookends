@@ -30,9 +30,11 @@ describe('shadow.helper', () => {
       { x: m(1), y: m(2), inset: true },
     ]);
     expect(multiStyle.boxShadow).toContain(' inset');
-    // two shadows -> two color tokens (count `rgba(` rather than splitting on
-    // ', ', which also appears inside each rgba() color).
-    expect(multiStyle.boxShadow.match(/rgba\(/g)).toHaveLength(2);
+    // two shadows -> two colour tokens. The default shadow colour (#000, opaque)
+    // renders as hex under the default ladder ([hex, rgba, oklch]), so count the
+    // hex token. Browser-compat of the emitted colour is gilding's job, not the
+    // shadow helper's: the helper emits the colour the primitive produces.
+    expect(multiStyle.boxShadow.match(/#000000/g)).toHaveLength(2);
 
     const singleValue = boxShadow.value({
       x: m(1),

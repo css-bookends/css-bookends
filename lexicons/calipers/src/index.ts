@@ -41,7 +41,6 @@ export {
   type SystemColor,
   type TransparentRendering,
 } from './color';
-export * from './css-values';
 export * from './units/absolute';
 export * from './units/angle';
 export * from './units/container';

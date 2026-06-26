@@ -9,8 +9,6 @@ import {
   makeUnitAssert,
   mPx,
   nonNegative,
-  opacity,
-  scale,
 } from '../../../src/index';
 import type { ErrorCode } from '../../../src/internal/errors';
 
@@ -21,9 +19,9 @@ import type { ErrorCode } from '../../../src/internal/errors';
  *   1. The MEASUREMENT CORE carries machine-readable `CALIPERS_E_*` codes in the
  *      error message (`[code=...]`). Every code in the `ErrorCode` union is
  *      reachable and documented in docs/errors.md.
- *   2. The SCALAR (i/f/r), CSS-VALUE, and COLOUR layers throw plain `Error`
- *      messages WITHOUT a code. This test pins that boundary so a future change
- *      that adds or moves a code is a deliberate, visible edit.
+ *   2. The SCALAR (i/f/r) and COLOUR layers throw plain `Error` messages
+ *      WITHOUT a code. This test pins that boundary so a future change that adds
+ *      or moves a code is a deliberate, visible edit.
  */
 
 const messageOf = (fn: () => unknown): string => {
@@ -114,25 +112,7 @@ describe('makeUnitAssert emits the assert-unit code', () => {
   });
 });
 
-describe('the scalar / css-value / colour layers throw codeless messages', () => {
-  it('css-value out-of-range has a clear message and no CALIPERS_E_ code', () => {
-    const msg = messageOf(() => opacity(2));
-    expect(msg).toMatch(/above the maximum/);
-    expect(msg).not.toMatch(/CALIPERS_E_/);
-  });
-
-  it('css-value bad keyword is codeless', () => {
-    const msg = messageOf(() => zIndexBadKeyword());
-    expect(msg).toMatch(/not a valid keyword/);
-    expect(msg).not.toMatch(/CALIPERS_E_/);
-  });
-
-  it('multi-part bad ident is codeless', () => {
-    const msg = messageOf(() => scale(1, 2).css() && counterBad());
-    // scale itself is valid; the codeless throw comes from the bad counter.
-    expect(msg).not.toMatch(/CALIPERS_E_/);
-  });
-
+describe('the scalar / colour layers throw codeless messages', () => {
   it('colour bad input is codeless with a color: prefix', () => {
     const msg = messageOf(() => color('definitely-not-a-color'));
     expect(msg).toMatch(/^color:/);
@@ -144,14 +124,3 @@ describe('the scalar / css-value / colour layers throw codeless messages', () =>
     expect(msg).toMatch(/min .* must be <= max/);
   });
 });
-
-// Helpers kept out of the table to avoid importing every css-value name.
-import { counterReset, zIndex } from '../../../src/index';
-function zIndexBadKeyword(): unknown {
-  // 'nope' is not a zIndex keyword.
-  return (zIndex as (v: string) => unknown)('nope');
-}
-function counterBad(): unknown {
-  // a leading digit is an invalid <custom-ident>.
-  return (counterReset as (v: string) => unknown)('1bad');
-}

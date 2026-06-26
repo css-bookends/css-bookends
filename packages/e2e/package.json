@@ -1,0 +1,57 @@
+{
+  "name": "@css-bookends/e2e",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Private, test-only workspace package: end-to-end tests proving the CSS-Bookends gilding pipeline works as a whole (books -> calipers colour -> gilding/Lightning CSS), kept separate from the gilding unit tests.",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/css-bookends/css-bookends.git",
+    "directory": "packages/e2e"
+  },
+  "bugs": {
+    "url": "https://github.com/css-bookends/css-bookends/issues"
+  },
+  "homepage": "https://github.com/css-bookends/css-bookends#readme",
+  "author": "slafleche",
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "dist"
+  ],
+  "sideEffects": false,
+  "type": "commonjs",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/esm/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "devDependencies": {
+    "@css-bookends/gilding": "workspace:*",
+    "@css-bookends/color": "workspace:*",
+    "@css-bookends/css-calipers": "workspace:*",
+    "@css-bookends/shadows": "workspace:*",
+    "@css-bookends/compendium": "workspace:*",
+    "@css-bookends/eslint-config": "workspace:*",
+    "@types/node": "^24.10.1",
+    "eslint": "^9.39.2",
+    "typescript": "^5.6.3",
+    "vitest": "^4.1.7"
+  },
+  "scripts": {
+    "build": "npm run build:cjs && npm run build:esm",
+    "build:cjs": "tsc -p tsconfig.build.cjs.json",
+    "build:esm": "tsc -p tsconfig.build.esm.json && node scripts/emit-esm-package.mts",
+    "test": "npm run build && npm run test:e2e && npm run test:tsc && npm run lint",
+    "test:e2e": "vitest run tests/e2e",
+    "test:tsc": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint . --max-warnings=0"
+  }
+}

@@ -30,6 +30,37 @@ importers:
         specifier: ^4.1.8
         version: 4.1.9(prettier@3.8.4)
 
+  books/animation-iteration-count:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
   books/backdrop-filter:
     dependencies:
       csstype:
@@ -61,6 +92,99 @@ importers:
         specifier: ^4.1.7
         version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
 
+  books/border-image-outset:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/border-image-slice:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/border-image-width:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
   books/borders:
     dependencies:
       csstype:
@@ -73,6 +197,502 @@ importers:
       '@css-bookends/css-calipers':
         specifier: workspace:*
         version: link:../../lexicons/calipers
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/column-count:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/counter-increment:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/counter-reset:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/counter-set:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/fill-opacity:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/flex-grow:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/flex-shrink:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/flood-opacity:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/font-size-adjust:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/font-weight:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/grid-column-end:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/grid-column-start:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/grid-row-end:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/grid-row-start:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/line-clamp:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/line-height:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
       '@css-bookends/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
@@ -119,6 +739,223 @@ importers:
       tsd:
         specifier: ^0.33.0
         version: 0.33.0
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/mask-border-outset:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/mask-border-slice:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/mask-border-width:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/math-depth:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/opacity:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/order:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/orphans:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
       typescript:
         specifier: ^5.6.3
         version: 5.9.3
@@ -188,6 +1025,37 @@ importers:
         specifier: ^4.1.7
         version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
 
+  books/scale:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
   books/shadows:
     dependencies:
       csstype:
@@ -203,6 +1071,223 @@ importers:
       '@css-bookends/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/shape-image-threshold:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/stop-opacity:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/stroke-dasharray:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/stroke-dashoffset:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/stroke-miterlimit:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/stroke-opacity:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/stroke-width:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
       '@types/node':
         specifier: ^24.10.1
         version: 24.12.4
@@ -237,6 +1322,37 @@ importers:
         specifier: ^4.1.7
         version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
 
+  books/tab-size:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
   books/transforms:
     dependencies:
       csstype:
@@ -249,6 +1365,99 @@ importers:
       '@css-bookends/eslint-config':
         specifier: workspace:*
         version: link:../../packages/eslint-config
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/widows:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/z-index:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  books/zoom:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../../packages/css-value-core
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../../packages/eslint-config
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
       '@types/node':
         specifier: ^24.10.1
         version: 24.12.4
@@ -348,6 +1557,236 @@ importers:
         specifier: ^4.1.7
         version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
 
+  packages/compendium:
+    dependencies:
+      '@css-bookends/animation-iteration-count':
+        specifier: workspace:*
+        version: link:../../books/animation-iteration-count
+      '@css-bookends/backdrop-filter':
+        specifier: workspace:*
+        version: link:../../books/backdrop-filter
+      '@css-bookends/border-image-outset':
+        specifier: workspace:*
+        version: link:../../books/border-image-outset
+      '@css-bookends/border-image-slice':
+        specifier: workspace:*
+        version: link:../../books/border-image-slice
+      '@css-bookends/border-image-width':
+        specifier: workspace:*
+        version: link:../../books/border-image-width
+      '@css-bookends/borders':
+        specifier: workspace:*
+        version: link:../../books/borders
+      '@css-bookends/color':
+        specifier: workspace:*
+        version: link:../../lexicons/color
+      '@css-bookends/column-count':
+        specifier: workspace:*
+        version: link:../../books/column-count
+      '@css-bookends/counter-increment':
+        specifier: workspace:*
+        version: link:../../books/counter-increment
+      '@css-bookends/counter-reset':
+        specifier: workspace:*
+        version: link:../../books/counter-reset
+      '@css-bookends/counter-set':
+        specifier: workspace:*
+        version: link:../../books/counter-set
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/fill-opacity':
+        specifier: workspace:*
+        version: link:../../books/fill-opacity
+      '@css-bookends/flex-grow':
+        specifier: workspace:*
+        version: link:../../books/flex-grow
+      '@css-bookends/flex-shrink':
+        specifier: workspace:*
+        version: link:../../books/flex-shrink
+      '@css-bookends/flood-opacity':
+        specifier: workspace:*
+        version: link:../../books/flood-opacity
+      '@css-bookends/font-size-adjust':
+        specifier: workspace:*
+        version: link:../../books/font-size-adjust
+      '@css-bookends/font-weight':
+        specifier: workspace:*
+        version: link:../../books/font-weight
+      '@css-bookends/grid-column-end':
+        specifier: workspace:*
+        version: link:../../books/grid-column-end
+      '@css-bookends/grid-column-start':
+        specifier: workspace:*
+        version: link:../../books/grid-column-start
+      '@css-bookends/grid-row-end':
+        specifier: workspace:*
+        version: link:../../books/grid-row-end
+      '@css-bookends/grid-row-start':
+        specifier: workspace:*
+        version: link:../../books/grid-row-start
+      '@css-bookends/line-clamp':
+        specifier: workspace:*
+        version: link:../../books/line-clamp
+      '@css-bookends/line-height':
+        specifier: workspace:*
+        version: link:../../books/line-height
+      '@css-bookends/margin':
+        specifier: workspace:*
+        version: link:../../books/margin
+      '@css-bookends/mask-border-outset':
+        specifier: workspace:*
+        version: link:../../books/mask-border-outset
+      '@css-bookends/mask-border-slice':
+        specifier: workspace:*
+        version: link:../../books/mask-border-slice
+      '@css-bookends/mask-border-width':
+        specifier: workspace:*
+        version: link:../../books/mask-border-width
+      '@css-bookends/math-depth':
+        specifier: workspace:*
+        version: link:../../books/math-depth
+      '@css-bookends/opacity':
+        specifier: workspace:*
+        version: link:../../books/opacity
+      '@css-bookends/order':
+        specifier: workspace:*
+        version: link:../../books/order
+      '@css-bookends/orphans':
+        specifier: workspace:*
+        version: link:../../books/orphans
+      '@css-bookends/padding':
+        specifier: workspace:*
+        version: link:../../books/padding
+      '@css-bookends/positioning':
+        specifier: workspace:*
+        version: link:../../books/positioning
+      '@css-bookends/scale':
+        specifier: workspace:*
+        version: link:../../books/scale
+      '@css-bookends/self-publish':
+        specifier: workspace:*
+        version: link:../../self-publish
+      '@css-bookends/shadows':
+        specifier: workspace:*
+        version: link:../../books/shadows
+      '@css-bookends/shape-image-threshold':
+        specifier: workspace:*
+        version: link:../../books/shape-image-threshold
+      '@css-bookends/stop-opacity':
+        specifier: workspace:*
+        version: link:../../books/stop-opacity
+      '@css-bookends/stroke-dasharray':
+        specifier: workspace:*
+        version: link:../../books/stroke-dasharray
+      '@css-bookends/stroke-dashoffset':
+        specifier: workspace:*
+        version: link:../../books/stroke-dashoffset
+      '@css-bookends/stroke-miterlimit':
+        specifier: workspace:*
+        version: link:../../books/stroke-miterlimit
+      '@css-bookends/stroke-opacity':
+        specifier: workspace:*
+        version: link:../../books/stroke-opacity
+      '@css-bookends/stroke-width':
+        specifier: workspace:*
+        version: link:../../books/stroke-width
+      '@css-bookends/supports-fallback':
+        specifier: workspace:*
+        version: link:../../books/supports-fallback
+      '@css-bookends/tab-size':
+        specifier: workspace:*
+        version: link:../../books/tab-size
+      '@css-bookends/transforms':
+        specifier: workspace:*
+        version: link:../../books/transforms
+      '@css-bookends/widows':
+        specifier: workspace:*
+        version: link:../../books/widows
+      '@css-bookends/z-index':
+        specifier: workspace:*
+        version: link:../../books/z-index
+      '@css-bookends/zoom':
+        specifier: workspace:*
+        version: link:../../books/zoom
+    devDependencies:
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  packages/css-value-core:
+    dependencies:
+      csstype:
+        specifier: ^3.2.3
+        version: 3.2.3
+    devDependencies:
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      tsd:
+        specifier: ^0.33.0
+        version: 0.33.0
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
+  packages/e2e:
+    devDependencies:
+      '@css-bookends/color':
+        specifier: workspace:*
+        version: link:../../lexicons/color
+      '@css-bookends/compendium':
+        specifier: workspace:*
+        version: link:../compendium
+      '@css-bookends/css-calipers':
+        specifier: workspace:*
+        version: link:../../lexicons/calipers
+      '@css-bookends/eslint-config':
+        specifier: workspace:*
+        version: link:../eslint-config
+      '@css-bookends/gilding':
+        specifier: workspace:*
+        version: link:../gilding
+      '@css-bookends/shadows':
+        specifier: workspace:*
+        version: link:../../books/shadows
+      '@types/node':
+        specifier: ^24.10.1
+        version: 24.12.4
+      eslint:
+        specifier: ^9.39.2
+        version: 9.39.4
+      typescript:
+        specifier: ^5.6.3
+        version: 5.9.3
+      vitest:
+        specifier: ^4.1.7
+        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
+
   packages/eslint-config:
     dependencies:
       '@eslint/js':
@@ -390,34 +1829,6 @@ importers:
       '@css-bookends/css-calipers':
         specifier: workspace:*
         version: link:../../lexicons/calipers
-      '@css-bookends/eslint-config':
-        specifier: workspace:*
-        version: link:../eslint-config
-      '@types/node':
-        specifier: ^24.10.1
-        version: 24.12.4
-      eslint:
-        specifier: ^9.39.2
-        version: 9.39.4
-      typescript:
-        specifier: ^5.6.3
-        version: 5.9.3
-      vitest:
-        specifier: ^4.1.7
-        version: 4.1.7(@types/node@24.12.4)(@vitest/coverage-v8@4.1.7)(vite@8.0.14(@types/node@24.12.4)(yaml@2.9.0))
-
-  packages/shelf:
-    dependencies:
-      '@css-bookends/color':
-        specifier: workspace:*
-        version: link:../../lexicons/color
-      '@css-bookends/css-calipers':
-        specifier: workspace:*
-        version: link:../../lexicons/calipers
-      '@css-bookends/self-publish':
-        specifier: workspace:*
-        version: link:../../self-publish
-    devDependencies:
       '@css-bookends/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config

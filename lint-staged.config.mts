@@ -3,13 +3,10 @@ import path from 'node:path';
 
 const ROOT = process.cwd();
 
-// TEMP: color is excluded from ESLint + tsc in the hook pending its documented
-// culori-rewrite gaps. Staged files are still Prettier-formatted. Empty this set
-// to restore (and remove the matching `--filter='!...'` flags from the root
-// package.json scripts). borders was restored once migrated onto self-publish.
-const TEMP_EXCLUDED = new Set([
-  '@css-bookends/color',
-]);
+// No packages are excluded from ESLint + tsc in the hook. (color was previously
+// excluded pending its culori-rewrite gaps, now resolved.) Add a package name to
+// this set only as a temporary escape hatch if one ever needs it again.
+const TEMP_EXCLUDED = new Set<string>();
 
 // Shell-safe quoting for file paths passed on a command line.
 const q = (file: string): string => JSON.stringify(file);

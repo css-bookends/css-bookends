@@ -41,6 +41,5 @@ describe('per-primitive subpaths (CJS dist)', () => {
     expect(typeof cjsCorpus.color).toBe('function');
     expect(typeof cjsCorpus.createCalipers).toBe('function');
     expect(typeof cjsCorpus.createColor).toBe('function');
-    expect(typeof cjsCorpus.createCssValues).toBe('function');
   });
 });

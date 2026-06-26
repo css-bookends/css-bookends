@@ -1,0 +1,113 @@
+{
+  "name": "@css-bookends/compendium",
+  "version": "0.1.0",
+  "description": "The full CSS-Bookends compendium: one factory that binds every active book at once, with a master config (one optional key per book).",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/css-bookends/css-bookends.git",
+    "directory": "packages/compendium"
+  },
+  "bugs": {
+    "url": "https://github.com/css-bookends/css-bookends/issues"
+  },
+  "homepage": "https://github.com/css-bookends/css-bookends#readme",
+  "author": "slafleche",
+  "publishConfig": {
+    "access": "public"
+  },
+  "keywords": [
+    "css",
+    "bookends",
+    "typed",
+    "css-in-js"
+  ],
+  "engines": {
+    "node": ">=18"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "type": "commonjs",
+  "main": "dist/cjs/index.js",
+  "module": "dist/esm/index.js",
+  "types": "dist/esm/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/esm/index.d.ts",
+      "import": "./dist/esm/index.js",
+      "require": "./dist/cjs/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "dependencies": {
+    "@css-bookends/self-publish": "workspace:*",
+    "@css-bookends/css-calipers": "workspace:*",
+    "@css-bookends/color": "workspace:*",
+    "@css-bookends/animation-iteration-count": "workspace:*",
+    "@css-bookends/backdrop-filter": "workspace:*",
+    "@css-bookends/border-image-outset": "workspace:*",
+    "@css-bookends/border-image-slice": "workspace:*",
+    "@css-bookends/border-image-width": "workspace:*",
+    "@css-bookends/borders": "workspace:*",
+    "@css-bookends/column-count": "workspace:*",
+    "@css-bookends/counter-increment": "workspace:*",
+    "@css-bookends/counter-reset": "workspace:*",
+    "@css-bookends/counter-set": "workspace:*",
+    "@css-bookends/fill-opacity": "workspace:*",
+    "@css-bookends/flex-grow": "workspace:*",
+    "@css-bookends/flex-shrink": "workspace:*",
+    "@css-bookends/flood-opacity": "workspace:*",
+    "@css-bookends/font-size-adjust": "workspace:*",
+    "@css-bookends/font-weight": "workspace:*",
+    "@css-bookends/grid-column-end": "workspace:*",
+    "@css-bookends/grid-column-start": "workspace:*",
+    "@css-bookends/grid-row-end": "workspace:*",
+    "@css-bookends/grid-row-start": "workspace:*",
+    "@css-bookends/line-clamp": "workspace:*",
+    "@css-bookends/line-height": "workspace:*",
+    "@css-bookends/margin": "workspace:*",
+    "@css-bookends/mask-border-outset": "workspace:*",
+    "@css-bookends/mask-border-slice": "workspace:*",
+    "@css-bookends/mask-border-width": "workspace:*",
+    "@css-bookends/math-depth": "workspace:*",
+    "@css-bookends/opacity": "workspace:*",
+    "@css-bookends/order": "workspace:*",
+    "@css-bookends/orphans": "workspace:*",
+    "@css-bookends/padding": "workspace:*",
+    "@css-bookends/positioning": "workspace:*",
+    "@css-bookends/scale": "workspace:*",
+    "@css-bookends/shadows": "workspace:*",
+    "@css-bookends/shape-image-threshold": "workspace:*",
+    "@css-bookends/stop-opacity": "workspace:*",
+    "@css-bookends/stroke-dasharray": "workspace:*",
+    "@css-bookends/stroke-dashoffset": "workspace:*",
+    "@css-bookends/stroke-miterlimit": "workspace:*",
+    "@css-bookends/stroke-opacity": "workspace:*",
+    "@css-bookends/stroke-width": "workspace:*",
+    "@css-bookends/supports-fallback": "workspace:*",
+    "@css-bookends/tab-size": "workspace:*",
+    "@css-bookends/transforms": "workspace:*",
+    "@css-bookends/widows": "workspace:*",
+    "@css-bookends/z-index": "workspace:*",
+    "@css-bookends/zoom": "workspace:*"
+  },
+  "devDependencies": {
+    "@css-bookends/eslint-config": "workspace:*",
+    "@types/node": "^24.10.1",
+    "eslint": "^9.39.2",
+    "typescript": "^5.6.3",
+    "vitest": "^4.1.7"
+  },
+  "scripts": {
+    "build": "npm run build:cjs && npm run build:esm",
+    "build:cjs": "tsc -p tsconfig.build.cjs.json",
+    "build:esm": "tsc -p tsconfig.build.esm.json && node scripts/emit-esm-package.mts",
+    "test": "npm run build && npm run test:smoke && npm run test:tsc && npm run lint",
+    "test:smoke": "vitest run tests/smoke.test.ts",
+    "test:tsc": "tsc -p tsconfig.json --noEmit",
+    "lint": "eslint . --max-warnings=0"
+  }
+}
