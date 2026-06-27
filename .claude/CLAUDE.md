@@ -24,10 +24,14 @@ A typed-CSS stack in three layers. Each has one job. Keep them strictly separate
   refinement, and factory support those primitives require.
 - MUST NOT contain: any helper, any book, any composed concern, or the `publishBook`
   / self-publish engine. No book code lives in calipers, ever.
-- GRANULAR IMPORTS: all typed-input CODE lives in calipers (one package), but a consumer
-  MUST be able to import only the part they want, e.g. `m()` without pulling in colour
-  and its `culori` dependency. Provide per-primitive subpath exports; colour + culori
-  load ONLY when the colour entry is imported. The root stays the all-in-one convenience.
+- SEPARATE PACKAGES (the unit model): each primitive is its OWN npm package on a shared
+  `@css-bookends/core` (`@css-bookends/measurement`, `/ratio`, `/integer`, `/float`, and the
+  colour primitive), so a consumer installs only what they want, e.g. measurement without
+  colour and its `culori` dependency (colour + culori arrive ONLY with the colour primitive
+  package). `css-calipers` is the BUNDLE (the "corpus"): it depends on + re-exports every
+  primitive and owns `createCalipersBundle`. This mirrors the books + compendium model in
+  Layer 2 exactly: per-unit packages + a bundle. (Supersedes the earlier one-package +
+  subpath-exports design.)
 
 ### Layer 2, css-bookends = the helpers (books) that consume the primitives
 
@@ -80,41 +84,68 @@ A typed-CSS stack in three layers. Each has one job. Keep them strictly separate
 - Bookends is the helper layer that turns those typed inputs into something useful;
   emphasize the typed-ends, loose-middle framing as its reason to exist.
 
-## Factory is the path, with a lazy defaults re-export (absolute)
+## The unit + bundle model (both layers, absolute)
 
-- Every project's REAL, configurable path is its FACTORY: calipers `createCalipers()` /
-  `createColor()` / `createCssValues()`; each bookends book's `publishBook<Name>()`; the
-  bundle's `publishCompendium()`. Force consumers through the factory, it is the override
-  seam (rewrite or wrap any step onion-style, swap internals, with zero call-site changes;
-  it gives minimal blast radius, since you bind once in your own module and the library's
-  internal paths can be rewritten without touching your hundreds of call sites; and it
-  gives independent multi-instances, several configs of the same book side by side with no
-  cascade or global state to fight. See `AGENTS.md` for the full why). Document that why in
-  the package READMEs too, not only `AGENTS.md`.
-- **Encourage the factory.** It is the path we WANT consumers on (it tends to give better,
-  more deliberate results), with the lazy defaults below as a clean zero-config escape for
-  those who do not want to configure anything.
+Both layers obey ONE model. A **unit** is the atom (a calipers PRIMITIVE in Layer 1, a
+bookends BOOK in Layer 2); every unit is its own npm package exposing a factory. A **bundle**
+package aggregates every unit of a layer and carries a global config. calipers' bundle is the
+`corpus` (`css-calipers`); bookends' bundle is the `compendium`. Learn it once, it applies to
+both. Three cross-cutting patterns follow.
+
+### Pattern 1: factory-first (the override seam)
+
+- Every unit's REAL, configurable path is its FACTORY: a book's `publishBook<Name>()`; a
+  primitive's `create<Name>` (`createCalipers` / `createColor`); the bundle's
+  `publishCompendium()` / `createCalipersBundle()`. Consume the factory, never a pre-made
+  instance. It is the override seam (rewrite or wrap any step onion-style, swap internals, with
+  zero call-site changes; minimal blast radius since you bind once; independent multi-instances
+  with no global state to fight). See `AGENTS.md` for the full why; document it in READMEs too.
+- **Encourage the factory.** It is the path we WANT consumers on, with the lazy defaults below
+  as the clean zero-config escape.
 - **Composed-book exception (a DOCUMENTED namespace class).** A closed set of books are
   multi-function utility namespaces, not single value->CSS manuscripts, so they expose NO
-  `publishBook<Name>` factory: `shadows`, `positioning`, `supports-fallback`,
-  `backdrop-filter`, `transforms`. Their surface is the namespace of pure functions, and
-  they ship NO pre-made bound instance / default export. NO book in the layer ships a bound
-  default. Everything else (per-property / per-value books) is a `publishBook<Name>`
-  factory with no instance.
-- **EXACTLY TWO lazy-defaults exports** (no per-book ones). Each is a master factory (one
-  optional keyed config slot per sub-factory) PLUS the bound-at-defaults surface, so a
-  consumer who just wants the defaults never binds anything:
-  - calipers: `corpus` DEFAULT-exports the master factory `createCalipersBundle`
-    (`{ measurements?, color? }`, combining `createCalipers` + `createColor`, mirrors
-    `publishCompendium`), and named-exports the full helper set bound at defaults
-    (`m` / `r` / `i` / `f` / `color` + the factories). So `corpus` is both the master
-    factory and the bound bundle.
-  - bookends: the compendium's main entry stays the `publishCompendium` factory (default
-    export, the configurable path). The bound-at-defaults bundle is the
-    `@css-bookends/compendium/defaults` SUBPATH, which re-exports every book + lexicon by
-    name. The `compendium` package REPLACED the old `shelf` / `publishShelf` naming.
-- The lazy re-export is a convenience layer ON TOP of the factory, never a replacement:
-  configuration still goes through the factory.
+  `publishBook<Name>` factory: `shadows`, `positioning`, `supports-fallback`, `backdrop-filter`,
+  `transforms`. Their surface is the namespace of pure functions; they ship NO bound instance.
+  NO book ships a bound default. Everything else is a `publishBook<Name>` factory, no instance.
+
+### Pattern 2: output shape is a config choice (`format: 'object' | 'string'`)
+
+- Every book's factory config takes `format: 'object' | 'string'`. `'object'` -> a
+  property-keyed style object (`{ opacity: '0.5' }`, `{ marginTop: … }`); `'string'` -> the
+  bare value (`'0.5'`). Global DEFAULT is `'object'`.
+- Reference implementation is spacing (margin/padding): `SpacingConfig.format`, switched in
+  `lexicons/spacing/src/render.ts`. The book's output step MUST receive `cfg` and switch on
+  `format` (borders historically dropped `cfg` and ignored its config — that is the bug shape
+  to avoid). Multi-property books ALSO keep their decomposition axis (longhand/shorthand;
+  long/line/short); per-property books keep `.value()` for the raw scalar.
+
+### Pattern 3: three-tier config cascade (own -> global -> default)
+
+- A bundle factory takes ONE config object shaped `{ global?: <shared options>, <unitKey>?:
+  <that unit's own config>, … }`: a `global` slot of shared options, plus one optional key per
+  unit matching its name. Each unit resolves every setting in order: `its own keyed config` ->
+  `the bundle's global` (where that option applies to the unit) -> `built-in default`.
+- Set a value once in `global` and every applicable unit inherits it; a unit's own key
+  overrides. Both bundle factories (`publishCompendium`, `createCalipersBundle`) implement the
+  `global` slot + this cascade.
+- **A book self-instantiates its calipers dependency; it never requires a calipers config.** If a
+  book needs a calipers primitive configured a certain way, it builds its OWN calipers instance
+  via the factory (`createCalipers` / `createColor`) internally, with the config it needs. It
+  never asks the consumer to thread a calipers config through, and never hard-depends on a shared
+  instance. This decouples books from calipers' config surface and shrinks the config a consumer
+  supplies. (The compendium `calipers` slot configures the calipers LAYER used directly through
+  the bundle; it is not a back-channel for a book's internal calipers needs.)
+
+### Lazy / bound defaults (the zero-config path)
+
+The lazy re-export is a convenience ON TOP of the factory, never a replacement (config still
+goes through the factory). Each bundle ships its factory called at defaults, re-exported:
+
+- calipers: `corpus` DEFAULT-exports `createCalipersBundle` AND named-exports the full helper
+  set bound at defaults (`m` / `r` / `i` / `f` / `color` + the factories).
+- bookends: the compendium's main entry is `publishCompendium` (the configurable path); the
+  bound-at-defaults bundle is the `@css-bookends/compendium/defaults` SUBPATH, re-exporting
+  every book + lexicon by name. (`compendium` REPLACED the old `shelf` / `publishShelf`.)
 
 ## Test-first, always (absolute)
 
@@ -138,11 +169,12 @@ failing test is the spec.
   that is green from the start does not validate a type-level change.
 - Only once the test is truly red do you implement to make it green.
 
-## Known violation to fix
+## Legacy css-values in calipers (remove during the split)
 
-- The per-property value helpers in `lexicons/calipers/src/css-values/` (opacity,
-  zIndex, fontWeight, the `createCssValues` factory, the spec table) are HELPERS
-  living inside calipers. They break the rule above and must be extracted OUT of
-  calipers into the books layer. Until that extraction lands, treat their presence in
-  calipers as known debt: do NOT add any further helpers to calipers, and the
-  calipers README / docs must not present them as a permanent calipers feature.
+- The per-property helpers now live in the BOOKS layer: the shared `@css-bookends/css-value-core`
+  engine plus a per-property book package each (opacity, zIndex, fontWeight, …). That is their
+  permanent home.
+- Any per-property css-values code still resident in `lexicons/calipers/src/css-values/` is
+  LEGACY. Do NOT add helpers to calipers, and do not present css-values as a calipers feature in
+  its README/docs. This residue is removed when calipers is split into per-primitive packages
+  (Phase C of the architecture plan); calipers keeps only the value primitives.

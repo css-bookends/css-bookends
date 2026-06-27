@@ -21,9 +21,18 @@ Keep them in sync. The stack is three strictly-separated layers, each with one j
    calipers + bookends foundation, adaptable per project (you could in theory rebuild
    Tailwind or Bootstrap on top of it). Not built yet; nothing depends on it.
 
-Known debt: the per-property helpers in `lexicons/calipers/src/css-values/` currently
-live in calipers, violating Layer 1. They must be extracted into the books layer. Do
-NOT add further helpers to calipers.
+The per-property helpers now live in the BOOKS layer (the `@css-bookends/css-value-core`
+engine + a per-property book each); that is their home. Any css-values code still resident in
+`lexicons/calipers/src/css-values/` is LEGACY, removed when calipers is split (see below). Do
+NOT add helpers to calipers.
+
+**Both layers share ONE shape (absolute):** a UNIT is the atom (a calipers primitive, a
+bookends book); every unit is its own npm package exposing a factory. A BUNDLE aggregates a
+layer's units with a global config: `compendium` for books, `corpus` (`css-calipers`) for
+calipers. So calipers is being split into per-primitive packages (`@css-bookends/measurement`,
+`/ratio`, `/integer`, `/float`, the colour primitive) on a shared `@css-bookends/core`, exactly
+mirroring books + compendium. Three cross-cutting patterns follow: factory-first, output-shape
+via config (`format`), and the three-tier config cascade. They are detailed below.
 
 ## Global rules
 
@@ -52,13 +61,28 @@ form (every book bound at defaults). That aggregate does not change the per-book
   `publishCompendium` factory, exported as the package's DEFAULT export (the entry file is
   the factory). A bare `publishCompendium()` binds every active book at its own defaults
   (the lazy-defaults form); passing a master `CompendiumConfig` configures any subset.
-  `CompendiumConfig` is an amalgam: one OPTIONAL key per configurable book, each keyed to
-  that book's own config type (`{ color?: Partial<ColorConfig>; opacity?: OpacityConfig;
-  borders?: BordersConfig; ... }`), and the factory fans each sub-config into the matching
-  `publishBook<Name>` and binds the rest at defaults. It returns every book bound in one
-  object and does NOT re-export raw helpers, so a raw value-helper is not reachable through
-  it. This aggregate sits ON TOP of the per-book factories; it does not change the per-book
-  contract (each package still exports only its `publishBook<Name>`, no pre-made instance).
+  `CompendiumConfig` is an amalgam: an optional `global` slot of shared options PLUS one
+  OPTIONAL key per configurable book, each keyed to that book's own config type
+  (`{ global?: { format?: 'object' | 'string'; … }; color?: Partial<ColorConfig>;
+  opacity?: OpacityConfig; borders?: BordersConfig; ... }`). The factory fans each sub-config
+  into the matching `publishBook<Name>` and binds the rest at defaults. It returns every book
+  bound in one object and does NOT re-export raw helpers, so a raw value-helper is not reachable
+  through it. This aggregate sits ON TOP of the per-book factories; it does not change the
+  per-book contract (each package still exports only its `publishBook<Name>`, no pre-made
+  instance).
+- **Three-tier config cascade (absolute).** A bundle (`publishCompendium`, `createCalipersBundle`)
+  resolves every setting per unit as: the unit's OWN keyed config -> the bundle's `global` slot
+  (where that option applies) -> the unit's built-in default. Set a value once in `global` and
+  every applicable unit inherits it; a unit's own key overrides. The `global` slot is the only
+  way to set a value across the whole bundle at once.
+- **A book self-instantiates its dependencies; it never REQUIRES their config (absolute).** When
+  a book needs a calipers primitive configured a certain way, it CREATES its own calipers
+  instance via the factory (`createCalipers` / `createColor`) with the config it needs, INTERNAL
+  to the book. A book never asks the consumer to pass a calipers config through, and never takes
+  a hard dependency on a shared calipers instance. This keeps books decoupled from calipers'
+  config surface and minimizes the config a consumer ever has to supply. (The compendium's
+  `calipers` slot configures the calipers LAYER you use directly through the bundle; it is not a
+  channel for wiring an individual book's internal calipers needs.)
 - **Call sites bind, then call** (`const color = publishBookColor(); color('#fff').css()`),
   or pull a bound book off `publishCompendium()`. Pass config at bind time
   (`publishBookColor({ config })`), or via the matching `CompendiumConfig` key when
@@ -84,13 +108,14 @@ is a master factory (one optional keyed config slot per sub-factory) PLUS the
 bound-at-defaults surface, so a consumer who does not want to configure anything imports
 helpers already bound and never calls a factory:
 
-- **css-calipers: `corpus`** (`lexicons/calipers/src/corpus.ts`). DEFAULT-exports the
-  master factory `createCalipersBundle(config?: { measurements?: CalipersFactoryConfig;
-  color?: CreateColorConfig })`, which combines `createCalipers` + `createColor` under one
-  keyed config and binds the whole calipers surface in one object (mirrors
-  `publishCompendium`). It also named-exports the full helper set bound at defaults
-  (`m` / `r` / `i` / `f` / `color` + the factories), so `corpus` is both the master
-  factory and the bound bundle.
+- **css-calipers: `corpus`** (the calipers BUNDLE). DEFAULT-exports the master factory
+  `createCalipersBundle`, whose config is the same `{ global?, <unitKey>? }` shape as
+  `publishCompendium` (a `global` slot plus one optional key per primitive: `measurement`,
+  `ratio`, `integer`, `float`, `color`), with the three-tier cascade. It binds the whole
+  calipers surface in one object and also named-exports the full helper set bound at defaults
+  (`m` / `r` / `i` / `f` / `color` + the factories), so `corpus` is both the master factory and
+  the bound bundle. `css-calipers` is the bundle package that depends on + re-exports the
+  per-primitive packages.
 - **compendium: `@css-bookends/compendium/defaults`**. The package's main entry stays the
   `publishCompendium` factory (the configurable path, default export). The `/defaults`
   subpath is the bound-at-defaults bundle: `publishCompendium()` called once, with every
@@ -150,6 +175,25 @@ color('#3366cc').hex().css();              // one-off override (selector) -> '#3
 color('#3366cc').formatAs(colorFormats.hex).css();  // one-off override (custom/list) -> '#3366cc'
 color('red').darken(0.2).css();            // navigate/modify, then render via .css()
 ```
+
+### Output shape: a style object or a bare value, by config (`format`, absolute)
+
+Separate from WHICH variant `.css()` renders (above), every book chooses the SHAPE of what
+`.css()` returns via a `format: 'object' | 'string'` config:
+
+- `'object'` -> a property-keyed style object (`{ opacity: '0.5' }`, `{ marginTop: '8px', … }`),
+  ready to spread into a style object.
+- `'string'` -> the bare value (`'0.5'`).
+- Global DEFAULT is `'object'`. It is set per book, or once via the bundle's `global` slot
+  (cascade above).
+
+Rules:
+- The output step MUST receive `cfg` and switch on `format`. A book whose output step drops
+  `cfg` and ignores its config is a BUG (borders did this; spacing is the correct reference,
+  `lexicons/spacing/src/render.ts`).
+- Per-property books still expose `.value()` for the raw scalar. Multi-property books ALSO keep
+  their decomposition axis (longhand/shorthand; long/line/short) as a separate config from
+  `format`.
 
 ### The typesetter is a code generator, not a runtime helper (planned)
 

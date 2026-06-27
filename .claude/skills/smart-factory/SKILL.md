@@ -39,6 +39,15 @@ the home of smart defaults. Modeled by `publishBookColor`. This is the how-to fo
   still producing a best-effort value in the warn case. Other invalid input fails fast
   with a named / coded error (calipers' `CALIPERS_E_*`). color's `strictness` /
   `violate()` is the pattern.
+- **Output shape via `format: 'object' | 'string'`.** Every book's config carries this
+  (object = property-keyed style object, string = bare value; default `'object'`). The output
+  step switches on it. See `output-shape`.
+- **Three-tier config cascade (bundle level).** The BUNDLE factories (`publishCompendium`,
+  `createCalipersBundle`) take `{ global?, <unitKey>? }`: a `global` slot of shared options plus
+  one optional key per unit. Each unit resolves every setting as `own keyed config -> bundle
+  global (where applicable) -> built-in default`. So a value set once in `global` (e.g.
+  `format: 'string'`) applies to all units unless a unit overrides it. A standalone
+  `publishBook<Name>({ config })` just uses `own -> default` (no bundle in play).
 
 ## Reference
 

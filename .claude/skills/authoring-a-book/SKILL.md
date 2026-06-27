@@ -35,7 +35,10 @@ export const publishBookBorders = publishBook(bordersManuscript);
 2. **storage** : normalize the canonical store (apply defaults, merge shorthands,
    resolve). One standardized shape, whatever the input looked like.
 3. **output** : render the store into the book's result, which exposes `.css()`.
-   The output variant (longform vs shorthand, etc.) is chosen by config.
+   The output step MUST receive `cfg` and switch on it. Two config axes: the SHAPE
+   `format: 'object' | 'string'` (property-keyed style object vs bare value; default
+   `'object'`), and, for multi-property books, the decomposition variant (longhand/shorthand,
+   long/line/short). A step that drops `cfg` and ignores config is a bug. See `output-shape`.
 
 ## Rules
 

@@ -33,6 +33,16 @@ the how-to for the "Output is always `.css()`" rule in `AGENTS.md`.
 - **Immutable.** Every operation (a variant selector, a modification like `.darken()`)
   returns a NEW result; nothing mutates. `color.ts`: "modifications: immutable - each
   returns a NEW resolved color."
+- **Output SHAPE is a config axis: `format: 'object' | 'string'`** (distinct from WHICH
+  variant renders, which is the `output`/`formatAs` axis above). `'object'` makes `.css()`
+  return a property-keyed style object (`{ opacity: '0.5' }`, `{ marginTop: '8px', … }`);
+  `'string'` makes it return the bare value (`'0.5'`). Global default `'object'`. The output
+  step MUST receive `cfg` and switch on `format`; a step that drops `cfg` and ignores config is
+  a bug (borders did this). Reference: spacing (`lexicons/spacing/src/render.ts`,
+  `SpacingConfig.format`). Per-property books still expose `.value()` for the raw scalar;
+  multi-property books keep their decomposition axis (longhand/shorthand) separate from `format`.
+  `format` can be set per book or once via the bundle's `global` slot (the three-tier cascade,
+  see `smart-factory` / `AGENTS.md`).
 
 ## Reference
 

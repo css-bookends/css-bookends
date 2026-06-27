@@ -18,6 +18,7 @@ export interface SpecRow<
   Name extends string = string,
   CssProperty extends CssPropertyKey = CssPropertyKey,
   Keyword extends string = string,
+  StyleKey extends string = Name,
 > {
   readonly name: Name;
   readonly kind: 'int' | 'float';
@@ -25,6 +26,13 @@ export interface SpecRow<
   readonly max?: number;
   readonly keywords: readonly Keyword[];
   readonly cssProperty: CssProperty;
+  /**
+   * The camelCase CSS-in-JS style-object key for the `format: 'object'` output
+   * (e.g. `{ opacity: '0.5' }`). Defaults to `name`, which already is the style
+   * key for almost every property; override only where they differ (e.g.
+   * `lineClamp` -> `WebkitLineClamp`).
+   */
+  readonly styleKey?: StyleKey;
 }
 
 /**
@@ -37,9 +45,10 @@ const row = <
   const Name extends string,
   CssProperty extends CssPropertyKey,
   const Keyword extends string,
+  const StyleKey extends string = Name,
 >(
-  entry: SpecRow<Name, CssProperty, Keyword>,
-): SpecRow<Name, CssProperty, Keyword> => entry;
+  entry: SpecRow<Name, CssProperty, Keyword, StyleKey>,
+): SpecRow<Name, CssProperty, Keyword, StyleKey> => entry;
 
 /**
  * The css-value spec table: one row per single-value property. The factory in
@@ -230,6 +239,7 @@ export const CSS_VALUE_SPEC = [
       'none',
     ],
     cssProperty: 'WebkitLineClamp',
+    styleKey: 'WebkitLineClamp',
   }),
 ] as const;
 

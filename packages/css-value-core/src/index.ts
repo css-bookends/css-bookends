@@ -9,10 +9,13 @@ export {
   createCssValues,
   type CssValue,
   type CssValueHelper,
+  type CssValueNode,
   type CssValueOptions,
   type CssValues,
   type CssValuesConfig,
+  type CssValueStyle,
   type OutOfRange,
+  type OutputFormat,
 } from './cssValues';
 export {
   borderImageOutset,
