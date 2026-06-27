@@ -35,6 +35,8 @@ for f in README.md README_MEASUREMENT.md; do
 done
 
 VERSION="$(node -p "require('./package.json').version")"
-echo "==> Publishing standalone css-calipers@$VERSION"
-npm publish --access public
+# Optional one-off dist-tag: run with NPM_TAG=beta to publish under @beta
+# instead of moving `latest`. Unset -> normal latest publish.
+echo "==> Publishing standalone css-calipers@$VERSION${NPM_TAG:+ (tag: $NPM_TAG)}"
+npm publish --access public ${NPM_TAG:+--tag "$NPM_TAG"}
 echo "==> Done: standalone css-calipers@$VERSION published."

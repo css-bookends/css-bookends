@@ -1,6 +1,6 @@
 {
   "name": "@css-bookends/css-calipers",
-  "version": "1.0.0",
+  "version": "1.1.0-beta.0",
   "description": "The missing typed inputs for CSS: build-time-validated measurements, ratios, integers, floats, and colour.",
   "license": "MIT",
   "repository": {
