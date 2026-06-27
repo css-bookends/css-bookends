@@ -67,8 +67,8 @@ describe('mask-border-slice: rejections', () => {
 
   it('rejects a length measurement (slice is number-only)', () => {
     expect(() =>
-      // @ts-expect-error mask-border-slice does not accept an IMeasurement.
       maskBorderSlice([
+        // @ts-expect-error mask-border-slice does not accept an IMeasurement.
         mPx(10),
       ]),
     ).toThrow();

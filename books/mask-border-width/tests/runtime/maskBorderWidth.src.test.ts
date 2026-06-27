@@ -70,8 +70,8 @@ describe('mask-border-width: rejections', () => {
 
   it('rejects an unknown keyword', () => {
     expect(() =>
-      // @ts-expect-error 'fill' is not a valid mask-border-width keyword.
       maskBorderWidth([
+        // @ts-expect-error 'fill' is not a valid mask-border-width keyword.
         'fill',
       ]),
     ).toThrow(/not a valid keyword/);

@@ -1,7 +1,8 @@
 import { m, mPercent } from '@css-bookends/css-calipers';
 import { describe, expect, it } from 'vitest';
 
-import backdropFilters, {
+import {
+  backdropFilterStyle,
   backdropFilterValue,
 } from '../../src/backdropFilter';
 
@@ -17,8 +18,8 @@ describe('backdropFilter.helper', () => {
     expect(value).toBe('blur(8px) saturate(120%) brightness(1.2)');
   });
 
-  it('exposes .style() shorthand with prefixed properties', () => {
-    const styles = backdropFilters.style({
+  it('exposes backdropFilterStyle with prefixed properties', () => {
+    const styles = backdropFilterStyle({
       contrast: mPercent(90),
     });
     expect(styles).toEqual({
@@ -28,6 +29,6 @@ describe('backdropFilter.helper', () => {
   });
 
   it('returns empty object when no intents supplied', () => {
-    expect(backdropFilters()).toEqual({});
+    expect(backdropFilterStyle()).toEqual({});
   });
 });

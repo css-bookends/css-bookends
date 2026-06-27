@@ -108,29 +108,6 @@ export const backdropFilterStyle = (
   return styles;
 };
 
-type BackdropFilterComposer = {
-  (...intents: Array<BackdropFilterIntent | null | undefined>): {
-    backdropFilter?: CSS_TYPES.Property.BackdropFilter;
-    WebkitBackdropFilter?: CSS_TYPES.Property.BackdropFilter;
-    backgroundColor?: CSS_TYPES.Property.BackgroundColor;
-  };
-  value: typeof backdropFilterValue;
-  style: typeof backdropFilterStyle;
-};
-
-/**
- * Default export mirrors the ergonomics of `transforms.helper.ts`,
- * letting callers compose intents while still reaching for `.value` /
- * `.style` when needed.
- */
-const backdropFilters = ((...intents) =>
-  backdropFilterStyle(...intents)) as BackdropFilterComposer;
-
-backdropFilters.value = backdropFilterValue;
-backdropFilters.style = backdropFilterStyle;
-
-export default backdropFilters;
-
 const supportsBackdropQuery =
   '((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)))';
 
@@ -143,7 +120,7 @@ const supportsBackdropQuery =
  *
  *     registerBackdropFallback({
  *       selector: '.frostedCard',
- *       supported: backdropFilters.style({ blur: glassVars.blur }),
+ *       supported: backdropFilterStyle({ blur: glassVars.blur }),
  *       fallback: { backgroundColor: glassVars.backupFill.css() },
  *     });
  */

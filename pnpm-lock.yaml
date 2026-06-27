@@ -1710,9 +1710,15 @@ importers:
         specifier: workspace:*
         version: link:../../books/zoom
     devDependencies:
+      '@css-bookends/css-value-core':
+        specifier: workspace:*
+        version: link:../css-value-core
       '@css-bookends/eslint-config':
         specifier: workspace:*
         version: link:../eslint-config
+      '@css-bookends/spacing':
+        specifier: workspace:*
+        version: link:../../lexicons/spacing
       '@types/node':
         specifier: ^24.10.1
         version: 24.12.4

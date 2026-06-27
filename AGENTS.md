@@ -67,6 +67,38 @@ form (every book bound at defaults). That aggregate does not change the per-book
   entry, even when it is exported from its own package for the factory's use.
 - **Exception: `@css-bookends/css-calipers`** (a lexicon with a different structure) is
   consumed directly (`m()`), not via a `publishBook` factory.
+- **Exception: composed books (a DOCUMENTED namespace class).** A small, fixed set of
+  books are multi-function utility namespaces, not single value->CSS manuscripts, so they
+  expose NO `publishBook<Name>` factory: `shadows`, `positioning`, `supports-fallback`,
+  `backdrop-filter`, `transforms`. Their public surface is the namespace of pure
+  functions (`backdropFilterValue` / `backdropFilterStyle`, `transformValue` /
+  `transformStyle`, etc.). They ALSO ship NO pre-made bound instance and no default
+  export: there is no bound default anywhere in the books layer. The compendium binds
+  each of these via `import * as X` under its namespace. This list is closed; a new
+  per-property / per-value book is a `publishBook<Name>` factory, never a namespace.
+
+### The two lazy-defaults exports (the zero-config path, absolute)
+
+There are EXACTLY TWO lazy-defaults exports in the whole monorepo, no per-book ones. Each
+is a master factory (one optional keyed config slot per sub-factory) PLUS the
+bound-at-defaults surface, so a consumer who does not want to configure anything imports
+helpers already bound and never calls a factory:
+
+- **css-calipers: `corpus`** (`lexicons/calipers/src/corpus.ts`). DEFAULT-exports the
+  master factory `createCalipersBundle(config?: { measurements?: CalipersFactoryConfig;
+  color?: CreateColorConfig })`, which combines `createCalipers` + `createColor` under one
+  keyed config and binds the whole calipers surface in one object (mirrors
+  `publishCompendium`). It also named-exports the full helper set bound at defaults
+  (`m` / `r` / `i` / `f` / `color` + the factories), so `corpus` is both the master
+  factory and the bound bundle.
+- **compendium: `@css-bookends/compendium/defaults`**. The package's main entry stays the
+  `publishCompendium` factory (the configurable path, default export). The `/defaults`
+  subpath is the bound-at-defaults bundle: `publishCompendium()` called once, with every
+  bound book and lexicon re-exported by name (`import { opacity, m, color } from
+  '@css-bookends/compendium/defaults'`).
+
+The lazy export is a convenience layer ON TOP of the factory, never a replacement:
+configuration still goes through the factory. Do NOT add per-book lazy or instance exports.
 
 Why: the factory is the override seam. It lets you rewrite any step (input, storage,
 output), wrap a step (onion-style), or replace the whole manuscript, and swap internals

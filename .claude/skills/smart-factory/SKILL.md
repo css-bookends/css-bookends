@@ -14,6 +14,12 @@ the home of smart defaults. Modeled by `publishBookColor`. This is the how-to fo
 - **Bind via `publishBook<Name>`, never a pre-made instance.** The package exports the
   factory (plus value builders / composition helpers); a consumer binds once
   (`const color = publishBookColor()`) and calls it. No default-instance export.
+  - **Composed-book exception (closed list).** Five books are multi-function utility
+    namespaces, not single value->CSS manuscripts, so they expose NO factory:
+    `shadows`, `positioning`, `supports-fallback`, `backdrop-filter`, `transforms`. Their
+    surface is the namespace of pure functions, and they ALSO ship no bound instance / no
+    default export. A new per-property / per-value book is NEVER a namespace; it is a
+    `publishBook<Name>` factory. Do not grow this list.
 - **Ship a SMART default config.** The out-of-the-box default is the most useful real
   behavior, not a placeholder, and is fully overridable via
   `publishBook<Name>({ config })`. Export the default so consumers can reference or

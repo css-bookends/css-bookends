@@ -58,4 +58,20 @@ describe('per-primitive subpaths (src)', () => {
     expect(typeof corpus.createCalipers).toBe('function');
     expect(typeof corpus.createColor).toBe('function');
   });
+
+  it('corpus DEFAULT-exports the master factory and binds everything at defaults', () => {
+    // the default export is the master factory (same fn as the named export).
+    expect(typeof corpus.default).toBe('function');
+    expect(corpus.default).toBe(corpus.createCalipersBundle);
+    // a bare call binds the whole calipers surface at defaults.
+    const c = corpus.createCalipersBundle();
+    expect(c.m(8).css()).toBe('8px');
+    expect(typeof c.color).toBe('function');
+    expect(c.color('#3366cc').css()).toBe('#3366cc');
+    // the keyed config threads through to the sub-factory.
+    const strict = corpus.createCalipersBundle({
+      measurements: { errorConfig: { stackHints: 'off' } },
+    });
+    expect(strict.m(8).css()).toBe('8px');
+  });
 });

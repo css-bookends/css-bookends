@@ -1,10 +1,7 @@
 import { m } from '@css-bookends/css-calipers';
 import { describe, expect, it } from 'vitest';
 
-import transforms, {
-  transformStyle,
-  transformValue,
-} from '../../src/transforms';
+import { transformStyle, transformValue } from '../../src/transforms';
 
 describe('transforms.helper', () => {
   it('composes translate/rotate/scale/skew/perspective parts', () => {
@@ -60,8 +57,10 @@ describe('transforms.helper', () => {
     expect(transformValue()).toBeUndefined();
   });
 
-  it('exposes helper with style() shorthand', () => {
-    const styles = transforms({ rotate: { value: m(15, 'deg') } });
+  it('exposes transformStyle shorthand', () => {
+    const styles = transformStyle({
+      rotate: { value: m(15, 'deg') },
+    });
     expect(styles).toEqual({ transform: 'rotate(15deg)' });
     expect(transformStyle()).toEqual({});
   });

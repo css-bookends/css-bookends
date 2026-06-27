@@ -83,17 +83,36 @@ A typed-CSS stack in three layers. Each has one job. Keep them strictly separate
 ## Factory is the path, with a lazy defaults re-export (absolute)
 
 - Every project's REAL, configurable path is its FACTORY: calipers `createCalipers()` /
-  `createColor()` / `createCssValues()`; each bookends book's `publishBook<Name>()`.
-  Force consumers through the factory, it is the override seam (rewrite or wrap any step
-  onion-style, swap internals, with zero call-site changes; see `AGENTS.md` for the full
-  why). Document that why in the package READMEs too, not only `AGENTS.md`.
-- ALWAYS also provide a LAZY convenience entry: a single file that calls each factory at
-  its DEFAULTS and re-exports the default instances, so a consumer who just wants the
-  defaults never has to bind anything.
-  - calipers: that entry is `corpus` (re-exports `m` / `r` / `i` / `f` / `color`, each a
-    factory-at-defaults instance).
-  - bookends: that entry is `compendium` (re-exports every book bound at defaults). It
-    REPLACES the old `shelf` / `publishShelf` naming.
+  `createColor()` / `createCssValues()`; each bookends book's `publishBook<Name>()`; the
+  bundle's `publishCompendium()`. Force consumers through the factory, it is the override
+  seam (rewrite or wrap any step onion-style, swap internals, with zero call-site changes;
+  it gives minimal blast radius, since you bind once in your own module and the library's
+  internal paths can be rewritten without touching your hundreds of call sites; and it
+  gives independent multi-instances, several configs of the same book side by side with no
+  cascade or global state to fight. See `AGENTS.md` for the full why). Document that why in
+  the package READMEs too, not only `AGENTS.md`.
+- **Encourage the factory.** It is the path we WANT consumers on (it tends to give better,
+  more deliberate results), with the lazy defaults below as a clean zero-config escape for
+  those who do not want to configure anything.
+- **Composed-book exception (a DOCUMENTED namespace class).** A closed set of books are
+  multi-function utility namespaces, not single value->CSS manuscripts, so they expose NO
+  `publishBook<Name>` factory: `shadows`, `positioning`, `supports-fallback`,
+  `backdrop-filter`, `transforms`. Their surface is the namespace of pure functions, and
+  they ship NO pre-made bound instance / default export. NO book in the layer ships a bound
+  default. Everything else (per-property / per-value books) is a `publishBook<Name>`
+  factory with no instance.
+- **EXACTLY TWO lazy-defaults exports** (no per-book ones). Each is a master factory (one
+  optional keyed config slot per sub-factory) PLUS the bound-at-defaults surface, so a
+  consumer who just wants the defaults never binds anything:
+  - calipers: `corpus` DEFAULT-exports the master factory `createCalipersBundle`
+    (`{ measurements?, color? }`, combining `createCalipers` + `createColor`, mirrors
+    `publishCompendium`), and named-exports the full helper set bound at defaults
+    (`m` / `r` / `i` / `f` / `color` + the factories). So `corpus` is both the master
+    factory and the bound bundle.
+  - bookends: the compendium's main entry stays the `publishCompendium` factory (default
+    export, the configurable path). The bound-at-defaults bundle is the
+    `@css-bookends/compendium/defaults` SUBPATH, which re-exports every book + lexicon by
+    name. The `compendium` package REPLACED the old `shelf` / `publishShelf` naming.
 - The lazy re-export is a convenience layer ON TOP of the factory, never a replacement:
   configuration still goes through the factory.
 

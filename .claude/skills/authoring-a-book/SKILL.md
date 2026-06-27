@@ -44,7 +44,10 @@ export const publishBookBorders = publishBook(bordersManuscript);
   Examples MAY use a compiler, as a devDependency only.
 - **The factory is the public surface.** Export `publishBook<Name>` (plus value
   builders / composition helpers where useful), never a pre-made instance as the
-  consumer entry. See `AGENTS.md`.
+  consumer entry. See `AGENTS.md`. (Exception: the five composed-book namespaces,
+  `shadows` / `positioning` / `supports-fallback` / `backdrop-filter` / `transforms`,
+  expose a namespace of pure functions and no factory and no instance. This list is
+  closed; a new per-property / per-value book is always a `publishBook<Name>` factory.)
 - **Steps are overridable and composable.** A re-publish can replace a step
   (`publishBookBorders({ storage: mine })`), wrap it onion-style
   (`{ wrap: { output: (base) => (s, c) => base(s, c) } }`), reuse another book's

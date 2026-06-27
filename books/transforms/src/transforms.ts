@@ -183,19 +183,3 @@ export const transformStyle = (
   const transform = transformValue(...intents);
   return transform ? { transform } : {};
 };
-
-type TransformComposer = {
-  (...intents: Array<TransformIntent | null | undefined>): {
-    transform?: CSS_TYPES.Property.Transform;
-  };
-  value: typeof transformValue;
-  style: typeof transformStyle;
-};
-
-const transforms = ((...intents) =>
-  transformStyle(...intents)) as TransformComposer;
-
-transforms.value = transformValue;
-transforms.style = transformStyle;
-
-export default transforms;

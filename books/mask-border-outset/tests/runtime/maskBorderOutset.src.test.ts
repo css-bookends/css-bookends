@@ -45,8 +45,8 @@ describe('mask-border-outset: rejections', () => {
 
   it('rejects the auto keyword (outset has no auto)', () => {
     expect(() =>
-      // @ts-expect-error mask-border-outset has no 'auto' keyword.
       maskBorderOutset([
+        // @ts-expect-error mask-border-outset has no 'auto' keyword.
         'auto',
       ]),
     ).toThrow(/not a valid keyword/);

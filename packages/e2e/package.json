@@ -1,7 +1,7 @@
 {
   "name": "@css-bookends/e2e",
   "version": "0.1.0",
-  "private": true,
+  "private": false,
   "description": "Test-only workspace package: end-to-end tests proving the CSS-Bookends gilding pipeline works as a whole (books -> calipers colour -> gilding/Lightning CSS), kept separate from the gilding unit tests.",
   "license": "MIT",
   "repository": {
