@@ -13,13 +13,15 @@ explicit, repeated instruction. (Full statement in `.claude/CLAUDE.md`.)
 ## Architecture: the three layers (canonical, ABSOLUTE)
 
 The same statement lives in `.claude/CLAUDE.md`, the package READMEs, and the skills.
-Keep them in sync. The stack is three strictly-separated layers, each with one job:
+Keep them in sync. For the map at a glance (units × bundles, plus the foundation→family model),
+see `docs/foundations.md` ("The map"). The stack is three strictly-separated layers, each with one
+job (a Layer-1 unit is a **lexicon**; "primitive" is the retired synonym):
 
-1. **css-calipers (Layer 1), typed CSS input PRIMITIVES only.** Fills the gap where
+1. **css-calipers (Layer 1), typed CSS input LEXICONS only.** Fills the gap where
    `csstype` is lacking: typed, build-time-validated CSS input values (`m`, `r`, `i`,
    `f`, `color`). Usable STANDALONE, for someone who wants only typed CSS inputs and no
    helpers at all. NO helpers, NO books, no `publishBook` engine, ever.
-2. **css-bookends (Layer 2), the helpers (books) that consume the primitives.** EVERY
+2. **css-bookends (Layer 2), the helpers (books) that consume the lexicons.** EVERY
    helper is a book (per-property: opacity, zIndex, ...; composed: borders, shadows,
    margin, ...). The compendium is the full bundle of every active book; the typesetter
    ingests DTCG design tokens; gilding is the output-edge finisher. Books consume
@@ -29,19 +31,30 @@ Keep them in sync. The stack is three strictly-separated layers, each with one j
    Tailwind or Bootstrap on top of it). Not built yet; nothing depends on it.
 
 The per-property helpers now live in the BOOKS layer (the `@css-bookends/css-value-core`
-engine + a per-property book each); that is their home. Any css-values code still resident in
-`lexicons/calipers/src/css-values/` is LEGACY, removed when calipers is split (see below). Do
-NOT add helpers to calipers.
+engine + a per-property book each); that is their home. The old `lexicons/calipers/src/css-values/`
+residue has already been removed; calipers keeps only the value lexicons. Do NOT add helpers to
+calipers.
 
-**Both layers share ONE shape (absolute):** a UNIT is the atom (a calipers primitive, a
+**Both layers share ONE shape (absolute):** a UNIT is the atom (a calipers lexicon, a
 bookends book); every unit is its own npm package exposing a factory. A BUNDLE aggregates a
 layer's units with a global config: `compendium` for books, `corpus` (`css-calipers`) for
-calipers. So calipers is being split into per-primitive packages (`@css-bookends/measurement`,
-`/ratio`, `/integer`, `/float`, the colour primitive) on a shared `@css-bookends/core`, exactly
+calipers. So calipers is being split into per-lexicon packages (`@css-bookends/measurement`,
+`/ratio`, `/integer`, `/float`, the colour lexicon) on a shared `@css-bookends/core`, exactly
 mirroring books + compendium. Three cross-cutting patterns follow: factory-first, output-shape
 via config (`format`), and the three-tier config cascade. They are detailed below.
 
 ## Global rules
+
+### Source of truth: css-bookends drives; the calipers repo MIRRORS (absolute)
+
+This monorepo (css-bookends) is the SOURCE OF TRUTH for all calipers code, authored here under
+`lexicons/calipers/`. The standalone `slafleche/css-calipers` repo is a DOWNSTREAM MIRROR (the
+`mirror.sh` push-out target), never where design decisions are made. The mirror MUST keep
+working as a self-contained standalone library, but that is a property we PRESERVE downstream,
+not a driver: when a bookends need conflicts with the mirror's standalone framing, BOOKENDS
+WINS. "calipers reads as complete / standalone" governs how the MIRROR presents itself; it never
+outranks what bookends requires. Order of work: change calipers HERE for bookends first, THEN
+verify the mirror still publishes cleanly.
 
 ### Consume helpers from a factory, never import directly (absolute)
 
@@ -89,7 +102,7 @@ form (every book bound at defaults). That aggregate does not change the per-book
   every applicable unit inherits it; a unit's own key overrides. The `global` slot is the only
   way to set a value across the whole bundle at once.
 - **A book self-instantiates its dependencies; it never REQUIRES their config (absolute).** When
-  a book needs a calipers primitive configured a certain way, it CREATES its own calipers
+  a book needs a calipers lexicon configured a certain way, it CREATES its own calipers
   instance via the factory (`createCalipers` / `createColor`) with the config it needs, INTERNAL
   to the book. A book never asks the consumer to pass a calipers config through, and never takes
   a hard dependency on a shared calipers instance. This keeps books decoupled from calipers'
@@ -123,12 +136,12 @@ helpers already bound and never calls a factory:
 
 - **css-calipers: `corpus`** (the calipers BUNDLE). DEFAULT-exports the master factory
   `createCalipersBundle`, whose config is the same `{ global?, <unitKey>? }` shape as
-  `publishCompendium` (a `global` slot plus one optional key per primitive: `measurement`,
+  `publishCompendium` (a `global` slot plus one optional key per lexicon: `measurement`,
   `ratio`, `integer`, `float`, `color`), with the three-tier cascade. It binds the whole
   calipers surface in one object and also named-exports the full helper set bound at defaults
   (`m` / `r` / `i` / `f` / `color` + the factories), so `corpus` is both the master factory and
   the bound bundle. `css-calipers` is the bundle package that depends on + re-exports the
-  per-primitive packages.
+  per-lexicon packages.
 - **compendium: `@css-bookends/compendium/defaults`**. The package's main entry stays the
   `publishCompendium` factory (the configurable path, default export). The `/defaults`
   subpath is the bound-at-defaults bundle: `publishCompendium()` called once, with every

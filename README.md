@@ -49,11 +49,11 @@ CSS. CSS-Bookends does not gate the output: if CSS allows it, you can emit it.
 The stack is three strictly-separated layers, each with one job (the canonical
 statement lives in `.claude/CLAUDE.md` and `AGENTS.md`):
 
-1. **css-calipers (Layer 1), the typed CSS input PRIMITIVES.** It fills the gap
+1. **css-calipers (Layer 1), the typed CSS input LEXICONS.** It fills the gap
    where `csstype` is lacking: typed, build-time-validated CSS input values (`m`,
    `r`, `i`, `f`, `color`). It is usable **standalone**, for someone who wants only
    typed CSS inputs and no helpers at all. No helpers, no books, ever.
-2. **css-bookends (Layer 2), the helpers (books) that consume the primitives.**
+2. **css-bookends (Layer 2), the helpers (books) that consume the lexicons.**
    Every helper is a book; the compendium is the full bundle of every active book; the
    typesetter ingests DTCG design tokens; gilding is the output-edge finisher.
    Books consume calipers; calipers never depends on a book.
@@ -61,40 +61,49 @@ statement lives in `.claude/CLAUDE.md` and `AGENTS.md`):
    steady calipers + bookends foundation, adaptable per project (you could in theory
    rebuild Tailwind or Bootstrap on top of it). Not built yet; nothing depends on it.
 
-Consumption is one-way: calipers -> books -> squire. Known debt: the per-property
-helpers in `lexicons/calipers/src/css-values/` currently live in calipers,
-violating Layer 1, and must move to the books layer.
+Consumption is one-way: calipers -> books -> squire. (The per-property helpers that
+once lived in calipers have since moved to the books layer, on the shared
+`@css-bookends/css-value-core` engine.)
 
 ## Lexicons and books
 
 CSS-Bookends is split into two kinds of package:
 
-- **Lexicons** are the foundational vocabularies. A lexicon defines typed values
-  and the operations on them, and depends on little or nothing else.
-  `css-calipers` (measurement) is a lexicon; `color` and `spacing` are too.
-  Lexicons can build on one another (a `spacing` lexicon builds on `css-calipers`).
+- **Lexicons** are the foundational vocabularies: a lexicon defines one typed CSS
+  input value and the operations on it. The core lexicons (`m`, `i`, `f`, `r`,
+  `color`) ship together in **`css-calipers`**, the Layer-1 bundle (the _corpus_).
+  Lexicons can build on one another: `spacing` is a lexicon built on `css-calipers`
+  that _founds_ the `margin` and `padding` books, so unlike the core lexicons it
+  does not stand alone.
 - **Books** are the standalone helper libraries built on top of one or more
   lexicons. A book takes typed tokens and emits plain CSS for a single concern.
   `borders`, `shadow`, and `margins` will be. (`media-queries` was an early book;
   it has been pulled from the active workspace pending rework.)
 
-A lexicon is the vocabulary; a book is written using it. Every package, lexicon
-or book, is independently installable and pulls in only what it actually depends
-on. The umbrella is organizational, never a bundle you are forced to take whole.
+A lexicon is the vocabulary; a book is written using it. Each layer has a **bundle**
+that aggregates its units: the _corpus_ (`css-calipers`) for lexicons, the
+_compendium_ for books. Every package, lexicon or book, is independently installable
+and pulls in only what it actually depends on. The umbrella is organizational, never
+a bundle you are forced to take whole. See `docs/foundations.md` ("The map") for how
+these fit together.
 
 A third kind of construct is planned (not built yet): the **typesetter**. It sits
-in front of the books at the input edge and converts a design-token document (the
-W3C Design Tokens / DTCG format) into typed lexicon vars (`m()`, `color()`, ...)
-that you then feed to the books. See `design-tokens.md` for the boundary and the
-format reference.
+in front of the books at the input edge and converts a design-token document into
+typed lexicon vars (`m()`, `color()`, ...) that you then feed to the books. The token
+layer it reads is source-agnostic; the standard the ecosystem is converging on is the
+[W3C Design Tokens (DTCG)](https://www.w3.org/community/design-tokens/) format, important
+work this project builds on rather than duplicates. See `design-tokens.md` for the
+boundary and the format reference.
 
 Every package publishes under the `@css-bookends/*` scope, lexicons and books
 alike (for example `@css-bookends/css-calipers` and `@css-bookends/compendium`).
 
 ## What is available today
 
-- **`@css-bookends/css-calipers`** — the measurement lexicon and the foundation
-  most other pieces build on. Stable, headed to 1.0.
+- **`@css-bookends/css-calipers`** — the corpus of typed-input lexicons (`m`, `i`,
+  `f`, `r`, `color`) and the foundation most other pieces build on. Stable, headed
+  to 1.0. It is standalone and owns its own complete docs and examples — start there:
+  [docs](./lexicons/calipers/README.md) ·
   [repo](https://github.com/slafleche/css-calipers) ·
   [npm](https://www.npmjs.com/package/@css-bookends/css-calipers)
 
@@ -151,7 +160,7 @@ The architecture terms (lexicon, book, the three steps, manuscript, `publishBook
 
 ## Factories (the override seam)
 
-Every book is consumed through its factory, never imported raw, because the factory is the configurable path and the override seam: it lets you rewrite or wrap any step (input, storage, output) onion-style, or swap the internals, with zero changes at call sites. A per-book package exports its `publishBook<Name>` factory and no pre-made instance, so a consumer binds it once (`const color = publishBookColor()`) and calls it. (Five books are a documented exception: `shadows`, `positioning`, `supports-fallback`, `backdrop-filter`, and `transforms` are multi-function utility namespaces rather than single value-to-CSS manuscripts, so they expose a namespace of pure functions instead of a factory. They still ship no pre-made bound instance, so nothing in the books layer ships a bound default.) Because you bind once in your own module and import the helper from there, a major rewrite of the library's internal paths changes that one file, not the hundreds or thousands of call sites across your project. Each factory call also returns its own independent instance, so you can run several configurations of the same book at once with no global state to collide: a strict opacity beside a clamping one, or two colour books with different output formats, with no cascade or shared global state to fight (each is a value in scope, not a stylesheet competing in the cascade). The compendium is the bundle's factory: `publishCompendium` is exported as the package's default export, a bare `publishCompendium()` binds every active book at its own defaults, and passing a master `CompendiumConfig` (one optional key per book) configures any subset. So all of that power is opt-in. If you do not want to configure anything, there is a clean zero-config path you never have to call: `@css-bookends/compendium/defaults` re-exports every book and lexicon already bound at defaults (`import { opacity, m, color } from '@css-bookends/compendium/defaults'`). That subpath and css-calipers' `corpus` (its own master factory, default-exported, plus the whole primitive set bound at defaults) are the only two lazy-defaults entries; there are no per-book ones.
+Every book is consumed through its factory, never imported raw, because the factory is the configurable path and the override seam: it lets you rewrite or wrap any step (input, storage, output) onion-style, or swap the internals, with zero changes at call sites. A per-book package exports its `publishBook<Name>` factory and no pre-made instance, so a consumer binds it once (`const color = publishBookColor()`) and calls it. (Five books are a documented exception: `shadows`, `positioning`, `supports-fallback`, `backdrop-filter`, and `transforms` are multi-function utility namespaces rather than single value-to-CSS manuscripts, so they expose a namespace of pure functions instead of a factory. They still ship no pre-made bound instance, so nothing in the books layer ships a bound default.) Because you bind once in your own module and import the helper from there, a major rewrite of the library's internal paths changes that one file, not the hundreds or thousands of call sites across your project. Each factory call also returns its own independent instance, so you can run several configurations of the same book at once with no global state to collide: a strict opacity beside a clamping one, or two colour books with different output formats, with no cascade or shared global state to fight (each is a value in scope, not a stylesheet competing in the cascade). The compendium is the bundle's factory: `publishCompendium` is exported as the package's default export, a bare `publishCompendium()` binds every active book at its own defaults, and passing a master `CompendiumConfig` (one optional key per book) configures any subset. So all of that power is opt-in. If you do not want to configure anything, there is a clean zero-config path you never have to call: `@css-bookends/compendium/defaults` re-exports every book and lexicon already bound at defaults (`import { opacity, m, color } from '@css-bookends/compendium/defaults'`). That subpath and css-calipers' `corpus` (its own master factory, default-exported, plus the whole lexicon set bound at defaults) are the only two lazy-defaults entries; there are no per-book ones.
 
 ## Installation
 

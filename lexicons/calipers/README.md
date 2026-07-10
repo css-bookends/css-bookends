@@ -65,7 +65,30 @@ Integers (`i`), floats (`f`), and custom colour formats round out the set.
 
 calipers is standalone and complete on its own. It is also Layer 1 of the larger CSS-Bookends project (helpers, then an opinionated framework, built on these primitives), and design-token (DTCG) documents convert to these primitives via the Bookends typesetter. Both are there if you want them, never required.
 
-A note on the names. The book metaphor (calipers, bookends, gilding, compendium) is deliberate, not just whimsy. Each name marks a ROLE, and intentionally hides the library currently filling it, because those internals are meant to be swappable. You import `color()`, not `culori`; the project's browser-compat finisher is `gilding`, not Lightning CSS. Swap the engine underneath and your call sites do not move.
+A note on the names, and on wrapping. The book metaphor (calipers, bookends, gilding, compendium) is deliberate, not just whimsy. Each name marks a ROLE, and intentionally hides the library currently filling it, because those internals are meant to be swappable. You import `color()`, not `culori`; the project's browser-compat finisher is `gilding`, not Lightning CSS. Swap the engine underneath and your call sites do not move.
+
+That swappability reflects a principle calipers shares with the wider project: where a mature tool already solves a problem, we wrap it at the edge and credit it plainly rather than reinventing it. calipers leans on `culori` for colour conversions and satisfies `csstype` on output; what it adds is the typed authoring surface around those edges (branded, validated values in, a single `.css()` out), not a reimplementation of the wrapped tool. The fuller version of this argument is the CSS-Bookends ["Wrapping at the edges, not reinventing"](https://github.com/css-bookends/css-bookends#wrapping-at-the-edges-not-reinventing) philosophy.
+
+## Coverage: a lexicon for every primitive input
+
+Every quantitative CSS input token is one of four shapes, and calipers has a lexicon for each, plus `color()` for colour:
+
+| CSS shape | example | lexicon |
+| --------- | ------- | ------- |
+| a plain whole number | `z-index: 3` | `i()` |
+| a plain real number | `flex-grow: 2.5` | `f()` |
+| a number with a unit (a dimension) | `8px` · `45deg` · `.3s` · `1fr` | `m()` |
+| a number over a number (a ratio) | `16/9` | `r()` |
+
+`m()` is generic over the unit (`m<Unit extends string>`), so ANY number-plus-unit is an `m()`, the named helpers (`mPx`, `mDeg`, …) are shortcuts, not the limit. Constraints (alpha `[0,1]`, counts `>= 1`, …) are added by hardening on those same lexicons. Together that closes the exact space csstype leaves open (`(number & {})` / `(string & {})`); string / identifier / url tokens stay csstype's `string`. The full proof, with every primitive CSS value type mapped to its lexicon, is [`docs/input-coverage.md`](./docs/input-coverage.md).
+
+## Complementary to Design Tokens (DTCG)
+
+The [Design Tokens Community Group](https://www.w3.org/community/design-tokens/) (DTCG), a W3C Community Group, maintains the [Design Tokens Format Module](https://design-tokens.github.io/community-group/format/): a vendor-neutral format for exchanging design tokens between tools, which reached its first stable version in 2025 with backing from major design-tool and platform vendors. It is the standard the ecosystem is converging on, it is important work, and calipers is built to complement it, not to compete with it.
+
+The two solve different halves of one problem. A token document is the source-agnostic layer: the agreed description of what your tokens ARE, portable across tools. calipers is the layer that turns those values into real TypeScript types and real build-time validation for your project, so a token stops being a loose JSON value and becomes a checked, branded value that cannot be misused. From there it renders to whatever target you need through `.css()`: plain CSS, Sass, or the styles inside a component (React, Vue, and so on).
+
+calipers stays deliberately agnostic about where the tokens come from. It types and validates the VALUES, and a separate conversion step feeds them in, handing each token to the matching lexicon (`m()`, `color()`, `i()`, `f()`). The token landscape is still plural (the W3C DTCG format alongside the Figma, Tokens Studio, and Style Dictionary shapes in the wild), and calipers does not bind to any one of them. Which source formats a converter accepts, and how, is an open design question in the wider CSS-Bookends project; calipers does not depend on the answer. A token in, a typed and validated value in the middle, a rendered value out in any format you target.
 
 ## Install
 
@@ -152,6 +175,7 @@ All of that power is opt-in. If you just want sensible defaults and none of the 
 
 Deeper dives live in `docs/`:
 
+- `docs/input-coverage.md` - the coverage proof: a lexicon for every primitive CSS input token, and where the boundary is.
 - `docs/number-space.md` - which scalar CSS values are worth typing, and why.
 - `docs/hardening.md` - the refinement model, branded types, and custom refinements.
 - `docs/custom-format-registration.md` and `docs/adding-a-color-format.md` - registering custom colour formats end to end.

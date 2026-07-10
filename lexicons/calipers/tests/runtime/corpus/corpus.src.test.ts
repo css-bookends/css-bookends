@@ -4,7 +4,11 @@
 // so a bundle-level `global` or per-unit key actually reaches them.
 import { describe, expect, it } from 'vitest';
 
-import { hardenInteger } from '../../../src';
+import {
+  type ColorFormatPlugin,
+  type ColorString,
+  hardenInteger,
+} from '../../../src';
 import createCalipersBundle from '../../../src/corpus';
 
 describe('corpus config cascade (own key -> global -> factory default)', () => {
@@ -105,6 +109,44 @@ describe('corpus config cascade (own key -> global -> factory default)', () => {
       });
       const alpha = c.hardenFloat({ min: 0, max: 1 });
       expect(alpha(0.6).multiply(2).value()).toBe(1.2);
+    });
+  });
+
+  // The color quarter of the bundle: `config.color` must forward to `createColor`,
+  // so a custom format plugin registered through the bundle actually reaches the
+  // bound `color` instance. Previously only existence (`typeof bundle.color`) was
+  // checked, leaving the forwarding path untested through the split.
+  describe('color (bundle color slot forwards to createColor)', () => {
+    const marker: ColorFormatPlugin<'marker'> = {
+      format: 'marker',
+      hasAlpha: true,
+      gamut: 'unbounded',
+      supportsProbe: null,
+      gamutDependent: false,
+      srgbFloor: false,
+      render: () => 'MARKER' as ColorString<'marker'>,
+    };
+
+    it('binds a default color instance when no color config is given', () => {
+      const c = createCalipersBundle();
+      expect(c.color('#3366cc').hex().css()).toBe('#3366cc');
+    });
+
+    it('forwards a custom format plugin to the bundle color instance', () => {
+      const c = createCalipersBundle({
+        color: {
+          formats: [
+            marker,
+          ],
+        },
+      });
+      // the plugin is registered on the forwarded color instance...
+      expect(c.color.formats.marker).toBe(marker);
+      // ...and renders through it, via both the one-off selector and the typed name.
+      expect(c.color('#3366cc').formatAs(marker).css()).toBe(
+        'MARKER',
+      );
+      expect(c.color('#3366cc').marker.css()).toBe('MARKER');
     });
   });
 });

@@ -11,6 +11,61 @@ precedent to copy. When in doubt, open `m()` or `borders` and match it.
 
 ---
 
+## The map: units, bundles, and foundations
+
+Two layers. Within each, a **unit** (the atom) and a **bundle** (every unit of the layer, carrying
+config). Learn the four names once, because the two layers are the same machine:
+
+|                          | **unit** — the atom, its own package + factory              | **bundle** — every unit of the layer + a `global` config cascade |
+| ------------------------ | ----------------------------------------------------------- | ---------------------------------------------------------------- |
+| **Layer 1 — calipers**   | **lexicon** — a typed CSS input value (`m`, `i`, `f`, `r`, `color`) | **corpus** — `css-calipers` (`createCalipersBundle`)      |
+| **Layer 2 — bookends**   | **book** — a helper for one CSS concern (opacity, borders, …)      | **compendium** — `publishCompendium`                     |
+
+A **lexicon is to the corpus what a book is to the compendium.** Both bundles take
+`{ global?, <unitKey>? }` and resolve each setting **own key → `global` → factory default**;
+`createCalipersBundle`'s own docstring says it mirrors `publishCompendium`. ("Primitive" is the
+older synonym for "lexicon"; prefer **lexicon**.)
+
+Consumption is one-way: **lexicon → book → squire (TBD)**. A book peer-depends on the lexicons it
+uses and self-instantiates them; a lexicon never depends on a book.
+
+### Foundations: not every unit stands alone
+
+Value flows UP through foundations, and a book is often just the thin policy/label at the top.
+Three kinds of foundation sit under the books:
+
+- **Corpus lexicons** (`m`, `i`, `f`, `r`, `color`) — standalone typed values; each renders its own
+  `.css()`; shipped in the corpus.
+- **Foundation lexicons** (`spacing`) — a lexicon that CANNOT stand alone. It factors the shared
+  input/storage/output steps plus a policy surface for a FAMILY of books, but chooses no CSS
+  property, so it has no `.css()` target of its own. It lives OUTSIDE the corpus, one layer above
+  calipers.
+- **Shared engines** (`packages/`) — `self-publish` (the manuscript engine every book is stamped
+  from) and `css-value-core` (the constrained-scalar engine the per-property books share).
+
+| Foundation        | Kind             | Founds (the family)                                    | What each book adds on top       |
+| ----------------- | ---------------- | ------------------------------------------------------ | -------------------------------- |
+| `self-publish`    | engine           | every book                                             | its three manuscript steps       |
+| `css-value-core`  | engine           | the per-property scalar books (opacity, z-index, …)    | a per-property spec (range + keywords) |
+| `spacing`         | foundation lexicon | `margin`, `padding` (gap TBD)                        | a value-domain policy + the property key |
+| `color`           | corpus lexicon   | `borders` (+ colour anywhere)                          | composition                      |
+| `m` `i` `f` `r`   | corpus lexicons  | ~everything                                            | —                                |
+
+**Worked example — spacing.** `lexicons/spacing` provides `parseSpacing(input, policy)` (INPUT),
+`resolveSpacing` (STORAGE — spells a shorthand out into the canonical four-side store), the
+measurement-hardening hook, and the result renderer. The two books are the SAME machine at different
+policies:
+
+- **margin** = spacing at the permissive policy (`auto` + negatives + `anchor-size()` allowed),
+  output keyed to `'margin'`.
+- **padding** = spacing at a narrowed policy (no `auto`, no `anchor-size()`, measurements hardened to
+  `NonNegativeMeasurement`), output keyed to `'padding'`.
+
+The book contributes only its **policy** and its **property name**; everything else is spacing. That
+is why spacing cannot be used alone, and why it is a lexicon but not a *corpus* lexicon.
+
+---
+
 ## First principle: everything is config-driven
 
 A behaviour that could reasonably vary is a CONFIG OPTION, not a hardcoded decision. When the
@@ -92,12 +147,12 @@ spec (e.g. `opacity` -> `[0,1]`). So the spec defines clamp-or-invalidate per pr
 
 The conformance rules that follow:
 
-- **Validation lives in the HELPER (book), not in `m()` / the primitives.** A book knows its
+- **Validation lives in the HELPER (book), not in `m()` / the lexicons.** A book knows its
   property's spec rule and applies it: **clamp where the spec clamps** (opacity, calc-context),
   otherwise **fail fast** (throw) rather than emit CSS the browser would reject (a typed-input
   library cannot "silently ignore" like the cascade does). This is the existing
   `outOfRange: 'throw' | 'clamp'` knob, defaulted per the property's spec behaviour.
-- **`m()` / the primitives stay PERMISSIVE.** Only truly-invalid input (non-finite) fails; range
+- **`m()` / the lexicons stay PERMISSIVE.** Only truly-invalid input (non-finite) fails; range
   rules are not their job. Ordinary in-range variation (an opacity moving 1 -> 0.4) is never an
   error.
 - **Hardening is OPT-IN.** `m()`'s refinement quartet, and `hardenInteger`/`hardenFloat` on
@@ -126,12 +181,12 @@ lives on `CalipersFactoryConfig` (today `{ errorConfig? }`) and is reachable fro
 `createCalipersBundle` under the `measurement` key + the `global` cascade. (Key name + default still
 being finalised; lean default `warn`.)
 
-### Colour is a Layer-1 calipers primitive (locked 2026-06-27)
+### Colour is a Layer-1 calipers lexicon (locked 2026-06-27)
 
 The colour VALUE (parse/store/resolve, `colorFormats`, types) lives in `@css-bookends/css-calipers`
 already; the separate `@css-bookends/color` package is only a thin `publishBookColor` wrapper that
-re-exports it. When calipers splits, the colour primitive becomes the `@css-bookends/color` package
-(a Layer-1 calipers primitive, using `createColor`), and the thin wrapper is folded in. Colour is a
+re-exports it. When calipers splits, the colour lexicon becomes the `@css-bookends/color` package
+(a Layer-1 calipers lexicon, using `createColor`), and the thin wrapper is folded in. Colour is a
 LEXICON, not a Layer-2 book.
 
 ---

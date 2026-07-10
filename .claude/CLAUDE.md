@@ -15,8 +15,11 @@ repeated instruction. Report packaging observations if asked, but do not change 
 ## The three layers
 
 A typed-CSS stack in three layers. Each has one job. Keep them strictly separated.
+For the units/bundles/foundations map at a glance, see `docs/foundations.md` ("The map").
+(Terminology: a Layer-1 unit is a **lexicon**; "primitive" is the older synonym, retired in
+favour of "lexicon".)
 
-### Layer 1, css-calipers = typed CSS input PRIMITIVES only
+### Layer 1, css-calipers = typed CSS input LEXICONS only
 
 - THE RULE (absolute): ALL typed CSS input VALUES go in calipers, FULL STOP, regardless
   of how rich the value's surface is. That includes `color`, `m`, `i`, `f`, `r`. The
@@ -27,24 +30,24 @@ A typed-CSS stack in three layers. Each has one job. Keep them strictly separate
 - Mission: fill the gap where `csstype` is lacking, typed, build-time-validated CSS
   input VALUES. It MUST be usable STANDALONE, by someone who wants only typed CSS
   inputs and no helpers at all.
-- Contains: the primitives and the machinery they need, and nothing else. `m()`
+- Contains: the lexicons and the machinery they need, and nothing else. `m()`
   measurements, `r()` ratios, `i()` integers, `f()` floats, `color()` (the colour
-  VALUE primitive, including custom-format registration), plus the hardening,
-  refinement, and factory support those primitives require.
+  VALUE lexicon, including custom-format registration), plus the hardening,
+  refinement, and factory support those lexicons require.
 - MUST NOT contain: any helper, any book, any composed concern, or the `publishBook`
   / self-publish engine. No book code lives in calipers, ever.
-- SEPARATE PACKAGES (the unit model): each primitive is its OWN npm package on a shared
+- SEPARATE PACKAGES (the unit model): each lexicon is its OWN npm package on a shared
   `@css-bookends/core` (`@css-bookends/measurement`, `/ratio`, `/integer`, `/float`, and the
-  colour primitive), so a consumer installs only what they want, e.g. measurement without
-  colour and its `culori` dependency (colour + culori arrive ONLY with the colour primitive
+  colour lexicon), so a consumer installs only what they want, e.g. measurement without
+  colour and its `culori` dependency (colour + culori arrive ONLY with the colour lexicon
   package). `css-calipers` is the BUNDLE (the "corpus"): it depends on + re-exports every
-  primitive and owns `createCalipersBundle`. This mirrors the books + compendium model in
+  lexicon and owns `createCalipersBundle`. This mirrors the books + compendium model in
   Layer 2 exactly: per-unit packages + a bundle. (Supersedes the earlier one-package +
   subpath-exports design.)
 
-### Layer 2, css-bookends = the helpers (books) that consume the primitives
+### Layer 2, css-bookends = the helpers (books) that consume the lexicons
 
-- Mission: helpers built ON TOP of calipers primitives, to turn typed inputs into
+- Mission: helpers built ON TOP of calipers lexicons, to turn typed inputs into
   something useful. CSS-Bookends is the helper layer.
 - EVERY helper is a book. Per-property helpers (opacity, zIndex, fontWeight, ...) and
   composed helpers (borders, shadows, margin, padding, ...) are ALL Layer-2 books
@@ -63,7 +66,7 @@ A typed-CSS stack in three layers. Each has one job. Keep them strictly separate
 
 - Books consume calipers; calipers never depends on a book or on `publishBook`. Squire
   builds on calipers + bookends; nothing in the lower layers depends on Squire.
-- Design tokens (DTCG) flow IN through the typesetter: tokens -> calipers primitives
+- Design tokens (DTCG) flow IN through the typesetter: tokens -> calipers lexicons
   -> books. css-bookends consumes the tokens; calipers itself stays token-unaware.
 
 ## css-calipers positioning (README, docs, all public copy)
@@ -81,7 +84,22 @@ A typed-CSS stack in three layers. Each has one job. Keep them strictly separate
   and useful on its own (you never need bookends to use it). Pointing to the larger
   CSS-Bookends project (helpers on top, Layer 2; CSS Squire the opinionated Layer 3) is
   welcome but SECONDARY: a "there is more if you want it" note, never a framing that
-  makes calipers feel incomplete without it or subordinate to it.
+  makes calipers feel incomplete without it or subordinate to it. (This governs how the
+  MIRROR presents itself; per "Source of truth" below, standalone NEVER outranks a bookends need.)
+
+## Source of truth: css-bookends drives; the standalone calipers repo MIRRORS (absolute)
+
+- This monorepo (css-bookends) is the SOURCE OF TRUTH for all calipers code, authored here
+  under `lexicons/calipers/`. The standalone `slafleche/css-calipers` repo is a DOWNSTREAM
+  MIRROR (the push-out target of `mirror.sh`), never where design decisions are made.
+- The mirror MUST keep functioning as a self-contained standalone library, but that is a
+  property we PRESERVE downstream, not a driver. When a bookends need conflicts with the
+  mirror's standalone framing, BOOKENDS WINS. The "calipers reads as complete / standalone"
+  positioning rule governs how the MIRROR presents itself; it NEVER outranks what bookends
+  requires.
+- Practical order: design and change calipers HERE, for bookends, first; THEN verify the
+  mirror still publishes cleanly as a standalone. The standalone check is a downstream gate,
+  not a veto on the design.
 
 ## css-bookends positioning (README, docs, public copy)
 
@@ -95,16 +113,17 @@ A typed-CSS stack in three layers. Each has one job. Keep them strictly separate
 
 ## The unit + bundle model (both layers, absolute)
 
-Both layers obey ONE model. A **unit** is the atom (a calipers PRIMITIVE in Layer 1, a
+Both layers obey ONE model. A **unit** is the atom (a calipers LEXICON in Layer 1, a
 bookends BOOK in Layer 2); every unit is its own npm package exposing a factory. A **bundle**
 package aggregates every unit of a layer and carries a global config. calipers' bundle is the
 `corpus` (`css-calipers`); bookends' bundle is the `compendium`. Learn it once, it applies to
-both. Three cross-cutting patterns follow.
+both. Three cross-cutting patterns follow. (See `docs/foundations.md` "The map" for the
+lexicon/book × corpus/compendium grid and the foundation→family model, e.g. `spacing`.)
 
 ### Pattern 1: factory-first (the override seam)
 
 - Every unit's REAL, configurable path is its FACTORY: a book's `publishBook<Name>()`; a
-  primitive's `create<Name>` (`createCalipers` / `createColor`); the bundle's
+  lexicon's `create<Name>` (`createCalipers` / `createColor`); the bundle's
   `publishCompendium()` / `createCalipersBundle()`. Consume the factory, never a pre-made
   instance. It is the override seam (rewrite or wrap any step onion-style, swap internals, with
   zero call-site changes; minimal blast radius since you bind once; independent multi-instances
@@ -144,7 +163,7 @@ design forces a "should it do X or Y?" choice, it is a config, not a baked-in br
   overrides. Both bundle factories (`publishCompendium`, `createCalipersBundle`) implement the
   `global` slot + this cascade.
 - **A book self-instantiates its calipers dependency; it never requires a calipers config.** If a
-  book needs a calipers primitive configured a certain way, it builds its OWN calipers instance
+  book needs a calipers lexicon configured a certain way, it builds its OWN calipers instance
   via the factory (`createCalipers` / `createColor`) internally, with the config it needs. It
   never asks the consumer to thread a calipers config through, and never hard-depends on a shared
   instance. This decouples books from calipers' config surface and shrinks the config a consumer
@@ -184,12 +203,11 @@ failing test is the spec.
   that is green from the start does not validate a type-level change.
 - Only once the test is truly red do you implement to make it green.
 
-## Legacy css-values in calipers (remove during the split)
+## No helpers in calipers (the css-values legacy is already removed)
 
 - The per-property helpers now live in the BOOKS layer: the shared `@css-bookends/css-value-core`
   engine plus a per-property book package each (opacity, zIndex, fontWeight, …). That is their
   permanent home.
-- Any per-property css-values code still resident in `lexicons/calipers/src/css-values/` is
-  LEGACY. Do NOT add helpers to calipers, and do not present css-values as a calipers feature in
-  its README/docs. This residue is removed when calipers is split into per-primitive packages
-  (Phase C of the architecture plan); calipers keeps only the value primitives.
+- The old `lexicons/calipers/src/css-values/` residue has ALREADY been removed; calipers keeps only
+  the value lexicons. Do NOT add helpers to calipers, and do not present css-values as a calipers
+  feature in its README/docs.
