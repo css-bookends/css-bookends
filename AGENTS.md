@@ -23,9 +23,10 @@ job (a Layer-1 unit is a **lexicon**; "primitive" is the retired synonym):
    helpers at all. NO helpers, NO books, no `publishBook` engine, ever.
 2. **css-bookends (Layer 2), the helpers (books) that consume the lexicons.** EVERY
    helper is a book (per-property: opacity, zIndex, ...; composed: borders, shadows,
-   margin, ...). The compendium is the full bundle of every active book; the typesetter
-   ingests DTCG design tokens; gilding is the output-edge finisher. Books consume
-   calipers; calipers never depends on a book.
+   margin, ...). The compendium is the full bundle of every active book; gilding is the
+   output-edge finisher. Books consume calipers; calipers never depends on a book. (The
+   **platemaker** is NOT a book: it is a calipers-adjacent input adapter in the
+   `css-calipers` org that feeds Layer 1; see its rule below.)
 3. **css-squire (Layer 3, TBD), the opinionated framework on top.** Built on the steady
    calipers + bookends foundation, adaptable per project (you could in theory rebuild
    Tailwind or Bootstrap on top of it). Not built yet; nothing depends on it.
@@ -221,23 +222,28 @@ Rules:
   their decomposition axis (longhand/shorthand; long/line/short) as a separate config from
   `format`.
 
-### The typesetter is a code generator, not a runtime helper (planned)
+### The platemaker is a calipers input adapter, not a book (planned)
 
-A third construct is planned (not built yet): the **typesetter** (see
-`ARCHITECTURE.md`, `README.md`, and `design-tokens.md`). It converts a DTCG
-design-token document into typed lexicon vars at build time. It is not a runtime
-helper, so the two rules above do not apply to it directly:
+A third construct is planned (spec: `docs/platemaker-spec.md`, no code yet): the
+**platemaker**, the input-edge adapter that turns design tokens into typed calipers
+values at build time. It **onion-wraps [style-dictionary](https://styledictionary.com)**
+(the swappable core, the same shape `gilding` uses for Lightning CSS): style-dictionary
+owns parse / resolve / transform, so the SOURCE is agnostic (DTCG, Tokens Studio, bespoke
+JSON); the platemaker owns the `$type` -> lexicon mapping + emit.
 
-- It is **not consumed from a factory** and is not bound by `publishBook`; it is an
-  on-demand script the dev runs when the design updates.
-- It **does not render `.css()`**. Its output is TS source: `export const`
-  declarations whose values are lexicon-factory calls (`m()`, `color()`). The
-  factory + `.css()` rules are upheld downstream, in that generated code, because
-  the generated vars are produced by the lexicon factories and rendered by the
-  consumer through `.css()` like any other value.
+It **belongs to the `css-calipers` org, NOT to bookends / Layer 2.** It depends on
+calipers and emits calipers values, and nothing lower depends on it, so it is calipers
+input tooling that FEEDS Layer 1, not a book that sits on top. Development stays in the
+css-bookends monorepo (source of truth) and mirrors out, like calipers itself. The factory
++ `.css()` rules do not apply to it directly:
 
-When the typesetter is built, keep its conversion engine fixed and its routing /
-naming / output-shape behavior configurable (see `design-tokens.md`).
+- It is **not consumed from a `publishBook` factory**; it is `createPlate(config)`, an
+  on-demand build step the dev runs when the design updates.
+- It **does not render `.css()`**. Its output is calipers values (TS source and/or an
+  in-memory map), rendered downstream through `.css()` like any other value.
+
+Keep the wrapped engine SWAPPABLE (the onion `core`, not a fixed bespoke engine) and the
+calipers mapping / routing / emit configurable (see `docs/platemaker-spec.md`).
 
 ### Format, lint, and type-check every file you touch (absolute)
 

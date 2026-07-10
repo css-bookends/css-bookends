@@ -71,7 +71,10 @@ import { m, opacity, color, borders } from '@css-bookends/compendium/defaults';
 
 ## Layers
 
-- **Layer 1 — [css-calipers](https://www.npmjs.com/package/@css-bookends/css-calipers):** typed, build-time-validated CSS input values (colour, measurements, integers, floats, ratios).
-- **Layer 2 — bookends:** the helper books that turn those typed inputs into useful output; the compendium is their full bundle. Typed input and typed output, with a loose, ergonomic middle.
+CSS-Bookends is three opt-in layers, each usable on its own, always with an escape hatch down (see [Lower-level by design](https://github.com/css-bookends/css-bookends#lower-level-by-design-choose-your-altitude)):
 
-`gilding` is the output-edge finisher (browser-compat post-processing); the typesetter ingests design tokens. Both are optional.
+- **Layer 1, [css-calipers](https://www.npmjs.com/package/@css-bookends/css-calipers):** typed, build-time-validated CSS input values (colour, measurements, integers, floats, ratios).
+- **Layer 2, bookends (this package):** the helper books that turn those typed inputs into useful output, opt-in and overwritable, with no built-in classes. The compendium is their full bundle. Typed input and typed output, with a loose, ergonomic middle.
+- **Layer 3, CSS Squire (TBD):** the framework conveniences (classes, presets) built on the two steady layers below.
+
+`gilding` is the output-edge finisher (browser-compat post-processing). The platemaker is a calipers-adjacent input adapter that turns design tokens into typed values. Both are optional.

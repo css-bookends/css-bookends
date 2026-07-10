@@ -2,7 +2,7 @@
 
 The single list of outstanding work. Reorganised around the **next css-calipers beta**:
 the checklists below are scoped to **Layer 1 lexicons only** (`m` / `r` / `i` / `f` / colour +
-the corpus bundle). Books, compendium, and typesetter are OUT of scope for the beta and live in
+the corpus bundle). Books, compendium, and platemaker are OUT of scope for the beta and live in
 the "Deferred" tail at the bottom, kept intact so nothing is lost.
 
 **Release model (locked 2026-07-09):** the new work (hardening, cascade, unified value surface,
@@ -157,14 +157,14 @@ Kept intact for the paper trail. These are Layer-2 (books / compendium) or later
 - [ ] css-value-core coverage gaps + convert remaining `todo` stubs + add tsd interop type tests —
       re-evaluate when the per-property books are conformed.
 
-## typesetter — spec it as an onion wrapper around style-dictionary (no code yet)
-The bespoke typesetter + its token docs were deleted (junk, 2026-06-29) and stay deleted. The future
-typesetter WRAPS **style-dictionary** (swappable core) with its own factory + props, like `gilding`
+## platemaker — spec it as an onion wrapper around style-dictionary (no code yet)
+The bespoke platemaker + its token docs were deleted (junk, 2026-06-29) and stay deleted. The future
+platemaker WRAPS **style-dictionary** (swappable core) with its own factory + props, like `gilding`
 wraps Lightning CSS. NEXT STEP IS A SPEC, not code.
-- [ ] Write `docs/typesetter-spec.md`: how style-dictionary works (tokens -> transforms -> formats),
-      its DTCG support, how the typesetter onion-wraps it (`createTypesetter(config)`: evergreen config +
+- [ ] Write `docs/platemaker-spec.md`: how style-dictionary works (tokens -> transforms -> formats),
+      its DTCG support, how the platemaker onion-wraps it (`createPlate(config)`: evergreen config +
       swappable `core` defaulting to a style-dictionary adapter + `coreOptions`), the seam feeding
       calipers Layer-1 primitives, and the open trade-offs.
 - [ ] (LATER, after the user has an opinion) implement per the spec.
-- [ ] Deprecate the published `@css-bookends/typesetter@0.1.0` on npm (`npm deprecate`, user-run).
-- [ ] Scrub remaining `typesetter` mentions in `ARCHITECTURE.md` / READMEs / `AGENTS.md` / `.claude/CLAUDE.md`.
+- [ ] Deprecate the published `@css-bookends/typesetter@0.1.0` on npm (`npm deprecate`, user-run). (Historical package name; the construct is now the platemaker.)
+- [ ] Scrub remaining `platemaker` mentions in `ARCHITECTURE.md` / READMEs / `AGENTS.md` / `.claude/CLAUDE.md`.

@@ -2,11 +2,36 @@
 
 The missing pieces of typed CSS input, build-time-validated: colour, measurements, integers, floats, and ratios.
 
-> **Beta.** The expanded surface documented here (colour, ratios, the unified value surface, and the config cascade) ships under the `beta` tag as `1.1.0-beta.0` — install with `@beta` and expect changes before it reaches a stable `1.x`. Only the original `m()` release is on `latest` (`1.0.0`).
+A companion to the [Design Tokens Community Group (DTCG)](https://www.w3.org/community/design-tokens/) format: where DTCG is the vendor-neutral standard for _what_ your tokens are, calipers is the layer that turns them into real, build-time-validated types ([more below](#complementary-to-design-tokens-dtcg)).
+
+> **Beta.** The expanded surface documented here (colour, ratios, the unified value surface, and the config cascade) ships under the `beta` tag; install with `@beta` and expect changes before it reaches a stable `1.x`. Only the original `m()` release is on `latest` (`1.0.0`).
+
+## Quick start
+
+```bash
+npm i @css-bookends/css-calipers@beta
+```
+
+```ts
+import { style } from '@vanilla-extract/css';
+import { m, r, color } from '@css-bookends/css-calipers';
+
+// Build typed, validated values; `.css()` emits plain CSS strings (or a style
+// object). Shown here with vanilla-extract, but calipers is agnostic about the
+// compiler: the output is plain CSS, so it drops into vanilla-extract, CSS
+// Modules, any CSS-in-JS, or a plain stylesheet build just the same.
+export const card = style({
+  padding: m(16).css(),          // '16px'
+  aspectRatio: r(16, 9).css(),   // '16/9'
+  color: color('#3366cc').css(), // '#3366cc'
+});
+```
 
 ## The problem
 
 CSS input values are untyped. A measurement is a string (`'8px'`), an opacity is a bare number, a colour is whatever string you typed. Nothing catches `opacity: 1.5`, a `px` value added to an `em`, or a `z-index` that is silently a float. The mistake surfaces in the browser, not the compiler.
+
+That is by design: CSS is meant to fail silently in the browser. The missing half is failing loudly in the *build*, which matters more now that so much CSS is AI-written (an LLM will confidently ship an invalid `width: fit-parent` and never know). [The case for compiled, typed CSS](https://dev.to/slafleche/the-case-for-compiled-typed-css-blame-ai-8m8) makes the fuller argument.
 
 ## Highlights
 
@@ -31,13 +56,14 @@ m(8).add(m(4)).css();          // '12px'  (m() defaults to px)
 m(2, 'rem').multiply(2).css(); // '4rem'
 ```
 
-Ratios accept typed integers and floats on either side:
+Ratios accept plain numbers or typed integers and floats on either side:
 
 ```ts
 import { r, i, f } from '@css-bookends/css-calipers';
 
-r(i(16), i(9)).css();  // '16/9'
-r(f(1.5), i(2)).css(); // '1.5/2'  (a float and an integer)
+r(16, 9).css();        // '16/9'   (plain numbers)
+r(i(16), i(9)).css();  // '16/9'   (typed integers)
+r(f(1.5), i(2)).css(); // '1.5/2'  (a float and an integer, mixed)
 ```
 
 Refinements turn a runtime check into a compile-time guarantee: the checked value is branded, so a function that demands a non-negative measurement cannot be handed an unchecked one.
@@ -63,11 +89,11 @@ Integers (`i`), floats (`f`), and custom colour formats round out the set.
 
 `csstype` is excellent and ships here as a dependency. It types CSS property names and their keywords well. What it leaves loose is open INPUT values: where a property accepts an open number or string, csstype falls back to `(number & {})`, so a bare `1.5`, a `px` added to an `em`, or a float `z-index` all pass. You cannot construct a validated value from that. calipers fills exactly that gap, and `.css()` renders to a string that still satisfies csstype on output. It complements csstype; it never replaces it. csstype types the property and keyword side, calipers types the value side, and the aim is a complete typed surface for CSS input, built from both.
 
-calipers is standalone and complete on its own. It is also Layer 1 of the larger CSS-Bookends project (helpers, then an opinionated framework, built on these primitives), and design-token (DTCG) documents convert to these primitives via the Bookends typesetter. Both are there if you want them, never required.
+calipers is standalone and complete on its own, and it is the lowest of three opt-in layers. Use it directly with no helpers, or reach up for the helpers ([CSS-Bookends](https://github.com/css-bookends/css-bookends), Layer 2) and the opinionated framework (CSS Squire, Layer 3, TBD) built on it, dropping back down whenever you want the control. Nothing above is ever required. See [Lower-level by design](https://github.com/css-bookends/css-bookends#lower-level-by-design-choose-your-altitude).
 
 A note on the names, and on wrapping. The book metaphor (calipers, bookends, gilding, compendium) is deliberate, not just whimsy. Each name marks a ROLE, and intentionally hides the library currently filling it, because those internals are meant to be swappable. You import `color()`, not `culori`; the project's browser-compat finisher is `gilding`, not Lightning CSS. Swap the engine underneath and your call sites do not move.
 
-That swappability reflects a principle calipers shares with the wider project: where a mature tool already solves a problem, we wrap it at the edge and credit it plainly rather than reinventing it. calipers leans on `culori` for colour conversions and satisfies `csstype` on output; what it adds is the typed authoring surface around those edges (branded, validated values in, a single `.css()` out), not a reimplementation of the wrapped tool. The fuller version of this argument is the CSS-Bookends ["Wrapping at the edges, not reinventing"](https://github.com/css-bookends/css-bookends#wrapping-at-the-edges-not-reinventing) philosophy.
+That swappability reflects a principle calipers shares with the wider project: where a mature tool already solves a problem, we wrap it at the edge and credit it plainly rather than reinventing it. calipers leans on `culori` for colour conversions and satisfies `csstype` on output; what it adds is the typed authoring surface around those edges (branded, validated values in, a single `.css()` out), not a reimplementation of the wrapped tool. The fuller version of this argument is the [CSS-Bookends "Wrapping at the edges, not reinventing"](https://github.com/css-bookends/css-bookends#wrapping-at-the-edges-not-reinventing) philosophy.
 
 ## Coverage: a lexicon for every primitive input
 
@@ -88,7 +114,9 @@ The [Design Tokens Community Group](https://www.w3.org/community/design-tokens/)
 
 The two solve different halves of one problem. A token document is the source-agnostic layer: the agreed description of what your tokens ARE, portable across tools. calipers is the layer that turns those values into real TypeScript types and real build-time validation for your project, so a token stops being a loose JSON value and becomes a checked, branded value that cannot be misused. From there it renders to whatever target you need through `.css()`: plain CSS, Sass, or the styles inside a component (React, Vue, and so on).
 
-calipers stays deliberately agnostic about where the tokens come from. It types and validates the VALUES, and a separate conversion step feeds them in, handing each token to the matching lexicon (`m()`, `color()`, `i()`, `f()`). The token landscape is still plural (the W3C DTCG format alongside the Figma, Tokens Studio, and Style Dictionary shapes in the wild), and calipers does not bind to any one of them. Which source formats a converter accepts, and how, is an open design question in the wider CSS-Bookends project; calipers does not depend on the answer. A token in, a typed and validated value in the middle, a rendered value out in any format you target.
+calipers stays deliberately agnostic about where the tokens come from. It types and validates the VALUES, and a separate conversion step feeds them in, handing each token to the matching lexicon (`m()`, `color()`, `i()`, `f()`). The token landscape is still plural (the W3C DTCG format alongside the Figma, Tokens Studio, and Style Dictionary shapes in the wild), and calipers does not bind to any one of them. Which source formats a converter accepts, and how, is an open design question in the wider [CSS-Bookends](https://github.com/css-bookends/css-bookends) project; calipers does not depend on the answer. A token in, a typed and validated value in the middle, a rendered value out in any format you target.
+
+**An intentional border.** This project deliberately starts *after* you have design tokens. Getting authoritative tokens out of the design tool, validating that the design system and the tokens agree, catching design drift, is a real and separate problem, and it is not ours to solve. Others work that upstream edge well, for example Amrutha Kollu's [_Check Designs validates your Figma. What validates your code?_](https://dev.to/akollu72/check-designs-validates-your-figma-what-validates-your-code-38c2), which names exactly the code-side gap calipers fills. So the boundary is by design: standard tokens come in, and calipers answers the "what validates your code" half with typed, build-time-validated values.
 
 ## Install
 
@@ -116,6 +144,8 @@ color('#3366cc80', { strictness: 'silent' }).rgb().css(); // 'rgb(51, 102, 204)'
 **Transparency.** A fully transparent colour renders as the `transparent` keyword by default; configurable with `{ transparent: 'keyword' | 'white' | 'black' | 'preserve' }` or per render with `.transparentAs(mode)`. See `examples/transparency.example.ts`.
 
 **Custom formats.** `createColor({ formats })` binds custom format plugins. A plugin bridges the input and output edges (storage stays canonical OKLCH) and gets a typed named selector; author one with `defineColorSpace`, and an optional `fallback` hook rewrites its output into browser-safe CSS. See `examples/custom-format.example.ts` (its "zoo" format is a deliberately silly extensibility demo, not a real format), `examples/plugin-fallback.example.ts`, and `docs/adding-a-color-format.md`.
+
+**Browser support for modern formats.** To recap the output story: `.css()` defaults to the simplest format that can faithfully hold the colour (the `[hex, rgba, oklch]` ladder), and that default is fully configurable, per call (a selector or `.formatAs(...)`) or per instance (the factory `output` config). If you opt into a bleeding-edge format (`oklch`, `lab`, `display-p3`) that older browsers do not yet support, calipers still emits it faithfully and leaves the fallbacks to a post-processor at the output edge: [gilding](https://github.com/css-bookends/css-bookends) (the CSS-Bookends finisher that wraps [Lightning CSS](https://lightningcss.dev/)) if you are in the wider project, or [Lightning CSS](https://lightningcss.dev/) on its own if you use calipers standalone. calipers types and emits the value; browser compatibility is the post-processor's job.
 
 ## Measurements
 

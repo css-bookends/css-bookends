@@ -65,7 +65,7 @@ opinionated, sitting on the evergreen foundation below it.
 
 ## Input edge and scope boundary
 
-- The input format is DTCG (the W3C Design Tokens format). A typesetter
+- The input format is DTCG (the W3C Design Tokens format). A platemaker
   (**planned**, not built) converts a DTCG document into typed lexicon vars that
   feed the helpers. The token-to-helper mapping stays under the consumer's
   control rather than being prescribed.

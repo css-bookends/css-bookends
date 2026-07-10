@@ -53,8 +53,9 @@ favour of "lexicon".)
   composed helpers (borders, shadows, margin, padding, ...) are ALL Layer-2 books
   here. A helper NEVER lives in calipers.
 - The compendium (`packages/compendium`) is the full bundle: it always re-exports every
-  active book (the full "bookends"). The typesetter ingests design tokens (DTCG); gilding is
-  the output-edge finisher (browser-compat post-processing).
+  active book (the full "bookends"). Gilding is the output-edge finisher (browser-compat
+  post-processing). (The platemaker is NOT part of Layer 2, see below: it is a
+  calipers-adjacent input adapter in the `css-calipers` org that feeds Layer 1.)
 
 ### Layer 3, css-squire (TBD) = the opinionated framework on top
 
@@ -66,8 +67,9 @@ favour of "lexicon".)
 
 - Books consume calipers; calipers never depends on a book or on `publishBook`. Squire
   builds on calipers + bookends; nothing in the lower layers depends on Squire.
-- Design tokens (DTCG) flow IN through the typesetter: tokens -> calipers lexicons
-  -> books. css-bookends consumes the tokens; calipers itself stays token-unaware.
+- Design tokens flow IN through the platemaker (a calipers-adjacent input adapter in the
+  `css-calipers` org that onion-wraps style-dictionary): tokens -> calipers lexicons -> books.
+  The platemaker consumes the tokens; calipers itself stays token-unaware.
 
 ## css-calipers positioning (README, docs, all public copy)
 

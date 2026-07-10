@@ -15,7 +15,7 @@ and `AGENTS.md`; keep this in sync with them.
    `f`, `color`). Usable STANDALONE, with no helpers at all. No helpers, no books, no
    `publishBook` engine, ever.
 2. **css-bookends (Layer 2), the helpers (books) that consume the primitives.** EVERY
-   helper is a book; the compendium is the full bundle of every active book; the typesetter
+   helper is a book; the compendium is the full bundle of every active book; the platemaker
    ingests DTCG design tokens; gilding is the output-edge finisher. Books consume
    calipers; calipers never depends on a book.
 3. **css-squire (Layer 3, TBD), the opinionated framework on top.** Built on the steady
@@ -33,7 +33,7 @@ must be extracted into the books layer. No further helpers go into calipers.
   vocabulary every other package builds on.
 - **book** : a workable library for one CSS concern (borders, shadows, ...),
   built by combining three steps.
-- **typesetter** (planned, not built yet) : a construct that converts a DTCG
+- **platemaker** (planned, not built yet) : a construct that converts a DTCG
   design-token document into typed lexicon vars (`m()`, `color()`, ...) for the
   books to consume. It is neither a lexicon nor a book: it sits at the input edge,
   it is an on-demand code generator (not a runtime helper), and it does not render

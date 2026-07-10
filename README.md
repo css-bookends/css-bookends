@@ -54,9 +54,10 @@ statement lives in `.claude/CLAUDE.md` and `AGENTS.md`):
    `r`, `i`, `f`, `color`). It is usable **standalone**, for someone who wants only
    typed CSS inputs and no helpers at all. No helpers, no books, ever.
 2. **css-bookends (Layer 2), the helpers (books) that consume the lexicons.**
-   Every helper is a book; the compendium is the full bundle of every active book; the
-   typesetter ingests DTCG design tokens; gilding is the output-edge finisher.
-   Books consume calipers; calipers never depends on a book.
+   Every helper is a book; the compendium is the full bundle of every active book;
+   gilding is the output-edge finisher. Books consume calipers; calipers never depends
+   on a book. (The platemaker is not a book, see below: it is a calipers-adjacent input
+   adapter that feeds Layer 1.)
 3. **css-squire (Layer 3, TBD), the opinionated framework on top.** Built on the
    steady calipers + bookends foundation, adaptable per project (you could in theory
    rebuild Tailwind or Bootstrap on top of it). Not built yet; nothing depends on it.
@@ -64,6 +65,35 @@ statement lives in `.claude/CLAUDE.md` and `AGENTS.md`):
 Consumption is one-way: calipers -> books -> squire. (The per-property helpers that
 once lived in calipers have since moved to the books layer, on the shared
 `@css-bookends/css-value-core` engine.)
+
+## Lower-level by design: choose your altitude
+
+Most CSS frameworks hand you the top floor: a fixed set of classes and conventions, and
+you live inside them. CSS-Bookends hands you the whole building and the stairs. It is three
+layers of abstraction, each usable on its own, and you can always drop to a lower one when
+you need the control. The same way you can drop to assembly when a language abstraction gets
+in your way, dropping a layer here is a supported path, not going off the rails.
+
+Four principles hold across every layer:
+
+- **Opt-in.** Take only the layer you want; calipers works with no helpers at all.
+- **Overwritable.** Every level is produced by a factory you can rebind or wrap, never a
+  black box.
+- **Multi-instance.** Because helpers are minted from a factory with settings, you can run
+  several configurations of the same helper at once: two `borders` with different defaults,
+  a strict `opacity` beside a clamping one, with no global state to collide (see
+  [Factories](#factories-the-override-seam)).
+- **No fighting the system.** Dropping a layer, rebinding a factory, or reaching past a
+  helper is expected, not a workaround.
+
+Where each layer sits:
+
+- **calipers (Layer 1)** is the lowest level: typed, validated values you use directly and
+  pipe wherever you like, even if you never touch a helper.
+- **css-bookends (Layer 2)** is the helper layer: enough to build a whole app (the author's
+  own portfolio is built on it), opt-in and overwritable, with no built-in classes.
+- **css-squire (Layer 3, TBD)** is where the framework conveniences live (classes, presets,
+  the bells and whistles), built on the two steady layers you can always reach past.
 
 ## Lexicons and books
 
@@ -87,22 +117,24 @@ and pulls in only what it actually depends on. The umbrella is organizational, n
 a bundle you are forced to take whole. See `docs/foundations.md` ("The map") for how
 these fit together.
 
-A third kind of construct is planned (not built yet): the **typesetter**. It sits
-in front of the books at the input edge and converts a design-token document into
-typed lexicon vars (`m()`, `color()`, ...) that you then feed to the books. The token
-layer it reads is source-agnostic; the standard the ecosystem is converging on is the
-[W3C Design Tokens (DTCG)](https://www.w3.org/community/design-tokens/) format, important
-work this project builds on rather than duplicates. See `design-tokens.md` for the
-boundary and the format reference.
+A third construct is planned (not built yet): the **platemaker**, a calipers-adjacent
+input adapter (it lives in the `css-calipers` org, not the books layer). It sits at the
+input edge and converts a design-token document into typed lexicon values (`m()`,
+`color()`, ...) that then flow into calipers and the books. It **onion-wraps
+[style-dictionary](https://styledictionary.com)** (the swappable core, the same shape
+`gilding` uses for Lightning CSS), so the source is agnostic; the standard the ecosystem
+is converging on is the [W3C Design Tokens (DTCG)](https://www.w3.org/community/design-tokens/)
+format, important work this project builds on rather than duplicates. See
+`docs/platemaker-spec.md` for the design.
 
 Every package publishes under the `@css-bookends/*` scope, lexicons and books
 alike (for example `@css-bookends/css-calipers` and `@css-bookends/compendium`).
 
 ## What is available today
 
-- **`@css-bookends/css-calipers`** — the corpus of typed-input lexicons (`m`, `i`,
+- **`@css-bookends/css-calipers`**: the corpus of typed-input lexicons (`m`, `i`,
   `f`, `r`, `color`) and the foundation most other pieces build on. Stable, headed
-  to 1.0. It is standalone and owns its own complete docs and examples — start there:
+  to 1.0. It is standalone and owns its own complete docs and examples. Start there:
   [docs](./lexicons/calipers/README.md) ·
   [repo](https://github.com/slafleche/css-calipers) ·
   [npm](https://www.npmjs.com/package/@css-bookends/css-calipers)
@@ -131,7 +163,7 @@ inspectable CSS.
 
 ## Wrapping at the edges, not reinventing
 
-The metaphors (lexicon, book, typesetter, gilding, compendium) name one consistent
+The metaphors (lexicon, book, platemaker, gilding, compendium) name one consistent
 architecture. The naming is not just for whimsy: it is because the idea is that
 everything underneath is swappable. Each name marks a ROLE and hides the library
 currently filling it (you import `color()`, not `culori`; the finisher is `gilding`,
@@ -144,7 +176,7 @@ things here are genuinely different, and neither is a rename:
    naming methodologies, and post-processors do not give you.
 2. **Deliberate wrapping at the edges, credited plainly.** Where a mature tool already
    solves a problem, we wrap it instead of reinventing it, and we say so. The
-   typesetter (planned) wraps a W3C Design Tokens parser at the input edge;
+   platemaker (planned) wraps [style-dictionary](https://styledictionary.com) at the input edge;
    **gilding** wraps [Lightning CSS](https://lightningcss.dev/) at the output edge to
    complete browser compatibility (older-browser fallbacks and vendor prefixes). We do
    not reimplement or take credit for their work. What CSS-Bookends adds is the

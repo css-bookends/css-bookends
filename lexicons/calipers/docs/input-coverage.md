@@ -1,7 +1,7 @@
 # Input coverage: proof that calipers types the whole CSS value space
 
 The claim this doc backs: **css-calipers can construct a typed, build-time-validated
-value for every PRIMITIVE (non-composite) CSS input token** — the exact place `csstype`
+value for every PRIMITIVE (non-composite) CSS input token**, the exact place `csstype`
 leaves a gap. Composite grammars (gradients, `<position>`, `transform` lists, shorthands)
 are built by the books layer on top of these primitives and are out of scope here.
 
@@ -68,7 +68,7 @@ each mapping:
 function m<Unit extends string>(value, unit): InscribedMeasurement<Lowercase<Unit>>;
 ```
 
-The unit is `Unit extends string`, i.e. ANY string — so `m(2, 'x')` (the resolution alias
+The unit is `Unit extends string`, i.e. ANY string, so `m(2, 'x')` (the resolution alias
 with no named helper), `m(8, 'rlh')`, or a unit CSS has not shipped yet all type-check and
 carry their unit in the brand. The ~62 named helpers (`mPx`, `mDeg`, `mFr`, …) are ergonomic
 shortcuts over that generic, not the limit of it. **Any string that is a number plus a unit
@@ -77,7 +77,7 @@ is an `m()`.** That is what makes the dimension arm total rather than a fixed en
 ### Constraints are added on top, not a separate primitive
 
 The "constrained" primitives are the same four shapes plus a range/sign rule, expressed with
-hardening — never a new lexicon:
+hardening, never a new lexicon:
 
 - alpha `[0,1]`, font-weight `[1,1000]`, counts `>= 1`, `flex-grow >= 0` → `i()` / `f()` bounds
   (`i(v, { min, max })`, `hardenFloat({ min, max })`).
@@ -91,13 +91,13 @@ Four primitive tokens are NOT calipers lexicons, and by design:
 
 | CSS primitive | example | status |
 | ------------- | ------- | ------ |
-| `<string>` | `content: "hi"` | csstype's `string` is adequate — no numeric/unit value to validate or construct |
-| `<custom-ident>` | `animation-name: spin` | typed as `string` today; a real (small) validation gap — an identifier lexicon is possible future work |
+| `<string>` | `content: "hi"` | csstype's `string` is adequate; no numeric/unit value to validate or construct |
+| `<custom-ident>` | `animation-name: spin` | typed as `string` today; a real (small) validation gap, an identifier lexicon is possible future work |
 | `<dashed-ident>` | `--gap`, an anchor name | must start with `--`; validated inline where used (e.g. `anchorSize`), no general lexicon |
 | `<url>` | `url(a.png)` | string-shaped; not a constructed numeric value |
 
 This is the honest edge of the claim: calipers is **total over the quantitative and colour
-input space** — precisely where csstype degrades to `(number & {})` / `(string & {})`. For
+input space**, precisely where csstype degrades to `(number & {})` / `(string & {})`. For
 string/ident/url tokens csstype already gives you `string`, and there is little build-time
 value to construct in the same sense, so those are not part of the same gap. The one genuine
 extension point is a `<custom-ident>` / `<dashed-ident>` lexicon, if identifier validation is
@@ -107,5 +107,5 @@ ever wanted; it would be a new, smaller gap, not a hole in the numeric/colour co
 
 Every CSS input value is a plain number (`i` / `f`), a number-with-unit (`m`, generic over
 any unit), a ratio (`r`), a colour (`color`), or a string/identifier (csstype's `string`).
-calipers supplies a typed, validated constructor for the first four — the whole space csstype
+calipers supplies a typed, validated constructor for the first four: the whole space csstype
 leaves open.

@@ -5,7 +5,7 @@ The CSS-Bookends **finisher**: a build-time pass that wraps a CSS post-processor
 compatibility - older-browser color fallbacks and vendor prefixes - over the plain CSS
 that books emit.
 
-It is the output-edge construct, opposite the typesetter (typesetter: DTCG tokens in;
+It is the output-edge construct, opposite the platemaker (platemaker: DTCG tokens in;
 gilding: finished CSS out). Books and lexicons stay browser-agnostic and emit clean
 modern CSS; gilding adds the compatibility trim, driven by your browser targets.
 

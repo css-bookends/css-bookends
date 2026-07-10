@@ -85,7 +85,7 @@ common case.
 
 ## Implications for CSS-Bookends
 
-- Colors emitted as literal inline values (the typesetter's output, a book's
+- Colors emitted as literal inline values (the platemaker's output, a book's
   rendered value) can use the cascade. `@supports` / `@media` is the escape hatch
   for custom properties and wide gamut.
 - Among the sRGB notations (`rgb` / `rgba` / `hex` / `hsl` / `hwb`), only ONE is
