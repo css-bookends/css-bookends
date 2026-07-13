@@ -13,6 +13,10 @@ const config: CalipersFactoryConfig = {
 const instance = createCalipers(config);
 expectAssignable<CalipersInstance>(instance);
 
+// `defaultUnit` is an accepted factory option (the configured unit is applied
+// to bare `m()` at runtime; branding the return type is a separate follow-up).
+expectAssignable<CalipersFactoryConfig>({ defaultUnit: '%' });
+
 instance.m(10);
 instance.mPx(2);
 instance.units.mPx(3);

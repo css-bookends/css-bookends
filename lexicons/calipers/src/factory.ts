@@ -20,6 +20,13 @@ export type CalipersFactoryConfig = {
    * type; also settable via the codex / compendium bundle `global`.
    */
   hardening?: Hardening;
+  /**
+   * The unit bare `m(value)` uses when no unit is given (default `'px'`), e.g.
+   * `createCalipers({ defaultUnit: '%' }).m(50)` yields `50%`. An explicit
+   * `m(value, unit)` still overrides it, and the fixed-unit helpers (`mVh`,
+   * `mRem`, …) are unaffected.
+   */
+  defaultUnit?: string;
 };
 
 export type CalipersInstance = CoreApi &
@@ -34,6 +41,7 @@ export const createCalipers = (
   const core = createCoreApi(
     errorStore,
     config.hardening ?? DEFAULT_HARDENING,
+    config.defaultUnit,
   );
   const units = createUnitsApi(core);
 

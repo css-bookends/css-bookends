@@ -42,6 +42,7 @@ type MeasurementCreateOptions<Unit extends string> = {
 export const createCoreApi = (
   errorStore: ErrorConfigStore,
   hardening: Hardening = DEFAULT_HARDENING,
+  defaultUnit: string = 'px',
 ) => {
   const { throwHelperError, throwMeasurementMethodError } =
     createErrorHelpers(errorStore);
@@ -420,7 +421,7 @@ export const createCoreApi = (
     value: Scalar,
     unitOrOptions:
       | Unit
-      | MeasurementCreateOptions<Unit> = 'px' as Unit,
+      | MeasurementCreateOptions<Unit> = defaultUnit as Unit,
     context?: string,
   ): InscribedMeasurement<Lowercase<Unit>> {
     // Accept a plain number OR a typed scalar (i / f); coerce to a number here.
@@ -449,7 +450,7 @@ export const createCoreApi = (
       unitOrOptions && typeof unitOrOptions === 'object'
         ? unitOrOptions
         : { unit: unitOrOptions, context };
-    const unit = (options.unit ?? 'px') as Unit;
+    const unit = (options.unit ?? defaultUnit) as Unit;
     const contextLabel = options.context;
     const normalizedUnit = unit.toLowerCase() as Lowercase<Unit>;
     if (!Number.isFinite(numericValue)) {

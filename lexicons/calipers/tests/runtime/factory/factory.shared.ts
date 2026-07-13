@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 type FactoryApi = {
   createCalipers: (config?: {
     errorConfig?: { stackHints?: 'auto' | 'on' | 'off' };
+    defaultUnit?: string;
   }) => {
     m: (value: number, unit?: string) => { css: () => string };
     mPx: (value: number, context?: string) => { css: () => string };
@@ -51,6 +52,15 @@ export const runFactoryTests = (
       expect(instance.m(1).css()).toBe('1px');
       expect(instance.mPx(2).css()).toBe('2px');
       expect(instance.units.mPx(3).css()).toBe('3px');
+    });
+
+    it('applies a configured defaultUnit to bare m()', () => {
+      const percent = api.createCalipers({ defaultUnit: '%' });
+      expect(percent.m(50).css()).toBe('50%');
+      // an explicit unit still overrides the configured default
+      expect(percent.m(50, 'px').css()).toBe('50px');
+      // and the default stays px when unconfigured
+      expect(api.createCalipers().m(50).css()).toBe('50px');
     });
 
     it('scopes stack hint behavior per instance', () => {
