@@ -6,15 +6,24 @@
 import { describe, expect, it } from 'vitest';
 
 import * as codex from '../../../src/codex';
-import { f as fEntry } from '../../../src/float';
-import { i as iEntry } from '../../../src/integer';
+import { createFloat, f as fEntry } from '../../../src/float';
+import { createInteger, i as iEntry } from '../../../src/integer';
 import * as meas from '../../../src/measurements';
-import { r as rEntry } from '../../../src/ratio';
+import { createRatio, r as rEntry } from '../../../src/ratio';
 
 describe('per-primitive subpaths (src)', () => {
   it('measurements entry exposes a working `m`', () => {
     expect(typeof meas.m).toBe('function');
     expect(meas.m(8).css()).toBe('8px');
+  });
+
+  it('measurements entry leads with the createCalipers factory', () => {
+    expect(typeof meas.createCalipers).toBe('function');
+    expect(meas.createCalipers().m(8).css()).toBe('8px');
+    // the configurable default unit reaches through the slice factory
+    expect(
+      meas.createCalipers({ defaultUnit: '%' }).m(50).css(),
+    ).toBe('50%');
   });
 
   it('measurements entry is colour-free', () => {
@@ -24,6 +33,7 @@ describe('per-primitive subpaths (src)', () => {
 
   it('ratio entry exposes `r` and is colour-free', async () => {
     expect(typeof rEntry).toBe('function');
+    expect(typeof createRatio).toBe('function');
     expect(rEntry(16, 9).css()).toBe('16/9');
     const ratioModule = await import('../../../src/ratio');
     expect('color' in ratioModule).toBe(false);
@@ -32,6 +42,7 @@ describe('per-primitive subpaths (src)', () => {
 
   it('integer entry exposes `i` and is colour-free', async () => {
     expect(typeof iEntry).toBe('function');
+    expect(typeof createInteger).toBe('function');
     expect(iEntry(3).css()).toBe('3');
     const integerModule = await import('../../../src/integer');
     expect('color' in integerModule).toBe(false);
@@ -40,6 +51,7 @@ describe('per-primitive subpaths (src)', () => {
 
   it('float entry exposes `f` and is colour-free', async () => {
     expect(typeof fEntry).toBe('function');
+    expect(typeof createFloat).toBe('function');
     expect(fEntry(1.5).css()).toBe('1.5');
     const floatModule = await import('../../../src/float');
     expect('color' in floatModule).toBe(false);

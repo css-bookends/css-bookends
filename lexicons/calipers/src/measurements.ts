@@ -10,6 +10,13 @@ export * from './core';
 // The bare default-instance helpers (`m`, refinements, unit-helper builders,
 // error-config accessors) assembled via `createCalipers()` at its defaults.
 export * from './default';
+// The measurement lexicon factory. Bind config once (even at defaults) and export
+// the bound surface from your own module. `./factory` is colour-free.
+export {
+  type CalipersFactoryConfig,
+  type CalipersInstance,
+  createCalipers,
+} from './factory';
 export * from './units/absolute';
 export * from './units/angle';
 export * from './units/container';
