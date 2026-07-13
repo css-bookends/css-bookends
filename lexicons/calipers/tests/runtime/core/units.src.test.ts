@@ -1,19 +1,23 @@
 // Exhaustive unit regression net. Every generated unit helper must round-trip its
 // CSS unit string and report its category. Cheap and table-driven over the whole
-// `UNIT_DEFINITIONS` registry, so the ~72 helpers are all behaviorally asserted,
-// not just export-name-checked. This is the net for the split: units move into their
-// own package, and a bad move would break `<helper>(1).css() === '1<unit>'` here.
+// `UNIT_DEFINITIONS` registry, so the ~72 helpers are all behaviorally asserted.
+// Helpers are taken from the codex bundle (the whole bound surface); the `./units`
+// subpath now exposes the per-group FACTORIES rather than bare helpers.
 import { describe, expect, it } from 'vitest';
 
+import { createCalipersBundle } from '../../../src';
 import { UNIT_DEFINITIONS } from '../../../src/unitDefinitions';
-import * as units from '../../../src/units';
+import * as unitsModule from '../../../src/units';
 
 type UnitHelper = (value: number) => {
   css: () => string;
   category: () => string | undefined;
 };
 
-const helpers = units as unknown as Record<string, UnitHelper>;
+const helpers = createCalipersBundle() as unknown as Record<
+  string,
+  UnitHelper
+>;
 
 describe('every unit helper round-trips its CSS unit + reports its category', () => {
   for (const [
@@ -22,12 +26,19 @@ describe('every unit helper round-trips its CSS unit + reports its category', ()
   ] of Object.entries(UNIT_DEFINITIONS)) {
     it(`${name}(1).css() === '1${def.unit}' and category '${def.category}'`, () => {
       const helper = helpers[name];
-      expect(helper, `${name} exported from ./units`).toBeTypeOf(
-        'function',
-      );
+      expect(helper, `${name} on the bundle`).toBeTypeOf('function');
       const value = helper(1);
       expect(value.css()).toBe(`1${def.unit}`);
       expect(value.category()).toBe(def.category);
     });
   }
+});
+
+describe('the ./units subpath exposes the group factories', () => {
+  it('surfaces create<Group>Units', () => {
+    const mod = unitsModule as Record<string, unknown>;
+    expect(typeof mod.createViewportUnits).toBe('function');
+    expect(typeof mod.createAbsoluteUnits).toBe('function');
+    expect(typeof mod.createPercentUnits).toBe('function');
+  });
 });

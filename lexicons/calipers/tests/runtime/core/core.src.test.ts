@@ -1,82 +1,16 @@
-// NOTE: This file is being refactored in phases to use a shared
-// `runCoreTests` helper defined in tests/runtime/core/core.shared.ts. If you
-// need to restore the original single-environment layout, use README.md.bak
-// and the git history for reference.
+// Core tests against the src surface, driven through the codex bundle, which
+// exposes the whole bound CoreApi surface (m + unit helpers + builders + guards).
+// The bare root exports are removed in later steps; the bundle is the stable
+// source for the harness.
 import { describe, expect, it } from 'vitest';
 
-import {
-  assertCondition,
-  assertMatchingUnits,
-  assertPercentMeasurement,
-  assertUnit,
-  f,
-  getErrorConfig,
-  hasCssMethod,
-  i,
-  isMeasurement,
-  isPercentMeasurement,
-  m,
-  makeUnitAssert,
-  makeUnitGuard,
-  makeUnitHelper,
-  makeUnitHelperFromDefinition,
-  mCm,
-  mCqh,
-  mCqw,
-  mDeg,
-  mDpi,
-  mDvw,
-  measurementMax,
-  measurementMin,
-  measurementUnitMetadata,
-  mEm,
-  mFr,
-  mKhz,
-  mLvw,
-  mMs,
-  mPercent,
-  mPx,
-  mSvw,
-  mVh,
-  setErrorConfig,
-} from '../../../src';
+import { createCalipersBundle } from '../../../src';
 import type { CoreApi } from './core.shared';
 import { runCoreTests } from './core.shared';
 
-const api = {
-  m,
-  mPercent,
-  mPx,
-  mCm,
-  mEm,
-  mVh,
-  mSvw,
-  mLvw,
-  mDvw,
-  mCqh,
-  mDeg,
-  mMs,
-  mKhz,
-  mDpi,
-  mFr,
-  mCqw,
-  assertMatchingUnits,
-  assertUnit,
-  assertCondition,
-  isMeasurement,
-  isPercentMeasurement,
-  assertPercentMeasurement,
-  makeUnitHelper,
-  makeUnitHelperFromDefinition,
-  measurementUnitMetadata,
-  makeUnitAssert,
-  makeUnitGuard,
-  hasCssMethod,
-  measurementMin,
-  measurementMax,
-  setErrorConfig,
-  getErrorConfig,
-} as unknown as CoreApi;
+const bundle = createCalipersBundle();
+const { m, i, f } = bundle;
+const api = bundle as unknown as CoreApi;
 
 runCoreTests('src', api);
 

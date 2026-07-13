@@ -1,19 +1,17 @@
 import { expectError, expectNotAssignable, expectType } from 'tsd';
 
 import {
+  createCalipersBundle,
   type IMeasurement,
   type InscribedMeasurement,
-  mDeg,
-  mDpi,
   measurementMax,
   measurementMin,
-  mEm,
-  mMs,
-  mPercent,
-  mPx,
-  mVh,
   type NonNegativeMeasurement,
 } from '../../dist/index';
+
+// unit helpers now come from the bound bundle, not bare exports
+const { mDeg, mDpi, mEm, mMs, mPercent, mPx, mVh } =
+  createCalipersBundle();
 
 // Representative measurements spanning multiple unit categories:
 // length (absolute + font-relative), percent, angle, viewport, time, resolution.

@@ -6,6 +6,7 @@ import {
 
 import {
   assertPercentMeasurement,
+  createCalipersBundle,
   type IMeasurement,
   isMeasurement,
   isPercentMeasurement,
@@ -13,13 +14,14 @@ import {
   measurementMax,
   measurementMin,
   type MeasurementString,
-  mPercent,
-  mPx,
   type PercentMeasurement,
   type PxMeasurement,
   type UnitAssertion,
   type UnitGuard,
 } from '../../dist/index';
+
+// unit helpers now come from the bound bundle, not bare exports
+const { mPx, mPercent } = createCalipersBundle();
 
 const implicit = m(10);
 expectAssignable<IMeasurement<string>>(implicit);

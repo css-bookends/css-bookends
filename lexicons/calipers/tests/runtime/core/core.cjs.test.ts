@@ -1,81 +1,12 @@
-// Core tests against the built CommonJS artifact (dist, cjs output).
+// Core tests against the built CommonJS artifact (dist, cjs output), driven
+// through the codex bundle (the stable full CoreApi surface). The harness type is
+// loose, so the built bundle is bridged to it the way core.src.test.ts is.
 import type { CoreApi } from './core.shared';
 import { runCoreTests } from './core.shared';
 
-// Dynamic import works with CommonJS output and will fail fast if the
-// artifact does not exist or exports are incorrect.
+// Dynamic import works with CommonJS output and will fail fast if the artifact
+// does not exist or its exports are wrong.
 const cjsModule = await import('../../../dist/index.js');
+const api = cjsModule.createCalipersBundle() as unknown as CoreApi;
 
-const {
-  assertMatchingUnits,
-  assertUnit,
-  assertCondition,
-  isMeasurement,
-  m,
-  mPercent,
-  mPx,
-  mCm,
-  mEm,
-  mVh,
-  mSvw,
-  mLvw,
-  mDvw,
-  mCqh,
-  mDeg,
-  mMs,
-  mKhz,
-  mDpi,
-  mFr,
-  mCqw,
-  isPercentMeasurement,
-  assertPercentMeasurement,
-  makeUnitHelper,
-  makeUnitHelperFromDefinition,
-  measurementUnitMetadata,
-  makeUnitAssert,
-  makeUnitGuard,
-  hasCssMethod,
-  measurementMax,
-  measurementMin,
-  setErrorConfig,
-  getErrorConfig,
-} = cjsModule;
-
-const api = {
-  m,
-  mPercent,
-  mPx,
-  mCm,
-  mEm,
-  mVh,
-  mSvw,
-  mLvw,
-  mDvw,
-  mCqh,
-  mDeg,
-  mMs,
-  mKhz,
-  mDpi,
-  mFr,
-  mCqw,
-  assertMatchingUnits,
-  assertUnit,
-  assertCondition,
-  isMeasurement,
-  isPercentMeasurement,
-  assertPercentMeasurement,
-  makeUnitHelper,
-  makeUnitHelperFromDefinition,
-  measurementUnitMetadata,
-  makeUnitAssert,
-  makeUnitGuard,
-  hasCssMethod,
-  measurementMin,
-  measurementMax,
-  setErrorConfig,
-  getErrorConfig,
-};
-
-// The built dist now carries real types (tsup); the harness type is loose
-// (MeasurementLike), so bridge it the same way core.src.test.ts does.
-runCoreTests('cjs', api as unknown as CoreApi);
+runCoreTests('cjs', api);
