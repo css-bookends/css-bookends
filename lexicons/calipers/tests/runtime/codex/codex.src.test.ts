@@ -149,4 +149,52 @@ describe('codex config cascade (own key -> global -> factory default)', () => {
       expect(c.color('#3366cc').marker.css()).toBe('MARKER');
     });
   });
+
+  // Ratio is now aggregated into the bundle (previously absent).
+  describe('r (ratio)', () => {
+    it('is bound in the bundle', () => {
+      const c = createCalipersBundle();
+      expect(c.r(16, 9).css()).toBe('16/9');
+    });
+
+    it('accepts a ratio key', () => {
+      const c = createCalipersBundle({ ratio: {} });
+      expect(c.r(16, 9).css()).toBe('16/9');
+    });
+  });
+
+  // The 13 unit-group factories are aggregated; a group key threads its config.
+  describe('unit groups (aggregated + config threads via a group key)', () => {
+    const captureMessage = (fn: () => void): string => {
+      try {
+        fn();
+      } catch (error) {
+        return (error as Error).message;
+      }
+      return '';
+    };
+
+    it('exposes every unit-group helper', () => {
+      const c = createCalipersBundle();
+      expect(c.mVh(20).css()).toBe('20vh');
+      expect(c.mPx(2).css()).toBe('2px');
+      expect(c.mPercent(50).css()).toBe('50%');
+      expect(c.isPercentMeasurement(c.mPercent(50))).toBe(true);
+    });
+
+    it('a group key threads its config to the group helpers', () => {
+      const withHints = createCalipersBundle({
+        viewport: { errorConfig: { stackHints: 'on' } },
+      });
+      const withoutHints = createCalipersBundle({
+        viewport: { errorConfig: { stackHints: 'off' } },
+      });
+      expect(
+        captureMessage(() => withHints.mVh(Number.NaN)),
+      ).toContain('stack=');
+      expect(
+        captureMessage(() => withoutHints.mVh(Number.NaN)),
+      ).not.toContain('stack=');
+    });
+  });
 });

@@ -26,6 +26,26 @@ import {
   type IntegerApi,
   type IntegerFactoryConfig,
 } from './integer';
+import {
+  createRatio,
+  type RatioApi,
+  type RatioFactoryConfig,
+} from './ratio';
+import {
+  createAbsoluteUnits,
+  createAngleUnits,
+  createContainerUnits,
+  createFontRelativeUnits,
+  createFrequencyUnits,
+  createGridUnits,
+  createPercentUnits,
+  createResolutionUnits,
+  createTimeUnits,
+  createViewportDynamicUnits,
+  createViewportLargeUnits,
+  createViewportSmallUnits,
+  createViewportUnits,
+} from './units';
 
 /** The calipers master config: a `global` slot + one OPTIONAL key per sub-factory. */
 export interface CalipersBundleConfig<
@@ -47,6 +67,34 @@ export interface CalipersBundleConfig<
   float?: FloatFactoryConfig;
   /** forwarded to `createColor` (custom colour format plugins). */
   color?: CreateColorConfig<P>;
+  /** forwarded to `createRatio` (the ratio surface). */
+  ratio?: RatioFactoryConfig;
+  /** forwarded to `createAbsoluteUnits` (the absolute-length helpers). */
+  absolute?: CalipersFactoryConfig;
+  /** forwarded to `createAngleUnits`. */
+  angle?: CalipersFactoryConfig;
+  /** forwarded to `createContainerUnits`. */
+  container?: CalipersFactoryConfig;
+  /** forwarded to `createFontRelativeUnits`. */
+  fontRelative?: CalipersFactoryConfig;
+  /** forwarded to `createFrequencyUnits`. */
+  frequency?: CalipersFactoryConfig;
+  /** forwarded to `createGridUnits`. */
+  grid?: CalipersFactoryConfig;
+  /** forwarded to `createPercentUnits`. */
+  percent?: CalipersFactoryConfig;
+  /** forwarded to `createResolutionUnits`. */
+  resolution?: CalipersFactoryConfig;
+  /** forwarded to `createTimeUnits`. */
+  time?: CalipersFactoryConfig;
+  /** forwarded to `createViewportUnits`. */
+  viewport?: CalipersFactoryConfig;
+  /** forwarded to `createViewportDynamicUnits`. */
+  viewportDynamic?: CalipersFactoryConfig;
+  /** forwarded to `createViewportLargeUnits`. */
+  viewportLarge?: CalipersFactoryConfig;
+  /** forwarded to `createViewportSmallUnits`. */
+  viewportSmall?: CalipersFactoryConfig;
 }
 
 /** The bound calipers bundle: every helper plus the colour instance, in one object. */
@@ -54,7 +102,8 @@ export type CalipersBundle<
   P extends ReadonlyArray<ColorFormatPlugin> = readonly [],
 > = CalipersInstance &
   IntegerApi &
-  FloatApi & { color: CustomColor<P> };
+  FloatApi &
+  RatioApi & { color: CustomColor<P> };
 
 /**
  * The calipers MASTER factory: combine the sub-factories under one keyed config,
@@ -66,25 +115,47 @@ export const createCalipersBundle = <
   const P extends ReadonlyArray<ColorFormatPlugin> = readonly [],
 >(
   config: CalipersBundleConfig<P> = {},
-): CalipersBundle<P> => ({
-  ...createCalipers({
-    ...config.measurements,
-    // cascade: own (unit key) -> bundle global -> built-in factory default.
-    hardening:
-      config.measurements?.hardening ?? config.global?.hardening,
-  }),
-  ...createInteger({
-    hardening: config.integer?.hardening ?? config.global?.hardening,
-  }),
-  ...createFloat({
-    hardening: config.float?.hardening ?? config.global?.hardening,
-  }),
-  // when no colour config is given, P is the default `readonly []` (no custom formats),
-  // so an empty formats list is the right default; the double cast satisfies the generic.
-  color: createColor(
-    config.color ??
-      ({ formats: [] } as unknown as CreateColorConfig<P>),
-  ),
-});
+): CalipersBundle<P> => {
+  // cascade for a measurement-shaped sub-config: own key -> bundle `global` ->
+  // built-in factory default. Forwards errorConfig / defaultUnit unchanged.
+  const cascade = (
+    own?: CalipersFactoryConfig,
+  ): CalipersFactoryConfig => ({
+    ...own,
+    hardening: own?.hardening ?? config.global?.hardening,
+  });
+  return {
+    ...createCalipers(cascade(config.measurements)),
+    // The per-group factories are spread AFTER createCalipers so a group's own
+    // config (e.g. viewport) wins over the base measurement instance's helpers.
+    ...createAbsoluteUnits(cascade(config.absolute)),
+    ...createAngleUnits(cascade(config.angle)),
+    ...createContainerUnits(cascade(config.container)),
+    ...createFontRelativeUnits(cascade(config.fontRelative)),
+    ...createFrequencyUnits(cascade(config.frequency)),
+    ...createGridUnits(cascade(config.grid)),
+    ...createPercentUnits(cascade(config.percent)),
+    ...createResolutionUnits(cascade(config.resolution)),
+    ...createTimeUnits(cascade(config.time)),
+    ...createViewportUnits(cascade(config.viewport)),
+    ...createViewportDynamicUnits(cascade(config.viewportDynamic)),
+    ...createViewportLargeUnits(cascade(config.viewportLarge)),
+    ...createViewportSmallUnits(cascade(config.viewportSmall)),
+    ...createInteger({
+      hardening:
+        config.integer?.hardening ?? config.global?.hardening,
+    }),
+    ...createFloat({
+      hardening: config.float?.hardening ?? config.global?.hardening,
+    }),
+    ...createRatio(config.ratio),
+    // when no colour config is given, P is the default `readonly []` (no custom formats),
+    // so an empty formats list is the right default; the double cast satisfies the generic.
+    color: createColor(
+      config.color ??
+        ({ formats: [] } as unknown as CreateColorConfig<P>),
+    ),
+  };
+};
 
 export default createCalipersBundle;
