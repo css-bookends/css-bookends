@@ -16,6 +16,8 @@ npm install @css-bookends/compendium
 
 `publishCompendium` is the path, and the default export. A bare call binds every active book at its defaults and spreads the calipers lexicons (`m` / `r` / `i` / `f` / `color`) straight up by name, so everything is on one object.
 
+For why every value comes from a factory, and the recommended bind-once-and-export pattern, see [the factory-first pattern](../../docs/factory-first-pattern.md).
+
 ```ts
 import publishCompendium from '@css-bookends/compendium';
 

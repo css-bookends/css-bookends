@@ -25,5 +25,8 @@
   },
   "include": [
     "examples"
+  ],
+  "exclude": [
+    "examples/bind-once"
   ]
 }

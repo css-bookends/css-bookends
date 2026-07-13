@@ -63,6 +63,9 @@ Every helper (lexicon or book) is produced by a factory. Consume the factory, or
 an instance the composition root made from it, never the raw helper/value-function
 imported straight from its module.
 
+See `docs/factory-first-pattern.md` for the full rationale: why the factory is the
+one supported construction path, and the recommended bind-once-and-export pattern.
+
 - **Factory naming: `publishBook<BookName>`.** A book's factory is named with the
   `publishBook` prefix plus the book's name, e.g. `publishBookColor`,
   `publishBookBorders`, `publishBookShadows`. The engine (`@css-bookends/self-publish`)

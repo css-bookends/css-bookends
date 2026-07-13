@@ -161,7 +161,7 @@
   },
   "scripts": {
     "build": "tsup && npm run build:examples",
-    "build:examples": "tsc -p tsconfig.examples.json --noEmit",
+    "build:examples": "tsc -p tsconfig.examples.json --noEmit && tsc -p examples/bind-once/tsconfig.json --noEmit",
     "build:test": "npm run build && npm run test",
     "build:delete": "node -e \"const { existsSync, rmSync } = require('fs'); const paths = ['dist/cjs', 'dist/esm']; for (const p of paths) { console.log('Scanning', p + '...'); if (existsSync(p)) { console.log('Found', p + ', deleting...'); rmSync(p, { recursive: true, force: true }); console.log('Deleted', p); } else { console.log(p + ' not found, skipping.'); } }\"",
     "test": "npm run build && npm run test:core && npm run test:units && npm run test:refinement && npm run test:ratio && npm run test:integer && npm run test:float && npm run test:hardening && npm run test:codex && npm run test:value-surface && npm run test:factory && npm run test:scalar-factories && npm run test:subpaths && npm run test:color && npm run test:audit && npm run test:dist && npm run test:types && npm run test:tsc && npm run test:nodenext && npm run lint && npm run test:internal && npm run test:internal:run",
