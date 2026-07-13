@@ -5,7 +5,7 @@ import {
   i,
   type IInteger,
   isInteger,
-} from '../../dist/esm';
+} from '../../dist/index';
 
 const n = i(5);
 expectAssignable<IInteger>(n);

@@ -47,21 +47,21 @@ import {
   type UnitAssertion,
   type UnitGuard,
   type VwMeasurement,
-} from '../../dist/esm';
-import * as Units from '../../dist/esm/units';
-import * as AbsoluteUnits from '../../dist/esm/units/absolute';
-import * as AngleUnits from '../../dist/esm/units/angle';
-import * as ContainerUnits from '../../dist/esm/units/container';
-import * as FontRelativeUnits from '../../dist/esm/units/font-relative';
-import * as FrequencyUnits from '../../dist/esm/units/frequency';
-import * as GridUnits from '../../dist/esm/units/grid';
-import * as PercentUnits from '../../dist/esm/units/percent';
-import * as ResolutionUnits from '../../dist/esm/units/resolution';
-import * as TimeUnits from '../../dist/esm/units/time';
-import * as ViewportUnits from '../../dist/esm/units/viewport';
-import * as ViewportDynamicUnits from '../../dist/esm/units/viewport-dynamic';
-import * as ViewportLargeUnits from '../../dist/esm/units/viewport-large';
-import * as ViewportSmallUnits from '../../dist/esm/units/viewport-small';
+} from '../../dist/index';
+import * as Units from '../../dist/units';
+import * as AbsoluteUnits from '../../dist/units/absolute';
+import * as AngleUnits from '../../dist/units/angle';
+import * as ContainerUnits from '../../dist/units/container';
+import * as FontRelativeUnits from '../../dist/units/font-relative';
+import * as FrequencyUnits from '../../dist/units/frequency';
+import * as GridUnits from '../../dist/units/grid';
+import * as PercentUnits from '../../dist/units/percent';
+import * as ResolutionUnits from '../../dist/units/resolution';
+import * as TimeUnits from '../../dist/units/time';
+import * as ViewportUnits from '../../dist/units/viewport';
+import * as ViewportDynamicUnits from '../../dist/units/viewport-dynamic';
+import * as ViewportLargeUnits from '../../dist/units/viewport-large';
+import * as ViewportSmallUnits from '../../dist/units/viewport-small';
 
 // Default unit (no explicit unit argument) is accepted from the public entry
 const apiImplicitMeasurement = m(10);

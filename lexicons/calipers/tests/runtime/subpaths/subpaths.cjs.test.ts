@@ -3,12 +3,11 @@
 // surface.
 import { describe, expect, it } from 'vitest';
 
-const cjsMeasurements =
-  await import('../../../dist/cjs/measurements.js');
-const cjsRatio = await import('../../../dist/cjs/ratio.js');
-const cjsInteger = await import('../../../dist/cjs/integer.js');
-const cjsFloat = await import('../../../dist/cjs/float.js');
-const cjsCorpus = await import('../../../dist/cjs/corpus.js');
+const cjsMeasurements = await import('../../../dist/measurements.js');
+const cjsRatio = await import('../../../dist/ratio.js');
+const cjsInteger = await import('../../../dist/integer.js');
+const cjsFloat = await import('../../../dist/float.js');
+const cjsCodex = await import('../../../dist/codex.js');
 
 describe('per-primitive subpaths (CJS dist)', () => {
   it('measurements entry exposes `m` and is colour-free', () => {
@@ -36,10 +35,10 @@ describe('per-primitive subpaths (CJS dist)', () => {
     expect('createColor' in cjsFloat).toBe(false);
   });
 
-  it('corpus entry exposes BOTH `m` and `color`', () => {
-    expect(typeof cjsCorpus.m).toBe('function');
-    expect(typeof cjsCorpus.color).toBe('function');
-    expect(typeof cjsCorpus.createCalipers).toBe('function');
-    expect(typeof cjsCorpus.createColor).toBe('function');
+  it('codex entry exposes BOTH `m` and `color`', () => {
+    expect(typeof cjsCodex.m).toBe('function');
+    expect(typeof cjsCodex.color).toBe('function');
+    expect(typeof cjsCodex.createCalipers).toBe('function');
+    expect(typeof cjsCodex.createColor).toBe('function');
   });
 });

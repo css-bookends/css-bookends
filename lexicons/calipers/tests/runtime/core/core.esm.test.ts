@@ -4,7 +4,7 @@ import { runCoreTests } from './core.shared';
 
 // Dynamic import will fail fast if the ESM artifact does not exist or
 // exports are incorrect.
-const esmModule = await import('../../../dist/esm/index.js');
+const esmModule = await import('../../../dist/index.mjs');
 
 const {
   assertMatchingUnits,

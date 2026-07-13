@@ -17,6 +17,7 @@
     "tests"
   ],
   "exclude": [
-    "tests/types"
+    "tests/types",
+    "tests/nodenext"
   ]
 }

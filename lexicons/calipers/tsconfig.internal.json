@@ -23,6 +23,7 @@
   ],
   "exclude": [
     "tests/types",
+    "tests/nodenext",
     "tests/runtime/**/*.cjs.test.ts",
     "tests/runtime/**/*.esm.test.ts",
     "tests/runtime/api-surface/**"

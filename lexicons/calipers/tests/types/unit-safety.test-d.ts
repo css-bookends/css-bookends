@@ -13,7 +13,7 @@ import {
   mPx,
   mVh,
   type NonNegativeMeasurement,
-} from '../../dist/esm';
+} from '../../dist/index';
 
 // Representative measurements spanning multiple unit categories:
 // length (absolute + font-relative), percent, angle, viewport, time, resolution.

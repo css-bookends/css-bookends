@@ -37,59 +37,109 @@
   ],
   "sideEffects": false,
   "type": "commonjs",
-  "main": "dist/cjs/index.js",
-  "module": "dist/esm/index.js",
-  "types": "dist/esm/index.d.ts",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/esm/index.d.ts",
-      "import": "./dist/esm/index.js",
-      "require": "./dist/cjs/index.js"
+      "import": {
+        "types": "./dist/index.d.mts",
+        "default": "./dist/index.mjs"
+      },
+      "require": {
+        "types": "./dist/index.d.ts",
+        "default": "./dist/index.js"
+      }
     },
     "./factory": {
-      "types": "./dist/esm/factory.d.ts",
-      "import": "./dist/esm/factory.js",
-      "require": "./dist/cjs/factory.js"
+      "import": {
+        "types": "./dist/factory.d.mts",
+        "default": "./dist/factory.mjs"
+      },
+      "require": {
+        "types": "./dist/factory.d.ts",
+        "default": "./dist/factory.js"
+      }
     },
     "./measurements": {
-      "types": "./dist/esm/measurements.d.ts",
-      "import": "./dist/esm/measurements.js",
-      "require": "./dist/cjs/measurements.js"
+      "import": {
+        "types": "./dist/measurements.d.mts",
+        "default": "./dist/measurements.mjs"
+      },
+      "require": {
+        "types": "./dist/measurements.d.ts",
+        "default": "./dist/measurements.js"
+      }
     },
     "./ratio": {
-      "types": "./dist/esm/ratio.d.ts",
-      "import": "./dist/esm/ratio.js",
-      "require": "./dist/cjs/ratio.js"
+      "import": {
+        "types": "./dist/ratio.d.mts",
+        "default": "./dist/ratio.mjs"
+      },
+      "require": {
+        "types": "./dist/ratio.d.ts",
+        "default": "./dist/ratio.js"
+      }
     },
     "./integer": {
-      "types": "./dist/esm/integer.d.ts",
-      "import": "./dist/esm/integer.js",
-      "require": "./dist/cjs/integer.js"
+      "import": {
+        "types": "./dist/integer.d.mts",
+        "default": "./dist/integer.mjs"
+      },
+      "require": {
+        "types": "./dist/integer.d.ts",
+        "default": "./dist/integer.js"
+      }
     },
     "./float": {
-      "types": "./dist/esm/float.d.ts",
-      "import": "./dist/esm/float.js",
-      "require": "./dist/cjs/float.js"
+      "import": {
+        "types": "./dist/float.d.mts",
+        "default": "./dist/float.mjs"
+      },
+      "require": {
+        "types": "./dist/float.d.ts",
+        "default": "./dist/float.js"
+      }
     },
-    "./corpus": {
-      "types": "./dist/esm/corpus.d.ts",
-      "import": "./dist/esm/corpus.js",
-      "require": "./dist/cjs/corpus.js"
+    "./codex": {
+      "import": {
+        "types": "./dist/codex.d.mts",
+        "default": "./dist/codex.mjs"
+      },
+      "require": {
+        "types": "./dist/codex.d.ts",
+        "default": "./dist/codex.js"
+      }
     },
     "./color": {
-      "types": "./dist/esm/color/index.d.ts",
-      "import": "./dist/esm/color/index.js",
-      "require": "./dist/cjs/color/index.js"
+      "import": {
+        "types": "./dist/color/index.d.mts",
+        "default": "./dist/color/index.mjs"
+      },
+      "require": {
+        "types": "./dist/color/index.d.ts",
+        "default": "./dist/color/index.js"
+      }
     },
     "./units": {
-      "types": "./dist/esm/units/index.d.ts",
-      "import": "./dist/esm/units/index.js",
-      "require": "./dist/cjs/units/index.js"
+      "import": {
+        "types": "./dist/units/index.d.mts",
+        "default": "./dist/units/index.mjs"
+      },
+      "require": {
+        "types": "./dist/units/index.d.ts",
+        "default": "./dist/units/index.js"
+      }
     },
     "./units/*": {
-      "types": "./dist/esm/units/*.d.ts",
-      "import": "./dist/esm/units/*.js",
-      "require": "./dist/cjs/units/*.js"
+      "import": {
+        "types": "./dist/units/*.d.mts",
+        "default": "./dist/units/*.mjs"
+      },
+      "require": {
+        "types": "./dist/units/*.d.ts",
+        "default": "./dist/units/*.js"
+      }
     },
     "./package.json": "./package.json"
   },
@@ -105,17 +155,16 @@
     "@vitest/coverage-v8": "^4.1.7",
     "eslint": "^9.39.2",
     "tsd": "^0.33.0",
+    "tsup": "^8.5.0",
     "typescript": "^5.6.3",
     "vitest": "^4.1.7"
   },
   "scripts": {
-    "build": "npm run build:cjs && npm run build:esm && npm run build:examples",
-    "build:cjs": "echo \"🛠️  Building CommonJS (cjs) bundle...\" && tsc -p tsconfig.build.cjs.json",
-    "build:esm": "echo \"🛠️  Building ES module (esm) bundle...\" && tsc -p tsconfig.build.esm.json && node scripts/emit-esm-package.mts",
+    "build": "tsup && npm run build:examples",
     "build:examples": "tsc -p tsconfig.examples.json --noEmit",
     "build:test": "npm run build && npm run test",
     "build:delete": "node -e \"const { existsSync, rmSync } = require('fs'); const paths = ['dist/cjs', 'dist/esm']; for (const p of paths) { console.log('Scanning', p + '...'); if (existsSync(p)) { console.log('Found', p + ', deleting...'); rmSync(p, { recursive: true, force: true }); console.log('Deleted', p); } else { console.log(p + ' not found, skipping.'); } }\"",
-    "test": "npm run build && npm run test:core && npm run test:units && npm run test:refinement && npm run test:ratio && npm run test:integer && npm run test:float && npm run test:hardening && npm run test:corpus && npm run test:value-surface && npm run test:factory && npm run test:scalar-factories && npm run test:subpaths && npm run test:color && npm run test:audit && npm run test:dist && npm run test:types && npm run test:tsc && npm run lint && npm run test:internal && npm run test:internal:run",
+    "test": "npm run build && npm run test:core && npm run test:units && npm run test:refinement && npm run test:ratio && npm run test:integer && npm run test:float && npm run test:hardening && npm run test:codex && npm run test:value-surface && npm run test:factory && npm run test:scalar-factories && npm run test:subpaths && npm run test:color && npm run test:audit && npm run test:dist && npm run test:types && npm run test:tsc && npm run test:nodenext && npm run lint && npm run test:internal && npm run test:internal:run",
     "test:subpaths": "vitest run tests/runtime/subpaths/subpaths.src.test.ts",
     "test:core": "vitest run tests/runtime/core/core.src.test.ts",
     "test:units": "vitest run tests/runtime/core/units.src.test.ts",
@@ -124,13 +173,14 @@
     "test:integer": "vitest run tests/runtime/integer/integer.src.test.ts",
     "test:float": "vitest run tests/runtime/float/float.src.test.ts",
     "test:hardening": "vitest run tests/runtime/hardening/hardening.src.test.ts",
-    "test:corpus": "vitest run tests/runtime/corpus/corpus.src.test.ts",
+    "test:codex": "vitest run tests/runtime/codex/codex.src.test.ts",
     "test:value-surface": "vitest run tests/runtime/value-surface",
     "test:color": "vitest run tests/runtime/color",
     "test:audit": "vitest run tests/runtime/audit",
     "test:core:cjs": "vitest run tests/runtime/core/core.cjs.test.ts tests/runtime/api-surface/api-surface.cjs.test.ts",
     "test:core:esm": "vitest run tests/runtime/core/core.esm.test.ts tests/runtime/api-surface/api-surface.esm.test.ts",
     "test:core:dist": "npm run test:core:cjs && npm run test:core:esm",
+    "test:nodenext": "tsc -p tests/nodenext/tsconfig.json --noEmit",
     "lint": "eslint . --max-warnings=0",
     "test:lint": "npm run lint",
     "test:types": "echo \"\n 🧪 Starting tsd type checks...\n\" && tsd --files tests/types/**/*.test-d.ts && echo \"✅ tsd type checks passed!\n\"",

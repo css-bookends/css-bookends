@@ -7,7 +7,7 @@ import {
   type IInteger,
   type IMeasurement,
   m,
-} from '../../dist/esm';
+} from '../../dist/index';
 
 /*
  * #40 typed-scalar interop, at the TYPE level. The runtime tests (in

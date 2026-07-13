@@ -2,33 +2,32 @@
 // This file focuses on export presence and basic shapes, not behavior.
 import { describe, expect, it } from 'vitest';
 
-const cjsRoot = await import('../../../dist/cjs/index.js');
-const cjsUnits = await import('../../../dist/cjs/units/index.js');
+const cjsRoot = await import('../../../dist/index.js');
+const cjsUnits = await import('../../../dist/units/index.js');
 
 const cjsUnitsPercent =
-  await import('../../../dist/cjs/units/percent.js');
+  await import('../../../dist/units/percent.js');
 const cjsUnitsAbsolute =
-  await import('../../../dist/cjs/units/absolute.js');
+  await import('../../../dist/units/absolute.js');
 const cjsUnitsFontRelative =
-  await import('../../../dist/cjs/units/font-relative.js');
+  await import('../../../dist/units/font-relative.js');
 const cjsUnitsViewport =
-  await import('../../../dist/cjs/units/viewport.js');
+  await import('../../../dist/units/viewport.js');
 const cjsUnitsViewportSmall =
-  await import('../../../dist/cjs/units/viewport-small.js');
+  await import('../../../dist/units/viewport-small.js');
 const cjsUnitsViewportLarge =
-  await import('../../../dist/cjs/units/viewport-large.js');
+  await import('../../../dist/units/viewport-large.js');
 const cjsUnitsViewportDynamic =
-  await import('../../../dist/cjs/units/viewport-dynamic.js');
+  await import('../../../dist/units/viewport-dynamic.js');
 const cjsUnitsContainer =
-  await import('../../../dist/cjs/units/container.js');
-const cjsUnitsAngle =
-  await import('../../../dist/cjs/units/angle.js');
-const cjsUnitsTime = await import('../../../dist/cjs/units/time.js');
+  await import('../../../dist/units/container.js');
+const cjsUnitsAngle = await import('../../../dist/units/angle.js');
+const cjsUnitsTime = await import('../../../dist/units/time.js');
 const cjsUnitsFrequency =
-  await import('../../../dist/cjs/units/frequency.js');
+  await import('../../../dist/units/frequency.js');
 const cjsUnitsResolution =
-  await import('../../../dist/cjs/units/resolution.js');
-const cjsUnitsGrid = await import('../../../dist/cjs/units/grid.js');
+  await import('../../../dist/units/resolution.js');
+const cjsUnitsGrid = await import('../../../dist/units/grid.js');
 
 describe('API surface (CJS)', () => {
   it('exposes expected core exports from the root entrypoint', () => {

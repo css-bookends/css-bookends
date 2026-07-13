@@ -3,3 +3,5 @@ packages:
   - 'lexicons/*'
   - 'books/*'
   - 'packages/*'
+allowBuilds:
+  esbuild: true

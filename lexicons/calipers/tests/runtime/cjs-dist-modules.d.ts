@@ -1,4 +1,4 @@
-declare module '../../../dist/cjs/*' {
+declare module '../../../dist/*' {
   const mod: any;
   export = mod;
 }

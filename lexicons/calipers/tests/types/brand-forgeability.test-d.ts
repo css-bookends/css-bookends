@@ -6,7 +6,7 @@ import {
   type InscribedMeasurement,
   m,
   type NonNegativeMeasurement,
-} from '../../dist/esm';
+} from '../../dist/index';
 
 /*
  * Publish-readiness pin: BRAND FORGEABILITY is a compile-time contract.

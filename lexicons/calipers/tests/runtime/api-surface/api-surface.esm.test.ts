@@ -2,33 +2,32 @@
 // This file focuses on export presence and basic shapes, not behavior.
 import { describe, expect, it } from 'vitest';
 
-const esmRoot = await import('../../../dist/esm/index.js');
-const esmUnits = await import('../../../dist/esm/units/index.js');
+const esmRoot = await import('../../../dist/index.mjs');
+const esmUnits = await import('../../../dist/units/index.mjs');
 
 const esmUnitsPercent =
-  await import('../../../dist/esm/units/percent.js');
+  await import('../../../dist/units/percent.mjs');
 const esmUnitsAbsolute =
-  await import('../../../dist/esm/units/absolute.js');
+  await import('../../../dist/units/absolute.mjs');
 const esmUnitsFontRelative =
-  await import('../../../dist/esm/units/font-relative.js');
+  await import('../../../dist/units/font-relative.mjs');
 const esmUnitsViewport =
-  await import('../../../dist/esm/units/viewport.js');
+  await import('../../../dist/units/viewport.mjs');
 const esmUnitsViewportSmall =
-  await import('../../../dist/esm/units/viewport-small.js');
+  await import('../../../dist/units/viewport-small.mjs');
 const esmUnitsViewportLarge =
-  await import('../../../dist/esm/units/viewport-large.js');
+  await import('../../../dist/units/viewport-large.mjs');
 const esmUnitsViewportDynamic =
-  await import('../../../dist/esm/units/viewport-dynamic.js');
+  await import('../../../dist/units/viewport-dynamic.mjs');
 const esmUnitsContainer =
-  await import('../../../dist/esm/units/container.js');
-const esmUnitsAngle =
-  await import('../../../dist/esm/units/angle.js');
-const esmUnitsTime = await import('../../../dist/esm/units/time.js');
+  await import('../../../dist/units/container.mjs');
+const esmUnitsAngle = await import('../../../dist/units/angle.mjs');
+const esmUnitsTime = await import('../../../dist/units/time.mjs');
 const esmUnitsFrequency =
-  await import('../../../dist/esm/units/frequency.js');
+  await import('../../../dist/units/frequency.mjs');
 const esmUnitsResolution =
-  await import('../../../dist/esm/units/resolution.js');
-const esmUnitsGrid = await import('../../../dist/esm/units/grid.js');
+  await import('../../../dist/units/resolution.mjs');
+const esmUnitsGrid = await import('../../../dist/units/grid.mjs');
 
 describe('API surface (ESM)', () => {
   it('exposes expected core exports from the root entrypoint', () => {

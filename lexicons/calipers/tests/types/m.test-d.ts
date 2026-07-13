@@ -19,7 +19,7 @@ import {
   type PxMeasurement,
   type UnitAssertion,
   type UnitGuard,
-} from '../../dist/esm';
+} from '../../dist/index';
 
 const implicit = m(10);
 expectAssignable<IMeasurement<string>>(implicit);

@@ -1,6 +1,11 @@
 import { expectAssignable, expectError } from 'tsd';
 
-import { f, hardenFloat, type IFloat, isFloat } from '../../dist/esm';
+import {
+  f,
+  hardenFloat,
+  type IFloat,
+  isFloat,
+} from '../../dist/index';
 
 const n = f(0.5);
 expectAssignable<IFloat>(n);

@@ -1,9 +1,10 @@
-// Core tests against the built CommonJS artifact in dist/cjs.
+// Core tests against the built CommonJS artifact (dist, cjs output).
+import type { CoreApi } from './core.shared';
 import { runCoreTests } from './core.shared';
 
 // Dynamic import works with CommonJS output and will fail fast if the
 // artifact does not exist or exports are incorrect.
-const cjsModule = await import('../../../dist/cjs/index.js');
+const cjsModule = await import('../../../dist/index.js');
 
 const {
   assertMatchingUnits,
@@ -75,4 +76,6 @@ const api = {
   getErrorConfig,
 };
 
-runCoreTests('cjs', api);
+// The built dist now carries real types (tsup); the harness type is loose
+// (MeasurementLike), so bridge it the same way core.src.test.ts does.
+runCoreTests('cjs', api as unknown as CoreApi);

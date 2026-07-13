@@ -21,7 +21,7 @@ import {
   type NonPositiveMeasurement,
   type SmallerOrEqualToZeroBrand,
   type SmallerOrEqualToZeroMeasurement,
-} from '../../dist/esm';
+} from '../../dist/index';
 
 // The built-ins are MeasurementRefinement objects over their constraint brand.
 expectAssignable<MeasurementRefinement<GreaterOrEqualToZeroBrand>>(

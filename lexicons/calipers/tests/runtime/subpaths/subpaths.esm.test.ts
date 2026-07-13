@@ -1,15 +1,15 @@
 // Per-primitive subpath contract against the BUILT ESM bundle. Confirms the new
-// entries (`measurements` / `ratio` / `integer` / `float` / `corpus`) resolve in
+// entries (`measurements` / `ratio` / `integer` / `float` / `codex`) resolve in
 // `dist/esm` and carry the right surface (measurements/ratio/integer/float stay
-// colour-free; corpus carries both `m` and `color`).
+// colour-free; codex carries both `m` and `color`).
 import { describe, expect, it } from 'vitest';
 
 const esmMeasurements =
-  await import('../../../dist/esm/measurements.js');
-const esmRatio = await import('../../../dist/esm/ratio.js');
-const esmInteger = await import('../../../dist/esm/integer.js');
-const esmFloat = await import('../../../dist/esm/float.js');
-const esmCorpus = await import('../../../dist/esm/corpus.js');
+  await import('../../../dist/measurements.mjs');
+const esmRatio = await import('../../../dist/ratio.mjs');
+const esmInteger = await import('../../../dist/integer.mjs');
+const esmFloat = await import('../../../dist/float.mjs');
+const esmCodex = await import('../../../dist/codex.mjs');
 
 describe('per-primitive subpaths (ESM dist)', () => {
   it('measurements entry exposes `m` and is colour-free', () => {
@@ -37,10 +37,10 @@ describe('per-primitive subpaths (ESM dist)', () => {
     expect('createColor' in esmFloat).toBe(false);
   });
 
-  it('corpus entry exposes BOTH `m` and `color`', () => {
-    expect(typeof esmCorpus.m).toBe('function');
-    expect(typeof esmCorpus.color).toBe('function');
-    expect(typeof esmCorpus.createCalipers).toBe('function');
-    expect(typeof esmCorpus.createColor).toBe('function');
+  it('codex entry exposes BOTH `m` and `color`', () => {
+    expect(typeof esmCodex.m).toBe('function');
+    expect(typeof esmCodex.color).toBe('function');
+    expect(typeof esmCodex.createCalipers).toBe('function');
+    expect(typeof esmCodex.createColor).toBe('function');
   });
 });

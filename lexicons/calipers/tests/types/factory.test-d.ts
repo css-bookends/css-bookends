@@ -4,7 +4,7 @@ import {
   type CalipersFactoryConfig,
   type CalipersInstance,
   createCalipers,
-} from '../../dist/esm/factory';
+} from '../../dist/factory';
 
 const config: CalipersFactoryConfig = {
   errorConfig: { stackHints: 'on' },
