@@ -1,0 +1,38 @@
+{
+  "name": "@css-bookends/measurement",
+  "version": "0.1.0",
+  "description": "The css-calipers measurement lexicon (m + units) as a self-contained slice, no culori. Bundled from @css-bookends/css-calipers; see docs/calipers-split.md.",
+  "license": "MIT",
+  "author": "slafleche",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "dependencies": {
+    "csstype": "^3.2.3"
+  },
+  "devDependencies": {
+    "@css-bookends/css-calipers": "workspace:*",
+    "tsup": "^8.5.0",
+    "typescript": "^5.6.3"
+  },
+  "scripts": {
+    "build": "tsup"
+  }
+}

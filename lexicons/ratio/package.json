@@ -1,0 +1,35 @@
+{
+  "name": "@css-bookends/ratio",
+  "version": "0.1.0",
+  "description": "The css-calipers ratio lexicon (r) as a self-contained slice. Bundled from @css-bookends/css-calipers; see docs/calipers-split.md.",
+  "license": "MIT",
+  "author": "slafleche",
+  "publishConfig": {
+    "access": "public"
+  },
+  "type": "commonjs",
+  "main": "dist/index.js",
+  "module": "dist/index.mjs",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    },
+    "./package.json": "./package.json"
+  },
+  "files": [
+    "dist",
+    "README.md"
+  ],
+  "sideEffects": false,
+  "devDependencies": {
+    "@css-bookends/css-calipers": "workspace:*",
+    "tsup": "^8.5.0",
+    "typescript": "^5.6.3"
+  },
+  "scripts": {
+    "build": "tsup"
+  }
+}
