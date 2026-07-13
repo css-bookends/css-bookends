@@ -1,3 +1,4 @@
+import { createCalipersBundle } from '@css-bookends/css-calipers/codex';
 import { createCalipers } from '@css-bookends/css-calipers/factory';
 
 /**
@@ -9,15 +10,10 @@ const calipers = createCalipers({
   errorConfig: { stackHints: 'on' },
 });
 
-export const {
-  mPx,
-  mPercent,
-  assertMatchingUnits,
-  assertCondition,
-  units,
-} = calipers;
-
-export const { mEm, mVw } = units;
+// The measurement core (m + builders) comes from `createCalipers`; the bound unit
+// helpers come from the codex bundle.
+export const { assertMatchingUnits, assertCondition } = calipers;
+export const { mPx, mPercent, mEm, mVw } = createCalipersBundle();
 
 /**
  * Benefit: you can make custom changes in one place without touching call sites.

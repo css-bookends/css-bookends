@@ -1,4 +1,4 @@
-import { expectAssignable } from 'tsd';
+import { expectAssignable, expectError } from 'tsd';
 
 import {
   type CalipersFactoryConfig,
@@ -18,5 +18,7 @@ expectAssignable<CalipersInstance>(instance);
 expectAssignable<CalipersFactoryConfig>({ defaultUnit: '%' });
 
 instance.m(10);
-instance.mPx(2);
-instance.units.mPx(3);
+// unit helpers and the `units` namespace are no longer on the core instance;
+// they come from the per-group factories or the codex bundle.
+expectError(instance.mPx(2));
+expectError(instance.units);

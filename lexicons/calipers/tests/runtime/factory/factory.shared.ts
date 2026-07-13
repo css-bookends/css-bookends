@@ -6,14 +6,10 @@ type FactoryApi = {
     defaultUnit?: string;
   }) => {
     m: (value: number, unit?: string) => { css: () => string };
-    mPx: (value: number, context?: string) => { css: () => string };
     getErrorConfig: () => { stackHints: 'auto' | 'on' | 'off' };
     setErrorConfig: (next: {
       stackHints?: 'auto' | 'on' | 'off';
     }) => void;
-    units: {
-      mPx: (value: number, context?: string) => { css: () => string };
-    };
   };
 };
 
@@ -47,11 +43,13 @@ export const runFactoryTests = (
       expect(second.getErrorConfig().stackHints).toBe('off');
     });
 
-    it('exposes core and units helpers', () => {
+    it('exposes the measurement core, not the unit helpers', () => {
       const instance = api.createCalipers();
       expect(instance.m(1).css()).toBe('1px');
-      expect(instance.mPx(2).css()).toBe('2px');
-      expect(instance.units.mPx(3).css()).toBe('3px');
+      // the bound unit helpers and the `units` namespace are NOT on this
+      // instance; they come from the per-group factories or the codex bundle.
+      expect('mPx' in instance).toBe(false);
+      expect('units' in instance).toBe(false);
     });
 
     it('applies a configured defaultUnit to bare m()', () => {

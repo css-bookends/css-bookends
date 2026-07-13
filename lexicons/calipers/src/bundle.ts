@@ -26,6 +26,7 @@ import {
   type IntegerApi,
   type IntegerFactoryConfig,
 } from './integer';
+import { type UnitsApi } from './internal/unitsApi';
 import {
   createRatio,
   type RatioApi,
@@ -101,6 +102,7 @@ export interface CalipersBundleConfig<
 export type CalipersBundle<
   P extends ReadonlyArray<ColorFormatPlugin> = readonly [],
 > = CalipersInstance &
+  UnitsApi &
   IntegerApi &
   FloatApi &
   RatioApi & { color: CustomColor<P> };

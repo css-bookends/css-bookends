@@ -4,10 +4,6 @@ import {
   createCoreApi,
 } from './internal/createCoreApi';
 import {
-  createUnitsApi,
-  type UnitsApi,
-} from './internal/createUnitsApi';
-import {
   createErrorConfigStore,
   type ErrorConfig,
 } from './internal/errors';
@@ -29,25 +25,18 @@ export type CalipersFactoryConfig = {
   defaultUnit?: string;
 };
 
-export type CalipersInstance = CoreApi &
-  UnitsApi & {
-    units: UnitsApi;
-  };
+// The measurement CORE: `m` plus the builders / guards / refinements /
+// error-accessors. The bound unit helpers (`mPx`, `mVh`, ...) come from their
+// per-group factories or the codex bundle, not this instance.
+export type CalipersInstance = CoreApi;
 
 export const createCalipers = (
   config: CalipersFactoryConfig = {},
 ): CalipersInstance => {
   const errorStore = createErrorConfigStore(config.errorConfig ?? {});
-  const core = createCoreApi(
+  return createCoreApi(
     errorStore,
     config.hardening ?? DEFAULT_HARDENING,
     config.defaultUnit,
   );
-  const units = createUnitsApi(core);
-
-  return {
-    ...core,
-    ...units,
-    units,
-  };
 };
