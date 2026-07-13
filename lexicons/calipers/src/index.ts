@@ -1,7 +1,7 @@
 export * from './core';
 // The master factory + its config, surfaced on the ROOT (cycle-free via
 // `./bundle`) so classic-resolution consumers (e.g. the compendium) reach it
-// without a subpath, exactly like `createColor`. The `/corpus` entry also
+// without a subpath, exactly like `createColor`. The `/codex` entry also
 // re-exports it (via `export * from './index'`).
 export {
   type CalipersBundle,

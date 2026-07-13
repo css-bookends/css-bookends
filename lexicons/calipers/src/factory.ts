@@ -17,7 +17,7 @@ export type CalipersFactoryConfig = {
   /**
    * How `m` reacts when arithmetic breaks a carried hardened bound:
    * `'ignore' | 'warn' | 'fail'` (default `'fail'`). The shared `Hardening`
-   * type; also settable via the corpus / compendium bundle `global`.
+   * type; also settable via the codex / compendium bundle `global`.
    */
   hardening?: Hardening;
 };

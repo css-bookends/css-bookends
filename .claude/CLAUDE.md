@@ -40,7 +40,7 @@ favour of "lexicon".)
   `@css-bookends/core` (`@css-bookends/measurement`, `/ratio`, `/integer`, `/float`, and the
   colour lexicon), so a consumer installs only what they want, e.g. measurement without
   colour and its `culori` dependency (colour + culori arrive ONLY with the colour lexicon
-  package). `css-calipers` is the BUNDLE (the "corpus"): it depends on + re-exports every
+  package). `css-calipers` is the BUNDLE (the "codex"): it depends on + re-exports every
   lexicon and owns `createCalipersBundle`. This mirrors the books + compendium model in
   Layer 2 exactly: per-unit packages + a bundle. (Supersedes the earlier one-package +
   subpath-exports design.)
@@ -118,9 +118,9 @@ favour of "lexicon".)
 Both layers obey ONE model. A **unit** is the atom (a calipers LEXICON in Layer 1, a
 bookends BOOK in Layer 2); every unit is its own npm package exposing a factory. A **bundle**
 package aggregates every unit of a layer and carries a global config. calipers' bundle is the
-`corpus` (`css-calipers`); bookends' bundle is the `compendium`. Learn it once, it applies to
+`codex` (`css-calipers`); bookends' bundle is the `compendium`. Learn it once, it applies to
 both. Three cross-cutting patterns follow. (See `docs/foundations.md` "The map" for the
-lexicon/book × corpus/compendium grid and the foundation→family model, e.g. `spacing`.)
+lexicon/book × codex/compendium grid and the foundation→family model, e.g. `spacing`.)
 
 ### Pattern 1: factory-first (the override seam)
 
@@ -177,7 +177,7 @@ design forces a "should it do X or Y?" choice, it is a config, not a baked-in br
 The lazy re-export is a convenience ON TOP of the factory, never a replacement (config still
 goes through the factory). Each bundle ships its factory called at defaults, re-exported:
 
-- calipers: `corpus` DEFAULT-exports `createCalipersBundle` AND named-exports the full helper
+- calipers: `codex` DEFAULT-exports `createCalipersBundle` AND named-exports the full helper
   set bound at defaults (`m` / `r` / `i` / `f` / `color` + the factories).
 - bookends: the compendium's main entry is `publishCompendium` (the configurable path); the
   bound-at-defaults bundle is the `@css-bookends/compendium/defaults` SUBPATH, re-exporting

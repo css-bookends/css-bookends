@@ -49,7 +49,7 @@ When a change adds or changes a CONFIG option on any unit (a lexicon or a book):
 - **Discuss / decide the config SHAPE first** (key name, type, default) and document it (step 1).
 - **It ALWAYS must be reachable from the master / bundle factory.** A unit config the bundle
   factory cannot set is a bug. Wire the new key into:
-  - `createCalipersBundle` (corpus) for a calipers primitive — under that primitive's key
+  - `createCalipersBundle` (codex) for a calipers primitive — under that primitive's key
     (`measurement` / `ratio` / `integer` / `float` / `color`), plus the `global` slot if it applies
     across units;
   - `publishCompendium` for a book — under that book's key (and `calipers` for the calipers layer),

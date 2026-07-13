@@ -212,7 +212,7 @@ import { publishBookZoom, type ZoomConfig } from '@css-bookends/zoom';
 export interface CompendiumConfig {
   /**
    * Shared options that cascade to every unit (books AND, through the nested
-   * corpus, the calipers primitives). A unit's own key wins, then this global,
+   * codex, the calipers primitives). A unit's own key wins, then this global,
    * then the factory default.
    */
   global?: {
@@ -220,9 +220,9 @@ export interface CompendiumConfig {
     hardening?: Hardening;
   };
   /**
-   * The whole calipers (corpus) config, forwarded to `createCalipersBundle`.
+   * The whole calipers (codex) config, forwarded to `createCalipersBundle`.
    * A primitive resolves own (`calipers.<unit>`) -> `calipers.global`
-   * (corpus global) -> `compendium.global` -> factory default.
+   * (codex global) -> `compendium.global` -> factory default.
    */
   calipers?: CalipersBundleConfig;
   color?: Partial<ColorConfig>;
@@ -342,7 +342,7 @@ export const publishCompendium = (
 ): Compendium => ({
   ...calipers,
   // Spread the CONFIGURED calipers bundle over the raw namespace so the cascade
-  // reaches the primitives (own calipers.<unit> -> corpus.global ->
+  // reaches the primitives (own calipers.<unit> -> codex.global ->
   // compendium.global -> default), overriding the default m / i / f. The raw
   // `...calipers` above still provides the broader namespace (r, helpers, types).
   ...createCalipersBundle({

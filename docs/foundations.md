@@ -18,10 +18,10 @@ config). Learn the four names once, because the two layers are the same machine:
 
 |                          | **unit** — the atom, its own package + factory              | **bundle** — every unit of the layer + a `global` config cascade |
 | ------------------------ | ----------------------------------------------------------- | ---------------------------------------------------------------- |
-| **Layer 1 — calipers**   | **lexicon** — a typed CSS input value (`m`, `i`, `f`, `r`, `color`) | **corpus** — `css-calipers` (`createCalipersBundle`)      |
+| **Layer 1 — calipers**   | **lexicon** — a typed CSS input value (`m`, `i`, `f`, `r`, `color`) | **codex** — `css-calipers` (`createCalipersBundle`)      |
 | **Layer 2 — bookends**   | **book** — a helper for one CSS concern (opacity, borders, …)      | **compendium** — `publishCompendium`                     |
 
-A **lexicon is to the corpus what a book is to the compendium.** Both bundles take
+A **lexicon is to the codex what a book is to the compendium.** Both bundles take
 `{ global?, <unitKey>? }` and resolve each setting **own key → `global` → factory default**;
 `createCalipersBundle`'s own docstring says it mirrors `publishCompendium`. ("Primitive" is the
 older synonym for "lexicon"; prefer **lexicon**.)
@@ -34,11 +34,11 @@ uses and self-instantiates them; a lexicon never depends on a book.
 Value flows UP through foundations, and a book is often just the thin policy/label at the top.
 Three kinds of foundation sit under the books:
 
-- **Corpus lexicons** (`m`, `i`, `f`, `r`, `color`) — standalone typed values; each renders its own
-  `.css()`; shipped in the corpus.
+- **Codex lexicons** (`m`, `i`, `f`, `r`, `color`) — standalone typed values; each renders its own
+  `.css()`; shipped in the codex.
 - **Foundation lexicons** (`spacing`) — a lexicon that CANNOT stand alone. It factors the shared
   input/storage/output steps plus a policy surface for a FAMILY of books, but chooses no CSS
-  property, so it has no `.css()` target of its own. It lives OUTSIDE the corpus, one layer above
+  property, so it has no `.css()` target of its own. It lives OUTSIDE the codex, one layer above
   calipers.
 - **Shared engines** (`packages/`) — `self-publish` (the manuscript engine every book is stamped
   from) and `css-value-core` (the constrained-scalar engine the per-property books share).
@@ -48,8 +48,8 @@ Three kinds of foundation sit under the books:
 | `self-publish`    | engine           | every book                                             | its three manuscript steps       |
 | `css-value-core`  | engine           | the per-property scalar books (opacity, z-index, …)    | a per-property spec (range + keywords) |
 | `spacing`         | foundation lexicon | `margin`, `padding` (gap TBD)                        | a value-domain policy + the property key |
-| `color`           | corpus lexicon   | `borders` (+ colour anywhere)                          | composition                      |
-| `m` `i` `f` `r`   | corpus lexicons  | ~everything                                            | —                                |
+| `color`           | codex lexicon   | `borders` (+ colour anywhere)                          | composition                      |
+| `m` `i` `f` `r`   | codex lexicons  | ~everything                                            | —                                |
 
 **Worked example — spacing.** `lexicons/spacing` provides `parseSpacing(input, policy)` (INPUT),
 `resolveSpacing` (STORAGE — spells a shorthand out into the canonical four-side store), the
@@ -62,7 +62,7 @@ policies:
   `NonNegativeMeasurement`), output keyed to `'padding'`.
 
 The book contributes only its **policy** and its **property name**; everything else is spacing. That
-is why spacing cannot be used alone, and why it is a lexicon but not a *corpus* lexicon.
+is why spacing cannot be used alone, and why it is a lexicon but not a *codex* lexicon.
 
 ---
 

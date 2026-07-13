@@ -32,10 +32,10 @@ Per-property books render to the `format: 'object'` shape by default (a property
 
 ## Configuration is a cascade
 
-`publishCompendium(config)` takes `CompendiumConfig`: a `global` slot of shared options, one optional key per configurable book, and a nested `calipers` key carrying the whole corpus (calipers) config. Bundles NEST, and the most specific setting wins.
+`publishCompendium(config)` takes `CompendiumConfig`: a `global` slot of shared options, one optional key per configurable book, and a nested `calipers` key carrying the whole codex (calipers) config. Bundles NEST, and the most specific setting wins.
 
 - A **book** resolves a setting: its own key → `compendium.global` → the book's built-in default.
-- A **primitive** (through the nested corpus) resolves: `calipers.<unit>` → `calipers.global` → `compendium.global` → the factory default.
+- A **primitive** (through the nested codex) resolves: `calipers.<unit>` → `calipers.global` → `compendium.global` → the factory default.
 
 ```ts
 import publishCompendium from '@css-bookends/compendium';
@@ -46,11 +46,11 @@ publishCompendium({ color: { output: colorFormats.rgba } })
   .color('#3366cc')
   .css(); // 'rgba(51, 102, 204, 1)'
 
-// a global reaches the calipers primitives through the nested corpus
+// a global reaches the calipers primitives through the nested codex
 const lenient = publishCompendium({ global: { hardening: 'ignore' } });
 lenient.i(8, { min: 0, max: 10 }).multiply(2).value(); // 16  (broken bound dropped)
 
-// most specific wins: the corpus global overrides the compendium global for primitives
+// most specific wins: the codex global overrides the compendium global for primitives
 publishCompendium({
   global: { hardening: 'fail' },
   calipers: { global: { hardening: 'ignore' } }, // primitives end up 'ignore'
@@ -67,7 +67,7 @@ If you only want the bound helpers and never touch the factory, import the bound
 import { m, opacity, color, borders } from '@css-bookends/compendium/defaults';
 ```
 
-`@css-bookends/compendium/defaults` is `publishCompendium()` called once and re-exported member by member. It and the calipers `corpus` entry are the project's two lazy-defaults entries; configuration always goes through the factory.
+`@css-bookends/compendium/defaults` is `publishCompendium()` called once and re-exported member by member. It and the calipers `codex` entry are the project's two lazy-defaults entries; configuration always goes through the factory.
 
 ## Layers
 

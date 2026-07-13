@@ -1,13 +1,13 @@
 ---
 name: config-cascade
-description: How configurable behaviour flows through CSS-Bookends - every unit (calipers primitive / bookends book) has a factory config, units of a kind share an IDENTICAL config shape, and a bundle (corpus / compendium) carries a `global` plus per-unit keys that resolve unit-key -> global -> factory default. Use when adding or changing ANY config option, a unit factory, or bundle wiring. Always paired with failing-first tests.
+description: How configurable behaviour flows through CSS-Bookends - every unit (calipers primitive / bookends book) has a factory config, units of a kind share an IDENTICAL config shape, and a bundle (codex / compendium) carries a `global` plus per-unit keys that resolve unit-key -> global -> factory default. Use when adding or changing ANY config option, a unit factory, or bundle wiring. Always paired with failing-first tests.
 ---
 
 # config-cascade
 
 The rule for any behaviour that can vary across instances. It makes "everything is
 config-driven" (see `docs/foundations.md`) concrete and uniform at both layers. This
-is the cascade `createCalipersBundle` (corpus) and `publishCompendium` (compendium)
+is the cascade `createCalipersBundle` (codex) and `publishCompendium` (compendium)
 implement; copy it, never reinvent a per-feature scheme.
 
 ## The rules
@@ -22,7 +22,7 @@ implement; copy it, never reinvent a per-feature scheme.
   `lexicons/calipers/src/hardening.ts` and are imported by the `m` / `i` / `f` factory
   configs. A new shared option is added to that one shared type, then it is automatically
   identical across the units.
-- **A bundle exposes `global` PLUS one key per unit.** `CalipersBundleConfig` (corpus):
+- **A bundle exposes `global` PLUS one key per unit.** `CalipersBundleConfig` (codex):
   `{ global?, measurements?, integer?, float?, ratio?, color? }`. `CompendiumConfig`:
   `{ global?, <book keys>…, calipers?: CalipersBundleConfig }`. The bundle factory must
   return the CONFIGURED units (spread `createInteger(...)` / `createFloat(...)` / … into the
@@ -33,9 +33,9 @@ implement; copy it, never reinvent a per-feature scheme.
   `hardening: config.integer?.hardening ?? config.global?.hardening` (then the factory applies
   its built-in default when that is `undefined`).
 - **Bundles NEST; the inner global overrides the outer.** The compendium carries the whole
-  corpus config under a `calipers` key and forwards it to `createCalipersBundle`, merging so a
-  primitive resolves `own -> corpus.global -> compendium.global -> default`. Build the corpus
-  global as `calipers.global.<opt> ?? compendium.global.<opt>` so corpus-specific wins.
+  codex config under a `calipers` key and forwards it to `createCalipersBundle`, merging so a
+  primitive resolves `own -> codex.global -> compendium.global -> default`. Build the codex
+  global as `calipers.global.<opt> ?? compendium.global.<opt>` so codex-specific wins.
 - **Reachability is mandatory.** No unit config the bundle factory cannot reach. If you add a
   unit option, you ALSO add it to the bundle config + cascade in the SAME change. An option
   that only works standalone is a bug.
@@ -57,12 +57,12 @@ bundle levels:
 
 Use a real worked option (today: `hardening`) with an observable effect (`ignore` proceeds,
 `fail` throws). Tighten throw-assertions to the real message (e.g. `toThrow(/maximum/)`) so a
-`TypeError` from an unbuilt API cannot pass spuriously. Reference: corpus cascade tests live in
-`lexicons/calipers/tests/runtime/corpus/corpus.src.test.ts`.
+`TypeError` from an unbuilt API cannot pass spuriously. Reference: codex cascade tests live in
+`lexicons/calipers/tests/runtime/codex/codex.src.test.ts`.
 
 ## Reference
 
-`lexicons/calipers/src/corpus.ts` (`createCalipersBundle` = the canonical cascade);
+`lexicons/calipers/src/codex.ts` (`createCalipersBundle` = the canonical cascade);
 `createInteger` / `createFloat` in `lexicons/calipers/src/integer.ts` / `float.ts`;
 the shared `Hardening` / `HardeningConfig` in `lexicons/calipers/src/hardening.ts`;
 `packages/compendium/src/index.ts` (`publishCompendium`). Companion skills: `doc-test-code`

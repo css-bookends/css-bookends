@@ -1,6 +1,6 @@
 // The calipers MASTER factory + its config, in a CYCLE-FREE module so BOTH the
-// package root (`@css-bookends/css-calipers`) and the `/corpus` subpath can
-// surface it (root re-exports it like it does `createColor`; corpus gets it via
+// package root (`@css-bookends/css-calipers`) and the `/codex` subpath can
+// surface it (root re-exports it like it does `createColor`; codex gets it via
 // `export * from './index'`). It combines the sub-factories (`createCalipers` /
 // `createInteger` / `createFloat` / `createColor`) under one keyed config with
 // the cascade: own unit key -> bundle `global` -> factory default.

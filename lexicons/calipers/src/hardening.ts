@@ -1,5 +1,5 @@
 // The SHARED hardening surface. One module, one type, imported everywhere
-// (m / i / f and both bundle configs — corpus, compendium); never redefined.
+// (m / i / f and both bundle configs — codex, compendium); never redefined.
 //
 // "Hardening" is a carried range bound (min / max). This module owns the ONE
 // config that decides what a value type does when an operation would BREAK that
@@ -12,7 +12,7 @@
  * - `fail`   — throw (disallow the breaking operation)
  *
  * This is the single config the whole stack shares: `m` / `i` / `f` factory
- * configs, the corpus (`createCalipersBundle`) and the compendium
+ * configs, the codex (`createCalipersBundle`) and the compendium
  * (`publishCompendium`) all reference THIS type, never a local copy.
  */
 export type Hardening = 'ignore' | 'warn' | 'fail';

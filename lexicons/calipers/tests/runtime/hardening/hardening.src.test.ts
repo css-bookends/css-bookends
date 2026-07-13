@@ -4,7 +4,7 @@
 //
 // Per docs/foundations.md: the hardening reaction is config-driven via the shared
 // `Hardening = 'ignore' | 'warn' | 'fail'` type, set on the m() factory (and the
-// corpus / compendium bundle `global`). Default is `fail` (preserves i/f's throw).
+// codex / compendium bundle `global`). Default is `fail` (preserves i/f's throw).
 // The i/f + quartet blocks are regression coverage; the carry + config blocks
 // exercise the new m behaviour.
 import { describe, expect, it, vi } from 'vitest';

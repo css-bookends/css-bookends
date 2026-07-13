@@ -1,4 +1,4 @@
-// The corpus config cascade: each unit (m / i / f) resolves a setting as
+// The codex config cascade: each unit (m / i / f) resolves a setting as
 // own keyed config -> bundle `global` -> factory default. Worked example: the
 // shared `hardening` reaction. The bundle must expose the CONFIGURED i / f / m,
 // so a bundle-level `global` or per-unit key actually reaches them.
@@ -9,9 +9,9 @@ import {
   type ColorString,
   hardenInteger,
 } from '../../../src';
-import createCalipersBundle from '../../../src/corpus';
+import createCalipersBundle from '../../../src/codex';
 
-describe('corpus config cascade (own key -> global -> factory default)', () => {
+describe('codex config cascade (own key -> global -> factory default)', () => {
   const hardenedI = () => hardenInteger({ min: 0, max: 10 })(8);
 
   describe('m (measurement)', () => {

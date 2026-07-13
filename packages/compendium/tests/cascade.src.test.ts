@@ -1,5 +1,5 @@
 // The cascade reaches calipers PRIMITIVES through the compendium. A primitive
-// resolves a setting as own key (calipers.<unit>) -> corpus.global
+// resolves a setting as own key (calipers.<unit>) -> codex.global
 // (calipers.global) -> compendium.global -> factory default. Worked example:
 // the shared `hardening` reaction. Tested at src level (only calipers needs
 // building); the configured bundle must be spread so the compendium's i / f / m
@@ -22,7 +22,7 @@ describe('compendium config cascade -> calipers primitives', () => {
     expect(c.i(8, { min: 0, max: 10 }).multiply(2).value()).toBe(16);
   });
 
-  it('corpus global (calipers.global) overrides compendium global', () => {
+  it('codex global (calipers.global) overrides compendium global', () => {
     const c = publishCompendium({
       global: { hardening: 'fail' },
       calipers: { global: { hardening: 'ignore' } },

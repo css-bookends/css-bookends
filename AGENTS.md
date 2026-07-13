@@ -38,7 +38,7 @@ calipers.
 
 **Both layers share ONE shape (absolute):** a UNIT is the atom (a calipers lexicon, a
 bookends book); every unit is its own npm package exposing a factory. A BUNDLE aggregates a
-layer's units with a global config: `compendium` for books, `corpus` (`css-calipers`) for
+layer's units with a global config: `compendium` for books, `codex` (`css-calipers`) for
 calipers. So calipers is being split into per-lexicon packages (`@css-bookends/measurement`,
 `/ratio`, `/integer`, `/float`, the colour lexicon) on a shared `@css-bookends/core`, exactly
 mirroring books + compendium. Three cross-cutting patterns follow: factory-first, output-shape
@@ -135,12 +135,12 @@ is a master factory (one optional keyed config slot per sub-factory) PLUS the
 bound-at-defaults surface, so a consumer who does not want to configure anything imports
 helpers already bound and never calls a factory:
 
-- **css-calipers: `corpus`** (the calipers BUNDLE). DEFAULT-exports the master factory
+- **css-calipers: `codex`** (the calipers BUNDLE). DEFAULT-exports the master factory
   `createCalipersBundle`, whose config is the same `{ global?, <unitKey>? }` shape as
   `publishCompendium` (a `global` slot plus one optional key per lexicon: `measurement`,
   `ratio`, `integer`, `float`, `color`), with the three-tier cascade. It binds the whole
   calipers surface in one object and also named-exports the full helper set bound at defaults
-  (`m` / `r` / `i` / `f` / `color` + the factories), so `corpus` is both the master factory and
+  (`m` / `r` / `i` / `f` / `color` + the factories), so `codex` is both the master factory and
   the bound bundle. `css-calipers` is the bundle package that depends on + re-exports the
   per-lexicon packages.
 - **compendium: `@css-bookends/compendium/defaults`**. The package's main entry stays the

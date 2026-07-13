@@ -101,7 +101,7 @@ CSS-Bookends is split into two kinds of package:
 
 - **Lexicons** are the foundational vocabularies: a lexicon defines one typed CSS
   input value and the operations on it. The core lexicons (`m`, `i`, `f`, `r`,
-  `color`) ship together in **`css-calipers`**, the Layer-1 bundle (the _corpus_).
+  `color`) ship together in **`css-calipers`**, the Layer-1 bundle (the _codex_).
   Lexicons can build on one another: `spacing` is a lexicon built on `css-calipers`
   that _founds_ the `margin` and `padding` books, so unlike the core lexicons it
   does not stand alone.
@@ -111,7 +111,7 @@ CSS-Bookends is split into two kinds of package:
   it has been pulled from the active workspace pending rework.)
 
 A lexicon is the vocabulary; a book is written using it. Each layer has a **bundle**
-that aggregates its units: the _corpus_ (`css-calipers`) for lexicons, the
+that aggregates its units: the _codex_ (`css-calipers`) for lexicons, the
 _compendium_ for books. Every package, lexicon or book, is independently installable
 and pulls in only what it actually depends on. The umbrella is organizational, never
 a bundle you are forced to take whole. See `docs/foundations.md` ("The map") for how
@@ -132,7 +132,7 @@ alike (for example `@css-bookends/css-calipers` and `@css-bookends/compendium`).
 
 ## What is available today
 
-- **`@css-bookends/css-calipers`**: the corpus of typed-input lexicons (`m`, `i`,
+- **`@css-bookends/css-calipers`**: the codex of typed-input lexicons (`m`, `i`,
   `f`, `r`, `color`) and the foundation most other pieces build on. Stable, headed
   to 1.0. It is standalone and owns its own complete docs and examples. Start there:
   [docs](./lexicons/calipers/README.md) ·
@@ -192,7 +192,7 @@ The architecture terms (lexicon, book, the three steps, manuscript, `publishBook
 
 ## Factories (the override seam)
 
-Every book is consumed through its factory, never imported raw, because the factory is the configurable path and the override seam: it lets you rewrite or wrap any step (input, storage, output) onion-style, or swap the internals, with zero changes at call sites. A per-book package exports its `publishBook<Name>` factory and no pre-made instance, so a consumer binds it once (`const color = publishBookColor()`) and calls it. (Five books are a documented exception: `shadows`, `positioning`, `supports-fallback`, `backdrop-filter`, and `transforms` are multi-function utility namespaces rather than single value-to-CSS manuscripts, so they expose a namespace of pure functions instead of a factory. They still ship no pre-made bound instance, so nothing in the books layer ships a bound default.) Because you bind once in your own module and import the helper from there, a major rewrite of the library's internal paths changes that one file, not the hundreds or thousands of call sites across your project. Each factory call also returns its own independent instance, so you can run several configurations of the same book at once with no global state to collide: a strict opacity beside a clamping one, or two colour books with different output formats, with no cascade or shared global state to fight (each is a value in scope, not a stylesheet competing in the cascade). The compendium is the bundle's factory: `publishCompendium` is exported as the package's default export, a bare `publishCompendium()` binds every active book at its own defaults, and passing a master `CompendiumConfig` (one optional key per book) configures any subset. So all of that power is opt-in. If you do not want to configure anything, there is a clean zero-config path you never have to call: `@css-bookends/compendium/defaults` re-exports every book and lexicon already bound at defaults (`import { opacity, m, color } from '@css-bookends/compendium/defaults'`). That subpath and css-calipers' `corpus` (its own master factory, default-exported, plus the whole lexicon set bound at defaults) are the only two lazy-defaults entries; there are no per-book ones.
+Every book is consumed through its factory, never imported raw, because the factory is the configurable path and the override seam: it lets you rewrite or wrap any step (input, storage, output) onion-style, or swap the internals, with zero changes at call sites. A per-book package exports its `publishBook<Name>` factory and no pre-made instance, so a consumer binds it once (`const color = publishBookColor()`) and calls it. (Five books are a documented exception: `shadows`, `positioning`, `supports-fallback`, `backdrop-filter`, and `transforms` are multi-function utility namespaces rather than single value-to-CSS manuscripts, so they expose a namespace of pure functions instead of a factory. They still ship no pre-made bound instance, so nothing in the books layer ships a bound default.) Because you bind once in your own module and import the helper from there, a major rewrite of the library's internal paths changes that one file, not the hundreds or thousands of call sites across your project. Each factory call also returns its own independent instance, so you can run several configurations of the same book at once with no global state to collide: a strict opacity beside a clamping one, or two colour books with different output formats, with no cascade or shared global state to fight (each is a value in scope, not a stylesheet competing in the cascade). The compendium is the bundle's factory: `publishCompendium` is exported as the package's default export, a bare `publishCompendium()` binds every active book at its own defaults, and passing a master `CompendiumConfig` (one optional key per book) configures any subset. So all of that power is opt-in. If you do not want to configure anything, there is a clean zero-config path you never have to call: `@css-bookends/compendium/defaults` re-exports every book and lexicon already bound at defaults (`import { opacity, m, color } from '@css-bookends/compendium/defaults'`). That subpath and css-calipers' `codex` (its own master factory, default-exported, plus the whole lexicon set bound at defaults) are the only two lazy-defaults entries; there are no per-book ones.
 
 ## Installation
 

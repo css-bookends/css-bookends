@@ -2,7 +2,7 @@
 
 The single list of outstanding work. Reorganised around the **next css-calipers beta**:
 the checklists below are scoped to **Layer 1 lexicons only** (`m` / `r` / `i` / `f` / colour +
-the corpus bundle). Books, compendium, and platemaker are OUT of scope for the beta and live in
+the codex bundle). Books, compendium, and platemaker are OUT of scope for the beta and live in
 the "Deferred" tail at the bottom, kept intact so nothing is lost.
 
 **Release model (locked 2026-07-09):** the new work (hardening, cascade, unified value surface,
@@ -20,12 +20,12 @@ decisions). Architecture rules live in `.claude/CLAUDE.md` and `AGENTS.md`. Per-
 > ▶ **RESUME HERE (next css-calipers beta).** §A (verify current-state) is DONE. **Safety net,
 > mostly in place (2026-07-09):** added the regression tests the split needs — exhaustive unit
 > round-trip (`test:units`, 62), direct `createInteger`/`createFloat` (`test:scalar-factories`),
-> and the bundle `color`-slot forwarding (in `test:corpus`) — plus examples for the colour format
+> and the bundle `color`-slot forwarding (in `test:codex`) — plus examples for the colour format
 > selectors, advanced modify (blend/ensureContrast/grayscale/invert/clone), the bundle colour
 > slot, and the colour-free `/measurements` subpath. Full suite green. Optional net still open:
 > ratio overload edge cases, construction-time hardening `warn`/`ignore`, error-config accessors.
 > **NEXT: §B**, the per-lexicon package split (`@css-bookends/core` + `/measurement`, `/ratio`,
-> `/integer`, `/float`, `/color`, with `css-calipers` becoming the corpus bundle) against that net.
+> `/integer`, `/float`, `/color`, with `css-calipers` becoming the codex bundle) against that net.
 > Then §C–§F. §G "release mechanics" means publishing the next BETA (not a `latest` promotion —
 > that waits on books battle-testing). Everything below "Deferred" is out of scope for the beta.
 > Published state: `css-calipers` `beta` = `1.1.0-beta.0`, `latest` = `1.0.0`.
@@ -42,8 +42,8 @@ decisions). Architecture rules live in `.claude/CLAUDE.md` and `AGENTS.md`. Per-
   - Colour folded in as a first-class primitive: modification gaps filled, colour back in the
     lint / typecheck / test suite (the old `//temp-exclude` is gone).
   - Subpath exports already exist INSIDE the single package: `./measurements`, `./ratio`,
-    `./integer`, `./float`, `./color`, `./corpus`, `./units`, `./factory`.
-  - `corpus.ts` / `createCalipersBundle` present; `default.ts` single-construction path present.
+    `./integer`, `./float`, `./color`, `./codex`, `./units`, `./factory`.
+  - `codex.ts` / `createCalipersBundle` present; `default.ts` single-construction path present.
 
 The remaining 1.1 work is the **package split** (turning those subpaths into real per-primitive
 packages), final primitive conformance, colour loose ends, docs, and release mechanics.
@@ -55,9 +55,9 @@ packages), final primitive conformance, colour loose ends, docs, and release mec
 ## A. Verify current-state (do first, before building)  ✅ DONE (2026-07-09)
 Recent commits CLAIM several conformance items are done; confirmed live in source + green suite.
 - [x] Run the full calipers suite green: `pnpm --filter @css-bookends/css-calipers test`
-      (build + core + refinement + ratio + integer + float + hardening + corpus + value-surface +
+      (build + core + refinement + ratio + integer + float + hardening + codex + value-surface +
       factory + subpaths + color + audit + dist + types + tsc + lint + internal). All green
-      (core 61, color 488, value-surface 15, corpus 11, dist CJS/ESM, tsd, tsc, lint, internal 12).
+      (core 61, color 488, value-surface 15, codex 11, dist CJS/ESM, tsd, tsc, lint, internal 12).
 - [x] Confirmed the unified value accessor (`.value()` + `.unit()`) is live on measurement
       (`createCoreApi.ts:112,116`), integer (`integer.ts:104,108`), float (`float.ts:100,104`),
       with `.getValue()` / `.getUnit()` kept as deprecated aliases on measurement
@@ -69,7 +69,7 @@ Recent commits CLAIM several conformance items are done; confirmed live in sourc
       value surface: measurement (`createCoreApi.ts:132,136,140`), integer (`integer.ts:33-35,120-128`),
       float (`float.ts:34-36,116-124`). Covered by `tests/runtime/value-surface/typed-value.src.test.ts`.
 
-## B. Packaging split — per-primitive packages + corpus bundle  ← THE 1.1 GATE
+## B. Packaging split — per-primitive packages + codex bundle  ← THE 1.1 GATE
 Turn the in-package subpaths into real npm packages on a shared core. This is the largest chunk.
 - [ ] New `@css-bookends/core`: shared internals only — `scalar`, `toPlainDecimal`, measurement
       infra, errors, `unitDefinitions`, the factory. No primitive surface of its own.
@@ -79,19 +79,19 @@ Turn the in-package subpaths into real npm packages on a shared core. This is th
 - [ ] `@css-bookends/ratio` on `core` (+ deps on `integer` / `float`).
 - [ ] `@css-bookends/color` on `core` (Layer-1 primitive; fold in the thin colour wrapper that only
       re-exports calipers colour; `culori` dependency lives ONLY here).
-- [ ] `css-calipers` becomes the **corpus BUNDLE**: depends on + re-exports every primitive package,
+- [ ] `css-calipers` becomes the **codex BUNDLE**: depends on + re-exports every primitive package,
       owns `createCalipersBundle` + the default bound instance. `m()` v1 stays on `latest` 1.0.0.
 - [ ] Preserve the existing public surface: every current root export and subpath keeps resolving
       (add the api-surface + subpaths tests to the split so nothing regresses).
 - [ ] Each new package: standard dual CJS/ESM build, eslint, tests, README, `files` includes README.
       (Use the `scaffold-package` skill.)
 
-## C. Corpus bundle + config cascade (calipers side only)
+## C. Codex bundle + config cascade (calipers side only)
 - [ ] `createCalipersBundle` config shape = `{ global?, measurement?, ratio?, integer?, float?,
       color? }`; each setting resolves **own key -> bundle `global` -> built-in default**.
-- [ ] Keep the lazy defaults path: `corpus` bound at defaults + the named default helpers
+- [ ] Keep the lazy defaults path: `codex` bound at defaults + the named default helpers
       (`m` / `r` / `i` / `f` / `color` + factories) exported from the root.
-- [ ] Confirm the cascade is covered by `test:corpus` + a tsd test; add cases if thin.
+- [ ] Confirm the cascade is covered by `test:codex` + a tsd test; add cases if thin.
       (Compendium-side cascade is Layer 2 — deferred.)
 
 ## D. Colour primitive — loose ends
@@ -110,7 +110,7 @@ Turn the in-package subpaths into real npm packages on a shared core. This is th
       Fold into the hardening reaction config (`'ignore' | 'warn' | 'fail'`) if it fits. Optional for 1.1.
 
 ## F. Docs / READMEs (calipers packages only)
-- [ ] A README for `@css-bookends/core` and each per-primitive package, plus an updated corpus README.
+- [ ] A README for `@css-bookends/core` and each per-primitive package, plus an updated codex README.
       Document the `createCalipersBundle` config + cascade and the standalone-usable framing (calipers
       reads complete on its own; the bookends pointer is secondary). Keep it small; link `docs/` for depth.
 - [ ] Ensure every calipers package `files` array includes `"README.md"` (calipers root already does).
@@ -148,8 +148,8 @@ Kept intact for the paper trail. These are Layer-2 (books / compendium) or later
       the stroke tier, `readingOrder` (blocked on csstype gaining `Property.ReadingOrder`).
 
 ## Bundles — compendium-side cascade (Layer 2)
-- [ ] `publishCompendium` config = `{ global?, <book keys>…, calipers?: CorpusConfig }`, forwarding
-      the `calipers` config into `createCalipersBundle` and merging its own `global` under `corpus.global`.
+- [ ] `publishCompendium` config = `{ global?, <book keys>…, calipers?: CodexConfig }`, forwarding
+      the `calipers` config into `createCalipersBundle` and merging its own `global` under `codex.global`.
 - [ ] Keep the `@css-bookends/compendium/defaults` bound-at-defaults subpath.
 
 ## Misc / later

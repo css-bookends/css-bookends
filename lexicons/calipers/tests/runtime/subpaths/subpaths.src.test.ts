@@ -1,11 +1,11 @@
 // Per-primitive subpath contract (src level). Each entry must expose only the
 // surface it owns. The measurements / ratio / integer / float entries MUST be
 // colour-free (no `color`, no `createColor`), so a consumer who imports them
-// never pulls in culori. The `corpus` lazy-defaults entry re-exports the full
+// never pulls in culori. The `codex` lazy-defaults entry re-exports the full
 // default set, so it MUST expose BOTH `m` and `color`.
 import { describe, expect, it } from 'vitest';
 
-import * as corpus from '../../../src/corpus';
+import * as codex from '../../../src/codex';
 import { f as fEntry } from '../../../src/float';
 import { i as iEntry } from '../../../src/integer';
 import * as meas from '../../../src/measurements';
@@ -46,30 +46,30 @@ describe('per-primitive subpaths (src)', () => {
     expect('createColor' in floatModule).toBe(false);
   });
 
-  it('corpus entry exposes BOTH `m` and `color` (full default set)', () => {
-    expect('m' in corpus).toBe(true);
-    expect('color' in corpus).toBe(true);
-    expect(typeof corpus.m).toBe('function');
-    expect(typeof corpus.color).toBe('function');
-    expect(corpus.m(8).css()).toBe('8px');
+  it('codex entry exposes BOTH `m` and `color` (full default set)', () => {
+    expect('m' in codex).toBe(true);
+    expect('color' in codex).toBe(true);
+    expect(typeof codex.m).toBe('function');
+    expect(typeof codex.color).toBe('function');
+    expect(codex.m(8).css()).toBe('8px');
   });
 
-  it('corpus also exposes the factories', () => {
-    expect(typeof corpus.createCalipers).toBe('function');
-    expect(typeof corpus.createColor).toBe('function');
+  it('codex also exposes the factories', () => {
+    expect(typeof codex.createCalipers).toBe('function');
+    expect(typeof codex.createColor).toBe('function');
   });
 
-  it('corpus DEFAULT-exports the master factory and binds everything at defaults', () => {
+  it('codex DEFAULT-exports the master factory and binds everything at defaults', () => {
     // the default export is the master factory (same fn as the named export).
-    expect(typeof corpus.default).toBe('function');
-    expect(corpus.default).toBe(corpus.createCalipersBundle);
+    expect(typeof codex.default).toBe('function');
+    expect(codex.default).toBe(codex.createCalipersBundle);
     // a bare call binds the whole calipers surface at defaults.
-    const c = corpus.createCalipersBundle();
+    const c = codex.createCalipersBundle();
     expect(c.m(8).css()).toBe('8px');
     expect(typeof c.color).toBe('function');
     expect(c.color('#3366cc').css()).toBe('#3366cc');
     // the keyed config threads through to the sub-factory.
-    const strict = corpus.createCalipersBundle({
+    const strict = codex.createCalipersBundle({
       measurements: { errorConfig: { stackHints: 'off' } },
     });
     expect(strict.m(8).css()).toBe('8px');
