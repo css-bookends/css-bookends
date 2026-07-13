@@ -7,6 +7,7 @@ import { describe, expect, it } from 'vitest';
 
 import { createFloat } from '../../../src/float';
 import { createInteger } from '../../../src/integer';
+import { createRatio } from '../../../src/ratio';
 
 describe('createInteger (direct factory behavior)', () => {
   it('binds an i carrying the configured hardening reaction', () => {
@@ -59,5 +60,18 @@ describe('createFloat (direct factory behavior)', () => {
     expect(() => c.f(0.6, { min: 0, max: 1 }).multiply(2)).toThrow(
       /maximum/,
     );
+  });
+});
+
+describe('createRatio (direct factory behavior)', () => {
+  it('binds an r that builds ratios', () => {
+    const { r } = createRatio();
+    expect(r(16, 9).css()).toBe('16/9');
+  });
+
+  it('tolerates an empty config and exposes isRatio', () => {
+    const c = createRatio({});
+    expect(c.isRatio(c.r(16, 9))).toBe(true);
+    expect(c.isRatio(42)).toBe(false);
   });
 });

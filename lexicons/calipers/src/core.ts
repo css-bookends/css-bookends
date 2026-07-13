@@ -23,11 +23,14 @@ import {
 } from './integer';
 import { type ErrorCode, type ErrorConfig } from './internal/errors';
 import {
+  createRatio,
   type IRatio,
   isRatio,
   normalizeRatio,
   parseRatio,
   r,
+  type RatioApi,
+  type RatioFactoryConfig,
   type RatioParts,
   ratioToFloat,
   type RatioValue,
@@ -247,6 +250,7 @@ export type MeasurementUnitCategory = UnitCategory;
 export { type ErrorCode, type ErrorConfig };
 export type { Constraints, Hardening } from './hardening';
 export {
+  createRatio,
   isRatio,
   normalizeRatio,
   parseRatio,
@@ -256,7 +260,13 @@ export {
   simplifyRatio,
   toFloat,
 };
-export type { IRatio, RatioParts, RatioValue };
+export type {
+  IRatio,
+  RatioApi,
+  RatioFactoryConfig,
+  RatioParts,
+  RatioValue,
+};
 export {
   createFloat,
   createInteger,

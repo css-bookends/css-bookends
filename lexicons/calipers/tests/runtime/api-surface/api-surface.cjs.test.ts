@@ -162,6 +162,7 @@ describe('API surface (CJS)', () => {
       'hardenFloat',
       'createInteger',
       'createFloat',
+      'createRatio',
       'createCalipersBundle',
       'isPercentMeasurement',
       'assertPercentMeasurement',

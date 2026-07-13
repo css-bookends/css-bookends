@@ -159,6 +159,7 @@ describe('API surface (ESM)', () => {
       'hardenFloat',
       'createInteger',
       'createFloat',
+      'createRatio',
       'createCalipersBundle',
       'isPercentMeasurement',
       'assertPercentMeasurement',

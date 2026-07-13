@@ -153,6 +153,33 @@ export const isRatio = (value: unknown): value is IRatio => {
   );
 };
 
+/**
+ * The ratio factory config. Ratio is config-free today; the empty config keeps
+ * `createRatio` shaped like `createInteger` / `createFloat` / `createColor` and
+ * leaves room to add options later without changing call sites.
+ */
+export type RatioFactoryConfig = Record<string, never>;
+
+/** The bound ratio surface a `createRatio` instance exposes. */
+export interface RatioApi {
+  r: typeof r;
+  isRatio: (value: unknown) => value is IRatio;
+}
+
+/**
+ * The ratio FACTORY. Ratio carries no configuration today, so this returns the
+ * ratio surface as-is; it exists for CONSISTENCY with the other lexicon
+ * factories (`createCalipers` / `createInteger` / `createFloat` / `createColor`)
+ * and to future-proof adding config without touching call sites. Mirrors
+ * `createInteger`.
+ */
+export const createRatio = (
+  _config: RatioFactoryConfig = {},
+): RatioApi => ({
+  r,
+  isRatio,
+});
+
 export const parseRatio = (
   value: number | string | IRatio | IInteger | IFloat,
 ): RatioParts | null => {
