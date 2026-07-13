@@ -17,7 +17,9 @@ import {
   parseColor,
   storeColor,
 } from '../../../src/color';
-import { mDeg } from '../../../src/units/angle';
+import { createAngleUnits } from '../../../src/units/angle';
+
+const { mDeg } = createAngleUnits();
 
 /*
  * The color book's coverage MATRIX (from color-coverage.md + the modification surface).

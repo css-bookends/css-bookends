@@ -4,11 +4,13 @@ import {
   inRange,
   m,
   makeMeasurementRefinement,
-  mPercent,
   nonNegative,
   nonPositive,
 } from '../../../src';
 import { createCalipers } from '../../../src/factory';
+import { createPercentUnits } from '../../../src/units/percent';
+
+const { mPercent } = createPercentUnits();
 
 /*
  * Value-constraint refinements. Each refinement runs a measurement through a runtime

@@ -1,23 +1,8 @@
 import type { MeasurementOf } from '../core';
-import { makeUnitHelperFromDefinition } from '../default';
 import {
   type CalipersFactoryConfig,
   createCalipers,
 } from '../factory';
-
-export const mVw = makeUnitHelperFromDefinition('mVw');
-export const mVh = makeUnitHelperFromDefinition('mVh');
-export const mVi = makeUnitHelperFromDefinition('mVi');
-export const mVb = makeUnitHelperFromDefinition('mVb');
-export const mVmin = makeUnitHelperFromDefinition('mVmin');
-export const mVmax = makeUnitHelperFromDefinition('mVmax');
-
-export type VwMeasurement = MeasurementOf<typeof mVw>;
-export type VhMeasurement = MeasurementOf<typeof mVh>;
-export type ViMeasurement = MeasurementOf<typeof mVi>;
-export type VbMeasurement = MeasurementOf<typeof mVb>;
-export type VminMeasurement = MeasurementOf<typeof mVmin>;
-export type VmaxMeasurement = MeasurementOf<typeof mVmax>;
 
 /** Factory for the viewport helpers, bound through `createCalipers`. */
 export const createViewportUnits = (
@@ -33,3 +18,11 @@ export const createViewportUnits = (
     mVmax: core.makeUnitHelperFromDefinition('mVmax'),
   };
 };
+
+type ViewportHelpers = ReturnType<typeof createViewportUnits>;
+export type VwMeasurement = MeasurementOf<ViewportHelpers['mVw']>;
+export type VhMeasurement = MeasurementOf<ViewportHelpers['mVh']>;
+export type ViMeasurement = MeasurementOf<ViewportHelpers['mVi']>;
+export type VbMeasurement = MeasurementOf<ViewportHelpers['mVb']>;
+export type VminMeasurement = MeasurementOf<ViewportHelpers['mVmin']>;
+export type VmaxMeasurement = MeasurementOf<ViewportHelpers['mVmax']>;

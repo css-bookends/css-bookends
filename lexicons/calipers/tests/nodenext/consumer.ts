@@ -12,7 +12,10 @@ import {
   r,
 } from '@css-bookends/css-calipers';
 import { colorFormats } from '@css-bookends/css-calipers/color';
-import { mPx } from '@css-bookends/css-calipers/measurements';
+import { createAbsoluteUnits } from '@css-bookends/css-calipers/units';
+
+// unit helpers come from their group factory now, not a bare export
+const { mPx } = createAbsoluteUnits();
 
 const px: string = m(8).css();
 const hex: string = color('#3366cc').hex().css();

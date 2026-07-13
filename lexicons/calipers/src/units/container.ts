@@ -1,23 +1,8 @@
 import type { MeasurementOf } from '../core';
-import { makeUnitHelperFromDefinition } from '../default';
 import {
   type CalipersFactoryConfig,
   createCalipers,
 } from '../factory';
-
-export const mCqw = makeUnitHelperFromDefinition('mCqw');
-export const mCqh = makeUnitHelperFromDefinition('mCqh');
-export const mCqi = makeUnitHelperFromDefinition('mCqi');
-export const mCqb = makeUnitHelperFromDefinition('mCqb');
-export const mCqmin = makeUnitHelperFromDefinition('mCqmin');
-export const mCqmax = makeUnitHelperFromDefinition('mCqmax');
-
-export type CqwMeasurement = MeasurementOf<typeof mCqw>;
-export type CqhMeasurement = MeasurementOf<typeof mCqh>;
-export type CqiMeasurement = MeasurementOf<typeof mCqi>;
-export type CqbMeasurement = MeasurementOf<typeof mCqb>;
-export type CqminMeasurement = MeasurementOf<typeof mCqmin>;
-export type CqmaxMeasurement = MeasurementOf<typeof mCqmax>;
 
 /** Factory for the container-query helpers, bound through `createCalipers`. */
 export const createContainerUnits = (
@@ -33,3 +18,15 @@ export const createContainerUnits = (
     mCqmax: core.makeUnitHelperFromDefinition('mCqmax'),
   };
 };
+
+type ContainerHelpers = ReturnType<typeof createContainerUnits>;
+export type CqwMeasurement = MeasurementOf<ContainerHelpers['mCqw']>;
+export type CqhMeasurement = MeasurementOf<ContainerHelpers['mCqh']>;
+export type CqiMeasurement = MeasurementOf<ContainerHelpers['mCqi']>;
+export type CqbMeasurement = MeasurementOf<ContainerHelpers['mCqb']>;
+export type CqminMeasurement = MeasurementOf<
+  ContainerHelpers['mCqmin']
+>;
+export type CqmaxMeasurement = MeasurementOf<
+  ContainerHelpers['mCqmax']
+>;

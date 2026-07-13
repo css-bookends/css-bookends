@@ -16,10 +16,11 @@
  */
 
 import {
-  color,
   type ColorObject,
-  mDeg,
+  createCalipersBundle,
 } from '@css-bookends/css-calipers';
+
+const { color, mDeg } = createCalipersBundle();
 
 // --- construct from a structured ColorObject ------------------------------------
 

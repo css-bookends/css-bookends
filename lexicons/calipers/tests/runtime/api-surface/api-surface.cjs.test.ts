@@ -29,6 +29,22 @@ const cjsUnitsResolution =
   await import('../../../dist/units/resolution.js');
 const cjsUnitsGrid = await import('../../../dist/units/grid.js');
 
+const groupFactoryNames = [
+  'createAbsoluteUnits',
+  'createAngleUnits',
+  'createContainerUnits',
+  'createFontRelativeUnits',
+  'createFrequencyUnits',
+  'createGridUnits',
+  'createPercentUnits',
+  'createResolutionUnits',
+  'createTimeUnits',
+  'createViewportUnits',
+  'createViewportDynamicUnits',
+  'createViewportLargeUnits',
+  'createViewportSmallUnits',
+] as const;
+
 describe('API surface (CJS)', () => {
   it('exposes expected core exports from the root entrypoint', () => {
     expect(cjsRoot).toHaveProperty('m');
@@ -38,86 +54,48 @@ describe('API surface (CJS)', () => {
     expect(typeof cjsRoot.assertUnit).toBe('function');
   });
 
-  it('exposes unit helpers via the units aggregator', () => {
-    expect(cjsUnits).toHaveProperty('mPercent');
-    expect(typeof cjsUnits.mPercent).toBe('function');
-
-    expect(cjsUnits).toHaveProperty('mPx');
-    expect(typeof cjsUnits.mPx).toBe('function');
-
-    expect(cjsUnits).toHaveProperty('mEm');
-    expect(typeof cjsUnits.mEm).toBe('function');
-
-    expect(cjsUnits).toHaveProperty('mVw');
-    expect(typeof cjsUnits.mVw).toBe('function');
-
-    expect(cjsUnits).toHaveProperty('mSvw');
-    expect(typeof cjsUnits.mSvw).toBe('function');
-
-    expect(cjsUnits).toHaveProperty('mLvw');
-    expect(typeof cjsUnits.mLvw).toBe('function');
-
-    expect(cjsUnits).toHaveProperty('mDvw');
-    expect(typeof cjsUnits.mDvw).toBe('function');
-
-    expect(cjsUnits).toHaveProperty('mCqw');
-    expect(typeof cjsUnits.mCqw).toBe('function');
-
-    expect(cjsUnits).toHaveProperty('mDeg');
-    expect(typeof cjsUnits.mDeg).toBe('function');
-
-    expect(cjsUnits).toHaveProperty('mS');
-    expect(typeof cjsUnits.mS).toBe('function');
-
-    expect(cjsUnits).toHaveProperty('mHz');
-    expect(typeof cjsUnits.mHz).toBe('function');
-
-    expect(cjsUnits).toHaveProperty('mDpi');
-    expect(typeof cjsUnits.mDpi).toBe('function');
-
-    expect(cjsUnits).toHaveProperty('mFr');
-    expect(typeof cjsUnits.mFr).toBe('function');
+  it('exposes the group factories via the units aggregator', () => {
+    const units = cjsUnits as Record<string, unknown>;
+    for (const name of groupFactoryNames) {
+      expect(units, name).toHaveProperty(name);
+      expect(typeof units[name]).toBe('function');
+    }
   });
 
-  it('exposes unit helpers via unit family subpaths', () => {
-    expect(cjsUnitsPercent).toHaveProperty('mPercent');
-    expect(typeof cjsUnitsPercent.mPercent).toBe('function');
-
-    expect(cjsUnitsAbsolute).toHaveProperty('mPx');
-    expect(typeof cjsUnitsAbsolute.mPx).toBe('function');
-
-    expect(cjsUnitsFontRelative).toHaveProperty('mEm');
-    expect(typeof cjsUnitsFontRelative.mEm).toBe('function');
-
-    expect(cjsUnitsViewport).toHaveProperty('mVw');
-    expect(typeof cjsUnitsViewport.mVw).toBe('function');
-
-    expect(cjsUnitsViewportSmall).toHaveProperty('mSvw');
-    expect(typeof cjsUnitsViewportSmall.mSvw).toBe('function');
-
-    expect(cjsUnitsViewportLarge).toHaveProperty('mLvw');
-    expect(typeof cjsUnitsViewportLarge.mLvw).toBe('function');
-
-    expect(cjsUnitsViewportDynamic).toHaveProperty('mDvw');
-    expect(typeof cjsUnitsViewportDynamic.mDvw).toBe('function');
-
-    expect(cjsUnitsContainer).toHaveProperty('mCqw');
-    expect(typeof cjsUnitsContainer.mCqw).toBe('function');
-
-    expect(cjsUnitsAngle).toHaveProperty('mDeg');
-    expect(typeof cjsUnitsAngle.mDeg).toBe('function');
-
-    expect(cjsUnitsTime).toHaveProperty('mS');
-    expect(typeof cjsUnitsTime.mS).toBe('function');
-
-    expect(cjsUnitsFrequency).toHaveProperty('mHz');
-    expect(typeof cjsUnitsFrequency.mHz).toBe('function');
-
-    expect(cjsUnitsResolution).toHaveProperty('mDpi');
-    expect(typeof cjsUnitsResolution.mDpi).toBe('function');
-
-    expect(cjsUnitsGrid).toHaveProperty('mFr');
-    expect(typeof cjsUnitsGrid.mFr).toBe('function');
+  it('exposes the group factory via each unit family subpath', () => {
+    expect(typeof cjsUnitsPercent.createPercentUnits).toBe(
+      'function',
+    );
+    expect(typeof cjsUnitsAbsolute.createAbsoluteUnits).toBe(
+      'function',
+    );
+    expect(typeof cjsUnitsFontRelative.createFontRelativeUnits).toBe(
+      'function',
+    );
+    expect(typeof cjsUnitsViewport.createViewportUnits).toBe(
+      'function',
+    );
+    expect(
+      typeof cjsUnitsViewportSmall.createViewportSmallUnits,
+    ).toBe('function');
+    expect(
+      typeof cjsUnitsViewportLarge.createViewportLargeUnits,
+    ).toBe('function');
+    expect(
+      typeof cjsUnitsViewportDynamic.createViewportDynamicUnits,
+    ).toBe('function');
+    expect(typeof cjsUnitsContainer.createContainerUnits).toBe(
+      'function',
+    );
+    expect(typeof cjsUnitsAngle.createAngleUnits).toBe('function');
+    expect(typeof cjsUnitsTime.createTimeUnits).toBe('function');
+    expect(typeof cjsUnitsFrequency.createFrequencyUnits).toBe(
+      'function',
+    );
+    expect(typeof cjsUnitsResolution.createResolutionUnits).toBe(
+      'function',
+    );
+    expect(typeof cjsUnitsGrid.createGridUnits).toBe('function');
   });
 
   it('exposes the full root runtime export map', () => {
@@ -128,7 +106,9 @@ describe('API surface (CJS)', () => {
       (key) => key !== '__esModule' && key !== 'default',
     );
 
-    const coreRuntimeKeys = [
+    // Factories + types + core builders only. The bare unit helpers and the
+    // percent guard/assert are gone (they come from the group factories now).
+    const expectedKeys = [
       'm',
       'r',
       'isMeasurement',
@@ -164,21 +144,7 @@ describe('API surface (CJS)', () => {
       'createFloat',
       'createRatio',
       'createCalipersBundle',
-      'createAbsoluteUnits',
-      'createAngleUnits',
-      'createContainerUnits',
-      'createFontRelativeUnits',
-      'createFrequencyUnits',
-      'createGridUnits',
-      'createPercentUnits',
-      'createResolutionUnits',
-      'createTimeUnits',
-      'createViewportUnits',
-      'createViewportDynamicUnits',
-      'createViewportLargeUnits',
-      'createViewportSmallUnits',
-      'isPercentMeasurement',
-      'assertPercentMeasurement',
+      ...groupFactoryNames,
       'getErrorConfig',
       'setErrorConfig',
       // colour value surface (re-exported from ./color)
@@ -191,18 +157,8 @@ describe('API surface (CJS)', () => {
       'parseColor',
       'resolveColor',
       'storeColor',
-    ];
-
-    const unitHelperKeys = Object.keys(
-      cjsRoot.measurementUnitMetadata,
-    );
-
-    const expectedKeys = [
-      ...coreRuntimeKeys,
-      ...unitHelperKeys,
     ].sort();
-    const actualKeys = rootKeys.sort();
 
-    expect(actualKeys).toEqual(expectedKeys);
+    expect(rootKeys.sort()).toEqual(expectedKeys);
   });
 });

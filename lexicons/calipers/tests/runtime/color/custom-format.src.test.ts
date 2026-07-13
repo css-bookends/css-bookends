@@ -11,7 +11,9 @@ import {
   createColor,
   defineColorSpace,
 } from '../../../src/color';
-import { mDeg } from '../../../src/units/angle';
+import { createAngleUnits } from '../../../src/units/angle';
+
+const { mDeg } = createAngleUnits();
 
 /*
  * GOAL B: a user-defined custom format (authored via `defineColorSpace`) must work

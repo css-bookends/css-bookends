@@ -1,23 +1,8 @@
 import type { MeasurementOf } from '../core';
-import { makeUnitHelperFromDefinition } from '../default';
 import {
   type CalipersFactoryConfig,
   createCalipers,
 } from '../factory';
-
-export const mDvw = makeUnitHelperFromDefinition('mDvw');
-export const mDvh = makeUnitHelperFromDefinition('mDvh');
-export const mDvi = makeUnitHelperFromDefinition('mDvi');
-export const mDvb = makeUnitHelperFromDefinition('mDvb');
-export const mDvmin = makeUnitHelperFromDefinition('mDvmin');
-export const mDvmax = makeUnitHelperFromDefinition('mDvmax');
-
-export type DvwMeasurement = MeasurementOf<typeof mDvw>;
-export type DvhMeasurement = MeasurementOf<typeof mDvh>;
-export type DviMeasurement = MeasurementOf<typeof mDvi>;
-export type DvbMeasurement = MeasurementOf<typeof mDvb>;
-export type DvminMeasurement = MeasurementOf<typeof mDvmin>;
-export type DvmaxMeasurement = MeasurementOf<typeof mDvmax>;
 
 /** Factory for the dynamic-viewport helpers, bound through `createCalipers`. */
 export const createViewportDynamicUnits = (
@@ -33,3 +18,25 @@ export const createViewportDynamicUnits = (
     mDvmax: core.makeUnitHelperFromDefinition('mDvmax'),
   };
 };
+
+type ViewportDynamicHelpers = ReturnType<
+  typeof createViewportDynamicUnits
+>;
+export type DvwMeasurement = MeasurementOf<
+  ViewportDynamicHelpers['mDvw']
+>;
+export type DvhMeasurement = MeasurementOf<
+  ViewportDynamicHelpers['mDvh']
+>;
+export type DviMeasurement = MeasurementOf<
+  ViewportDynamicHelpers['mDvi']
+>;
+export type DvbMeasurement = MeasurementOf<
+  ViewportDynamicHelpers['mDvb']
+>;
+export type DvminMeasurement = MeasurementOf<
+  ViewportDynamicHelpers['mDvmin']
+>;
+export type DvmaxMeasurement = MeasurementOf<
+  ViewportDynamicHelpers['mDvmax']
+>;

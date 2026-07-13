@@ -6,8 +6,17 @@
  * `culori` in the dependency graph. This is the standalone, minimal-footprint way to
  * use calipers when you want typed lengths / angles / etc. and nothing else.
  */
-import { m } from '@css-bookends/css-calipers/measurements';
-import { mRem, mVw } from '@css-bookends/css-calipers/units';
+import { createCalipers } from '@css-bookends/css-calipers/measurements';
+import {
+  createFontRelativeUnits,
+  createViewportUnits,
+} from '@css-bookends/css-calipers/units';
+
+// Colour-free: the measurement core + the unit-group factories, no bundle (which
+// would pull in the colour lexicon and culori).
+const { m } = createCalipers();
+const { mRem } = createFontRelativeUnits();
+const { mVw } = createViewportUnits();
 
 export const px = m(8).css(); // '8px'
 export const rem = mRem(1.5).css(); // '1.5rem'

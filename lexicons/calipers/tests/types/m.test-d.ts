@@ -5,11 +5,9 @@ import {
 } from 'tsd';
 
 import {
-  assertPercentMeasurement,
   createCalipersBundle,
   type IMeasurement,
   isMeasurement,
-  isPercentMeasurement,
   m,
   measurementMax,
   measurementMin,
@@ -20,8 +18,12 @@ import {
   type UnitGuard,
 } from '../../dist/index';
 
-// unit helpers now come from the bound bundle, not bare exports
-const { mPx, mPercent } = createCalipersBundle();
+// unit helpers and the percent guard/assert now come from the bound bundle
+const bundle = createCalipersBundle();
+const { mPx, mPercent, isPercentMeasurement } = bundle;
+// an assertion function must have an explicit type annotation to be called as one
+const assertPercentMeasurement: UnitAssertion<typeof mPercent> =
+  bundle.assertPercentMeasurement;
 
 const implicit = m(10);
 expectAssignable<IMeasurement<string>>(implicit);

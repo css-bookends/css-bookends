@@ -29,6 +29,22 @@ const esmUnitsResolution =
   await import('../../../dist/units/resolution.mjs');
 const esmUnitsGrid = await import('../../../dist/units/grid.mjs');
 
+const groupFactoryNames = [
+  'createAbsoluteUnits',
+  'createAngleUnits',
+  'createContainerUnits',
+  'createFontRelativeUnits',
+  'createFrequencyUnits',
+  'createGridUnits',
+  'createPercentUnits',
+  'createResolutionUnits',
+  'createTimeUnits',
+  'createViewportUnits',
+  'createViewportDynamicUnits',
+  'createViewportLargeUnits',
+  'createViewportSmallUnits',
+] as const;
+
 describe('API surface (ESM)', () => {
   it('exposes expected core exports from the root entrypoint', () => {
     expect(esmRoot).toHaveProperty('m');
@@ -38,94 +54,58 @@ describe('API surface (ESM)', () => {
     expect(typeof esmRoot.assertUnit).toBe('function');
   });
 
-  it('exposes unit helpers via the units aggregator', () => {
-    expect(esmUnits).toHaveProperty('mPercent');
-    expect(typeof esmUnits.mPercent).toBe('function');
-
-    expect(esmUnits).toHaveProperty('mPx');
-    expect(typeof esmUnits.mPx).toBe('function');
-
-    expect(esmUnits).toHaveProperty('mEm');
-    expect(typeof esmUnits.mEm).toBe('function');
-
-    expect(esmUnits).toHaveProperty('mVw');
-    expect(typeof esmUnits.mVw).toBe('function');
-
-    expect(esmUnits).toHaveProperty('mSvw');
-    expect(typeof esmUnits.mSvw).toBe('function');
-
-    expect(esmUnits).toHaveProperty('mLvw');
-    expect(typeof esmUnits.mLvw).toBe('function');
-
-    expect(esmUnits).toHaveProperty('mDvw');
-    expect(typeof esmUnits.mDvw).toBe('function');
-
-    expect(esmUnits).toHaveProperty('mCqw');
-    expect(typeof esmUnits.mCqw).toBe('function');
-
-    expect(esmUnits).toHaveProperty('mDeg');
-    expect(typeof esmUnits.mDeg).toBe('function');
-
-    expect(esmUnits).toHaveProperty('mS');
-    expect(typeof esmUnits.mS).toBe('function');
-
-    expect(esmUnits).toHaveProperty('mHz');
-    expect(typeof esmUnits.mHz).toBe('function');
-
-    expect(esmUnits).toHaveProperty('mDpi');
-    expect(typeof esmUnits.mDpi).toBe('function');
-
-    expect(esmUnits).toHaveProperty('mFr');
-    expect(typeof esmUnits.mFr).toBe('function');
+  it('exposes the group factories via the units aggregator', () => {
+    const units = esmUnits as Record<string, unknown>;
+    for (const name of groupFactoryNames) {
+      expect(units, name).toHaveProperty(name);
+      expect(typeof units[name]).toBe('function');
+    }
   });
 
-  it('exposes unit helpers via unit family subpaths', () => {
-    expect(esmUnitsPercent).toHaveProperty('mPercent');
-    expect(typeof esmUnitsPercent.mPercent).toBe('function');
-
-    expect(esmUnitsAbsolute).toHaveProperty('mPx');
-    expect(typeof esmUnitsAbsolute.mPx).toBe('function');
-
-    expect(esmUnitsFontRelative).toHaveProperty('mEm');
-    expect(typeof esmUnitsFontRelative.mEm).toBe('function');
-
-    expect(esmUnitsViewport).toHaveProperty('mVw');
-    expect(typeof esmUnitsViewport.mVw).toBe('function');
-
-    expect(esmUnitsViewportSmall).toHaveProperty('mSvw');
-    expect(typeof esmUnitsViewportSmall.mSvw).toBe('function');
-
-    expect(esmUnitsViewportLarge).toHaveProperty('mLvw');
-    expect(typeof esmUnitsViewportLarge.mLvw).toBe('function');
-
-    expect(esmUnitsViewportDynamic).toHaveProperty('mDvw');
-    expect(typeof esmUnitsViewportDynamic.mDvw).toBe('function');
-
-    expect(esmUnitsContainer).toHaveProperty('mCqw');
-    expect(typeof esmUnitsContainer.mCqw).toBe('function');
-
-    expect(esmUnitsAngle).toHaveProperty('mDeg');
-    expect(typeof esmUnitsAngle.mDeg).toBe('function');
-
-    expect(esmUnitsTime).toHaveProperty('mS');
-    expect(typeof esmUnitsTime.mS).toBe('function');
-
-    expect(esmUnitsFrequency).toHaveProperty('mHz');
-    expect(typeof esmUnitsFrequency.mHz).toBe('function');
-
-    expect(esmUnitsResolution).toHaveProperty('mDpi');
-    expect(typeof esmUnitsResolution.mDpi).toBe('function');
-
-    expect(esmUnitsGrid).toHaveProperty('mFr');
-    expect(typeof esmUnitsGrid.mFr).toBe('function');
+  it('exposes the group factory via each unit family subpath', () => {
+    expect(typeof esmUnitsPercent.createPercentUnits).toBe(
+      'function',
+    );
+    expect(typeof esmUnitsAbsolute.createAbsoluteUnits).toBe(
+      'function',
+    );
+    expect(typeof esmUnitsFontRelative.createFontRelativeUnits).toBe(
+      'function',
+    );
+    expect(typeof esmUnitsViewport.createViewportUnits).toBe(
+      'function',
+    );
+    expect(
+      typeof esmUnitsViewportSmall.createViewportSmallUnits,
+    ).toBe('function');
+    expect(
+      typeof esmUnitsViewportLarge.createViewportLargeUnits,
+    ).toBe('function');
+    expect(
+      typeof esmUnitsViewportDynamic.createViewportDynamicUnits,
+    ).toBe('function');
+    expect(typeof esmUnitsContainer.createContainerUnits).toBe(
+      'function',
+    );
+    expect(typeof esmUnitsAngle.createAngleUnits).toBe('function');
+    expect(typeof esmUnitsTime.createTimeUnits).toBe('function');
+    expect(typeof esmUnitsFrequency.createFrequencyUnits).toBe(
+      'function',
+    );
+    expect(typeof esmUnitsResolution.createResolutionUnits).toBe(
+      'function',
+    );
+    expect(typeof esmUnitsGrid.createGridUnits).toBe('function');
   });
 
   it('exposes the full root runtime export map', () => {
     const rootKeys = Object.keys(esmRoot).filter(
-      (key) => key !== '__esModule',
+      (key) => key !== '__esModule' && key !== 'default',
     );
 
-    const coreRuntimeKeys = [
+    // Factories + types + core builders only. The bare unit helpers and the
+    // percent guard/assert are gone (they come from the group factories now).
+    const expectedKeys = [
       'm',
       'r',
       'isMeasurement',
@@ -161,21 +141,7 @@ describe('API surface (ESM)', () => {
       'createFloat',
       'createRatio',
       'createCalipersBundle',
-      'createAbsoluteUnits',
-      'createAngleUnits',
-      'createContainerUnits',
-      'createFontRelativeUnits',
-      'createFrequencyUnits',
-      'createGridUnits',
-      'createPercentUnits',
-      'createResolutionUnits',
-      'createTimeUnits',
-      'createViewportUnits',
-      'createViewportDynamicUnits',
-      'createViewportLargeUnits',
-      'createViewportSmallUnits',
-      'isPercentMeasurement',
-      'assertPercentMeasurement',
+      ...groupFactoryNames,
       'getErrorConfig',
       'setErrorConfig',
       // colour value surface (re-exported from ./color)
@@ -188,21 +154,8 @@ describe('API surface (ESM)', () => {
       'parseColor',
       'resolveColor',
       'storeColor',
-    ];
-
-    const unitHelperKeys = Object.keys(
-      // measurementUnitMetadata is a runtime record of unit helpers
-      // and should align with the exported named helpers.
-      // We rely on it here to derive the full set of unit helper names.
-      esmRoot.measurementUnitMetadata,
-    );
-
-    const expectedKeys = [
-      ...coreRuntimeKeys,
-      ...unitHelperKeys,
     ].sort();
-    const actualKeys = rootKeys.sort();
 
-    expect(actualKeys).toEqual(expectedKeys);
+    expect(rootKeys.sort()).toEqual(expectedKeys);
   });
 });

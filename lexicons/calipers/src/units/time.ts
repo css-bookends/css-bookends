@@ -1,17 +1,8 @@
 import type { MeasurementOf } from '../core';
-import { makeUnitHelperFromDefinition } from '../default';
 import {
   type CalipersFactoryConfig,
   createCalipers,
 } from '../factory';
-
-export const mS = makeUnitHelperFromDefinition('mS');
-export const mMs = makeUnitHelperFromDefinition('mMs');
-
-export type SMeasurement = MeasurementOf<typeof mS>;
-export type MsMeasurement = MeasurementOf<typeof mMs>;
-
-export type TimeMeasurement = SMeasurement | MsMeasurement;
 
 /** Factory for the time helpers, bound through `createCalipers`. */
 export const createTimeUnits = (
@@ -23,3 +14,9 @@ export const createTimeUnits = (
     mMs: core.makeUnitHelperFromDefinition('mMs'),
   };
 };
+
+type TimeHelpers = ReturnType<typeof createTimeUnits>;
+export type SMeasurement = MeasurementOf<TimeHelpers['mS']>;
+export type MsMeasurement = MeasurementOf<TimeHelpers['mMs']>;
+
+export type TimeMeasurement = SMeasurement | MsMeasurement;

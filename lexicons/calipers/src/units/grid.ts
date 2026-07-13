@@ -1,13 +1,8 @@
 import type { MeasurementOf } from '../core';
-import { makeUnitHelperFromDefinition } from '../default';
 import {
   type CalipersFactoryConfig,
   createCalipers,
 } from '../factory';
-
-export const mFr = makeUnitHelperFromDefinition('mFr');
-
-export type FrMeasurement = MeasurementOf<typeof mFr>;
 
 /** Factory for the grid helpers, bound through `createCalipers`. */
 export const createGridUnits = (
@@ -18,3 +13,6 @@ export const createGridUnits = (
     mFr: core.makeUnitHelperFromDefinition('mFr'),
   };
 };
+
+type GridHelpers = ReturnType<typeof createGridUnits>;
+export type FrMeasurement = MeasurementOf<GridHelpers['mFr']>;

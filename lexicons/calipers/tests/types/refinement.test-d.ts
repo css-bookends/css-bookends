@@ -14,7 +14,6 @@ import {
   m,
   makeMeasurementRefinement,
   type MeasurementRefinement,
-  mPercent,
   nonNegative,
   type NonNegativeMeasurement,
   nonPositive,
@@ -22,6 +21,10 @@ import {
   type SmallerOrEqualToZeroBrand,
   type SmallerOrEqualToZeroMeasurement,
 } from '../../dist/index';
+import { createPercentUnits } from '../../dist/units/percent';
+
+// unit helpers now come from a bound factory, not bare exports
+const { mPercent } = createPercentUnits();
 
 // The built-ins are MeasurementRefinement objects over their constraint brand.
 expectAssignable<MeasurementRefinement<GreaterOrEqualToZeroBrand>>(

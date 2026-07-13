@@ -1,15 +1,8 @@
 import type { MeasurementOf } from '../core';
-import { makeUnitHelperFromDefinition } from '../default';
 import {
   type CalipersFactoryConfig,
   createCalipers,
 } from '../factory';
-
-export const mHz = makeUnitHelperFromDefinition('mHz');
-export const mKhz = makeUnitHelperFromDefinition('mKhz');
-
-export type HzMeasurement = MeasurementOf<typeof mHz>;
-export type KhzMeasurement = MeasurementOf<typeof mKhz>;
 
 /** Factory for the frequency helpers, bound through `createCalipers`. */
 export const createFrequencyUnits = (
@@ -21,3 +14,7 @@ export const createFrequencyUnits = (
     mKhz: core.makeUnitHelperFromDefinition('mKhz'),
   };
 };
+
+type FrequencyHelpers = ReturnType<typeof createFrequencyUnits>;
+export type HzMeasurement = MeasurementOf<FrequencyHelpers['mHz']>;
+export type KhzMeasurement = MeasurementOf<FrequencyHelpers['mKhz']>;

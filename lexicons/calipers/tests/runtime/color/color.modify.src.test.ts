@@ -2,7 +2,9 @@ import { converter, parse } from 'culori';
 import { describe, expect, it } from 'vitest';
 
 import { color, type ResolvedColor } from '../../../src/color';
-import { mDeg } from '../../../src/units/angle';
+import { createAngleUnits } from '../../../src/units/angle';
+
+const { mDeg } = createAngleUnits();
 
 /*
  * MODIFY step: the immutable modification algebra. Amounts are 0..1 fractions,

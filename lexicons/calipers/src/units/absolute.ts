@@ -1,25 +1,8 @@
 import type { MeasurementOf } from '../core';
-import { makeUnitHelperFromDefinition } from '../default';
 import {
   type CalipersFactoryConfig,
   createCalipers,
 } from '../factory';
-
-export const mPx = makeUnitHelperFromDefinition('mPx');
-export const mCm = makeUnitHelperFromDefinition('mCm');
-export const mMm = makeUnitHelperFromDefinition('mMm');
-export const mQ = makeUnitHelperFromDefinition('mQ');
-export const mIn = makeUnitHelperFromDefinition('mIn');
-export const mPc = makeUnitHelperFromDefinition('mPc');
-export const mPt = makeUnitHelperFromDefinition('mPt');
-
-export type PxMeasurement = MeasurementOf<typeof mPx>;
-export type CmMeasurement = MeasurementOf<typeof mCm>;
-export type MmMeasurement = MeasurementOf<typeof mMm>;
-export type QMeasurement = MeasurementOf<typeof mQ>;
-export type InMeasurement = MeasurementOf<typeof mIn>;
-export type PcMeasurement = MeasurementOf<typeof mPc>;
-export type PtMeasurement = MeasurementOf<typeof mPt>;
 
 /** Factory for the absolute-length helpers, bound through `createCalipers`. */
 export const createAbsoluteUnits = (
@@ -36,3 +19,12 @@ export const createAbsoluteUnits = (
     mPt: core.makeUnitHelperFromDefinition('mPt'),
   };
 };
+
+type AbsoluteHelpers = ReturnType<typeof createAbsoluteUnits>;
+export type PxMeasurement = MeasurementOf<AbsoluteHelpers['mPx']>;
+export type CmMeasurement = MeasurementOf<AbsoluteHelpers['mCm']>;
+export type MmMeasurement = MeasurementOf<AbsoluteHelpers['mMm']>;
+export type QMeasurement = MeasurementOf<AbsoluteHelpers['mQ']>;
+export type InMeasurement = MeasurementOf<AbsoluteHelpers['mIn']>;
+export type PcMeasurement = MeasurementOf<AbsoluteHelpers['mPc']>;
+export type PtMeasurement = MeasurementOf<AbsoluteHelpers['mPt']>;

@@ -7,10 +7,12 @@ import {
   inRange,
   m,
   makeUnitAssert,
-  mPx,
   nonNegative,
 } from '../../../src/index';
 import type { ErrorCode } from '../../../src/internal/errors';
+import { createAbsoluteUnits } from '../../../src/units/absolute';
+
+const { mPx } = createAbsoluteUnits();
 
 /*
  * Publish-readiness: ERROR-CODE CONSISTENCY.
