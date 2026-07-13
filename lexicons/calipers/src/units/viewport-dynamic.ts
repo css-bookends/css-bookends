@@ -1,5 +1,9 @@
 import type { MeasurementOf } from '../core';
 import { makeUnitHelperFromDefinition } from '../default';
+import {
+  type CalipersFactoryConfig,
+  createCalipers,
+} from '../factory';
 
 export const mDvw = makeUnitHelperFromDefinition('mDvw');
 export const mDvh = makeUnitHelperFromDefinition('mDvh');
@@ -14,3 +18,18 @@ export type DviMeasurement = MeasurementOf<typeof mDvi>;
 export type DvbMeasurement = MeasurementOf<typeof mDvb>;
 export type DvminMeasurement = MeasurementOf<typeof mDvmin>;
 export type DvmaxMeasurement = MeasurementOf<typeof mDvmax>;
+
+/** Factory for the dynamic-viewport helpers, bound through `createCalipers`. */
+export const createViewportDynamicUnits = (
+  config: CalipersFactoryConfig = {},
+) => {
+  const core = createCalipers(config);
+  return {
+    mDvw: core.makeUnitHelperFromDefinition('mDvw'),
+    mDvh: core.makeUnitHelperFromDefinition('mDvh'),
+    mDvi: core.makeUnitHelperFromDefinition('mDvi'),
+    mDvb: core.makeUnitHelperFromDefinition('mDvb'),
+    mDvmin: core.makeUnitHelperFromDefinition('mDvmin'),
+    mDvmax: core.makeUnitHelperFromDefinition('mDvmax'),
+  };
+};

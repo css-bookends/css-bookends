@@ -1,5 +1,9 @@
 import type { MeasurementOf } from '../core';
 import { makeUnitHelperFromDefinition } from '../default';
+import {
+  type CalipersFactoryConfig,
+  createCalipers,
+} from '../factory';
 
 export const mEm = makeUnitHelperFromDefinition('mEm');
 export const mRem = makeUnitHelperFromDefinition('mRem');
@@ -26,3 +30,24 @@ export type IcMeasurement = MeasurementOf<typeof mIc>;
 export type RicMeasurement = MeasurementOf<typeof mRic>;
 export type LhMeasurement = MeasurementOf<typeof mLh>;
 export type RlhMeasurement = MeasurementOf<typeof mRlh>;
+
+/** Factory for the font-relative helpers, bound through `createCalipers`. */
+export const createFontRelativeUnits = (
+  config: CalipersFactoryConfig = {},
+) => {
+  const core = createCalipers(config);
+  return {
+    mEm: core.makeUnitHelperFromDefinition('mEm'),
+    mRem: core.makeUnitHelperFromDefinition('mRem'),
+    mEx: core.makeUnitHelperFromDefinition('mEx'),
+    mRex: core.makeUnitHelperFromDefinition('mRex'),
+    mCh: core.makeUnitHelperFromDefinition('mCh'),
+    mRch: core.makeUnitHelperFromDefinition('mRch'),
+    mCap: core.makeUnitHelperFromDefinition('mCap'),
+    mRcap: core.makeUnitHelperFromDefinition('mRcap'),
+    mIc: core.makeUnitHelperFromDefinition('mIc'),
+    mRic: core.makeUnitHelperFromDefinition('mRic'),
+    mLh: core.makeUnitHelperFromDefinition('mLh'),
+    mRlh: core.makeUnitHelperFromDefinition('mRlh'),
+  };
+};
