@@ -20,7 +20,7 @@ import {
   m,
   makeMeasurementRefinement,
   nonPositive,
-} from '@css-bookends/css-calipers';
+} from './calipers_examples.ts';
 
 // --- nonPositive: the quartet ---------------------------------------------------
 

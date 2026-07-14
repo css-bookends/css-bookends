@@ -66,6 +66,16 @@ imported straight from its module.
 See `docs/factory-first-pattern.md` for the full rationale: why the factory is the
 one supported construction path, and the recommended bind-once-and-export pattern.
 
+**Examples and tests dogfood this (absolute).** Example files consume helpers the
+recommended way: bind a factory once (at the top of the file, or via a binding
+module) and use that, never a bare value-function. An example may break best
+practice ONLY when demonstrating that the inline / non-recommended path also works
+is the explicit POINT of that example, and it says so (e.g. the labelled inline `p`
+in `examples/bind-once/`). The test suite follows the same rule: default tests
+import their helpers from the shared bound codex in `tests/support/` (bind once,
+re-export), and only tests whose SUBJECT is a factory / its config, or the built
+artifact, construct their own instances.
+
 - **Factory naming: `publishBook<BookName>`.** A book's factory is named with the
   `publishBook` prefix plus the book's name, e.g. `publishBookColor`,
   `publishBookBorders`, `publishBookShadows`. The engine (`@css-bookends/self-publish`)

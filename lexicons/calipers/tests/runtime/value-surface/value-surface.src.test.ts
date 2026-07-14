@@ -3,7 +3,7 @@
 // Measurements keep `.getValue()` / `.getUnit()` as DEPRECATED aliases.
 import { describe, expect, it } from 'vitest';
 
-import { f, i, m } from '../../../src';
+import { f, i, m } from '../../support/calipers.src';
 
 describe('unified value surface: .value() + .unit()', () => {
   describe('measurement', () => {

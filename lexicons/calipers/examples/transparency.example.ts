@@ -15,7 +15,7 @@
  *                           hue, so a gradient toward it stays in-colour).
  */
 
-import { color } from '@css-bookends/css-calipers';
+import { color } from './calipers_examples.ts';
 
 // --- the config form: { transparent: mode } -------------------------------------
 

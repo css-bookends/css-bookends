@@ -6,7 +6,7 @@
  * resolved colour (values are immutable), so you navigate/modify and then render
  * through `.css()`.
  */
-import { color } from '@css-bookends/css-calipers';
+import { color } from './calipers_examples.ts';
 
 const brand = color('#3366cc');
 

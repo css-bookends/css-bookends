@@ -7,8 +7,9 @@
  * deeper discussion of this pattern and its trade-offs.
  */
 
-import { isMeasurement, m } from '@css-bookends/css-calipers';
 import type * as csstype from 'csstype';
+
+import { isMeasurement, m } from './calipers_examples.ts';
 
 type LineHeightInput = number | string;
 

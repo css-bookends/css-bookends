@@ -8,7 +8,7 @@
  * (not a string), so you always finish with `.css()`. (Opaque colours keep their
  * ` / 1` alpha slot unless `omitOpaqueAlpha` is set on the colour config.)
  */
-import { color } from '@css-bookends/css-calipers';
+import { color } from './calipers_examples.ts';
 
 const brand = color('#3366cc');
 

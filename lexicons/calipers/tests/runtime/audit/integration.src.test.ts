@@ -6,7 +6,7 @@ import {
   m,
   nonNegative,
   nonPositive,
-} from '../../../src/index';
+} from '../../support/calipers.src';
 
 /*
  * Publish-readiness: CROSS-MODULE INTEGRATION.

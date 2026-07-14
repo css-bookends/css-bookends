@@ -7,8 +7,9 @@
  * runner agnostic; you can adapt it to Jest, Mocha, or any other framework.
  */
 
-import { assertMatchingUnits, m } from '@css-bookends/css-calipers';
 import { describe, it } from 'vitest';
+
+import { assertMatchingUnits, m } from './calipers_examples.ts';
 
 // Pretend these spacing tokens come from a design token file or configuration
 // layer. The intent is a simple invariant: small <= large and both share units.

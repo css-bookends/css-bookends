@@ -17,7 +17,7 @@
  *
  */
 
-import { assertMatchingUnits, m } from '@css-bookends/css-calipers';
+import { assertMatchingUnits, m } from './calipers_examples.ts';
 
 // Pretend these tokens come from a design token file or configuration layer.
 // Two different components will enforce different invariants against the same

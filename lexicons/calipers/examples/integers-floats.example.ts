@@ -14,7 +14,7 @@ import {
   hardenFloat,
   hardenInteger,
   i,
-} from '@css-bookends/css-calipers';
+} from './calipers_examples.ts';
 
 // --- construction and render ----------------------------------------------------
 
