@@ -1,3 +1,5 @@
+/* eslint-disable no-restricted-syntax -- this file IS the examples binder: it binds
+   the codex once and re-exports the bound helpers; that single bind is the point. */
 // The single binding module for the examples (the RECOMMENDED pattern). Call the
 // codex bundle ONCE here with NO config (everything at its defaults), export the
 // bound helpers, and import from THIS file in every default example. Reach for a
