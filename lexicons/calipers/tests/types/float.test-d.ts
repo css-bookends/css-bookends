@@ -1,11 +1,7 @@
 import { expectAssignable, expectError } from 'tsd';
 
-import {
-  f,
-  hardenFloat,
-  type IFloat,
-  isFloat,
-} from '../../dist/index';
+import { type IFloat } from '../../dist/index';
+import { f, hardenFloat, isFloat } from '../support/calipers_tests.dist';
 
 const n = f(0.5);
 expectAssignable<IFloat>(n);

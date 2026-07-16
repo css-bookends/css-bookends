@@ -1,3 +1,5 @@
+/* eslint-disable no-restricted-syntax -- this whole file tests the createRatio
+   factory; every createRatio() call is the subject under test. */
 import { expectAssignable, expectType } from 'tsd';
 
 import {

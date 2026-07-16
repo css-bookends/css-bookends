@@ -1,9 +1,10 @@
+/* eslint-disable no-restricted-syntax, no-restricted-imports -- this whole file
+   verifies the EXPORT SURFACE: it imports bound values and calls the /units factories
+   from dist to assert they are exported. */
 import { expectAssignable } from 'tsd';
 
 import {
-  assertCondition,
   type CqwMeasurement,
-  createCalipersBundle,
   type DegMeasurement,
   type DpiMeasurement,
   type DvwMeasurement,
@@ -11,31 +12,21 @@ import {
   type ErrorCode,
   type ErrorConfig,
   type FrMeasurement,
-  getErrorConfig,
-  hasCssMethod,
   type HzMeasurement,
   type IMeasurement,
   type IRatio,
-  isMeasurement,
   isRatio,
   type LvwMeasurement,
-  m,
-  makeUnitAssert,
-  makeUnitGuard,
-  measurementMax,
-  measurementMin,
   type MeasurementOf,
   type MeasurementString,
   type MeasurementUnitCategory,
   type MeasurementUnitDefinition,
-  measurementUnitMetadata,
   normalizeRatio,
   parseRatio,
   r,
   type RatioParts,
   ratioToFloat,
   reduceRatio,
-  setErrorConfig,
   simplifyRatio,
   type SMeasurement,
   type SvwMeasurement,
@@ -46,29 +37,35 @@ import {
   type VwMeasurement,
 } from '../../dist/index';
 import * as Units from '../../dist/units';
-
-// The whole bound surface, plus the percent guard/assert, comes from the bundle.
-const bundle = createCalipersBundle();
-const {
-  mPx,
-  mPercent,
-  mEm,
-  mVw,
-  mSvw,
-  mLvw,
-  mDvw,
+import {
+  assertCondition,
+  assertPercentMeasurement,
+  getErrorConfig,
+  hasCssMethod,
+  isMeasurement,
+  isPercentMeasurement,
+  m,
+  makeUnitAssert,
+  makeUnitGuard,
   mCqw,
   mDeg,
-  mS,
-  mMs,
-  mHz,
   mDpi,
+  mDvw,
+  measurementMax,
+  measurementMin,
+  measurementUnitMetadata,
+  mEm,
   mFr,
-  isPercentMeasurement,
-} = bundle;
-// an assertion function must have an explicit type annotation to be called as one
-const assertPercentMeasurement: UnitAssertion<typeof mPercent> =
-  bundle.assertPercentMeasurement;
+  mHz,
+  mLvw,
+  mMs,
+  mPercent,
+  mPx,
+  mS,
+  mSvw,
+  mVw,
+  setErrorConfig,
+} from '../support/calipers_tests.dist';
 
 // Default unit (no explicit unit argument) is accepted from the public entry
 const apiImplicitMeasurement = m(10);

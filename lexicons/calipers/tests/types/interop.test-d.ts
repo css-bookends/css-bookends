@@ -1,13 +1,11 @@
 import { expectAssignable } from 'tsd';
 
 import {
-  f,
-  i,
   type IFloat,
   type IInteger,
   type IMeasurement,
-  m,
 } from '../../dist/index';
+import { f, i, m } from '../support/calipers_tests.dist';
 
 /*
  * #40 typed-scalar interop, at the TYPE level. The runtime tests (in

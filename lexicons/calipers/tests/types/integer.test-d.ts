@@ -1,11 +1,7 @@
 import { expectAssignable, expectError } from 'tsd';
 
-import {
-  hardenInteger,
-  i,
-  type IInteger,
-  isInteger,
-} from '../../dist/index';
+import { type IInteger } from '../../dist/index';
+import { hardenInteger, i, isInteger } from '../support/calipers_tests.dist';
 
 const n = i(5);
 expectAssignable<IInteger>(n);

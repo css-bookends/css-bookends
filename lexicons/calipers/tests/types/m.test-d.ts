@@ -5,25 +5,23 @@ import {
 } from 'tsd';
 
 import {
-  createCalipersBundle,
   type IMeasurement,
-  isMeasurement,
-  m,
-  measurementMax,
-  measurementMin,
   type MeasurementString,
   type PercentMeasurement,
   type PxMeasurement,
   type UnitAssertion,
   type UnitGuard,
 } from '../../dist/index';
-
-// unit helpers and the percent guard/assert now come from the bound bundle
-const bundle = createCalipersBundle();
-const { mPx, mPercent, isPercentMeasurement } = bundle;
-// an assertion function must have an explicit type annotation to be called as one
-const assertPercentMeasurement: UnitAssertion<typeof mPercent> =
-  bundle.assertPercentMeasurement;
+import {
+  assertPercentMeasurement,
+  isMeasurement,
+  isPercentMeasurement,
+  m,
+  measurementMax,
+  measurementMin,
+  mPercent,
+  mPx,
+} from '../support/calipers_tests.dist';
 
 const implicit = m(10);
 expectAssignable<IMeasurement<string>>(implicit);

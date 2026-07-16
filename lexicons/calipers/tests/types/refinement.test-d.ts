@@ -8,23 +8,22 @@ import {
   type GreaterOrEqualToZeroBrand,
   type GreaterOrEqualToZeroMeasurement,
   type IMeasurement,
-  inRange,
   type InRangeBrand,
   type InRangeMeasurement,
-  m,
-  makeMeasurementRefinement,
   type MeasurementRefinement,
-  nonNegative,
   type NonNegativeMeasurement,
-  nonPositive,
   type NonPositiveMeasurement,
   type SmallerOrEqualToZeroBrand,
   type SmallerOrEqualToZeroMeasurement,
 } from '../../dist/index';
-import { createPercentUnits } from '../../dist/units/percent';
-
-// unit helpers now come from a bound factory, not bare exports
-const { mPercent } = createPercentUnits();
+import {
+  inRange,
+  m,
+  makeMeasurementRefinement,
+  mPercent,
+  nonNegative,
+  nonPositive,
+} from '../support/calipers_tests.dist';
 
 // The built-ins are MeasurementRefinement objects over their constraint brand.
 expectAssignable<MeasurementRefinement<GreaterOrEqualToZeroBrand>>(
