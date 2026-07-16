@@ -789,10 +789,15 @@ export interface CustomColor<
   >;
 }
 
-/** The config a custom colour instance is built from. */
+/**
+ * The config a colour instance is built from: the custom format plugins PLUS the full
+ * colour config (`output` default, `strictness`, `transparent`, `omitOpaqueAlpha`) as the
+ * INSTANCE defaults. A per-call `color(input, config)` still overrides these. This is what
+ * makes colour a config-driven lexicon (no separate book).
+ */
 export interface CreateColorConfig<
   P extends ReadonlyArray<ColorFormatPlugin>,
-> {
+> extends Partial<ColorConfig> {
   /** the custom format plugins to register at the input + output edges. */
   formats: P;
 }
@@ -808,7 +813,13 @@ export const createColor = <
 >(
   config: CreateColorConfig<P>,
 ): CustomColor<P> => {
-  const plugins = config.formats;
+  const { formats: plugins, ...configOverrides } = config;
+  // the INSTANCE colour config: the built-in defaults with the factory config layered on
+  // top. Resolution order per render: per-call config -> this instance config -> defaults.
+  const instanceConfig: ColorConfig = {
+    ...defaultColorConfig,
+    ...configOverrides,
+  };
   // the per-instance registry: built-ins, then plugins (a plugin may shadow a built-in
   // name; built-in parse precedence is unaffected, it is consulted before plugins).
   const registry: Record<string, ColorSpaceDescriptor<string>> = {
@@ -830,8 +841,8 @@ export const createColor = <
     resolveWith(
       storeColor(instanceParse(input)),
       callConfig === undefined
-        ? defaultColorConfig
-        : { ...defaultColorConfig, ...callConfig },
+        ? instanceConfig
+        : { ...instanceConfig, ...callConfig },
       binding,
     ) as CustomResolvedColor<P>;
 
