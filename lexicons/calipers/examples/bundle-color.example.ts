@@ -7,11 +7,12 @@
  * the bound `color` helper: you configure the whole layer in one place and pull
  * `m` / `i` / `f` / `color` off a single instance.
  */
-import {
-  type ColorFormatPlugin,
-  type ColorString,
-  createCalipersBundle,
-} from '@css-bookends/css-calipers';
+import { createCalipersBundle } from '@css-bookends/css-calipers';
+
+import type {
+  ColorFormatPlugin,
+  ColorString,
+} from './calipers_examples.ts';
 
 // A tiny custom format that renders any colour as a fixed design token. (Illustrative
 // only; see custom-format.example.ts for a real parse + render plugin.)

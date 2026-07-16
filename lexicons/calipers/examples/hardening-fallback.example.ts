@@ -1,8 +1,4 @@
-import {
-  m,
-  nonNegative,
-  type NonNegativeMeasurement,
-} from '@css-bookends/css-calipers';
+import { m, nonNegative,type NonNegativeMeasurement } from './calipers_examples.ts';
 
 /**
  * Hardening a value that arrives from outside the type system (an API, CMS, or user

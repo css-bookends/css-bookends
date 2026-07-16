@@ -9,11 +9,13 @@
 import {
   createCalipersBundle,
   createInteger,
-  f,
-  hardenInteger,
-  i,
-  m,
 } from '@css-bookends/css-calipers';
+
+import { f, hardenInteger, i, m } from './calipers_examples.ts';
+
+// The default value-surface helpers above come from the shared binder. The
+// configured `createInteger` / `createCalipersBundle` calls below are the point of
+// the cascade demo, so those stay explicit.
 
 // --- m() accepts a plain number OR a typed scalar (i / f) -----------------------
 
@@ -53,7 +55,7 @@ export const breakThrows = (): string => {
 
 // 'ignore' / 'warn' instances drop the broken bound and proceed.
 const lenient = createCalipersBundle({
-  measurements: { hardening: 'ignore' },
+  measurement: { hardening: 'ignore' },
 });
 export const lenientResult = lenient.m(bounded(8)).multiply(2).css(); // '16px'
 

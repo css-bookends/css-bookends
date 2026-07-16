@@ -18,12 +18,13 @@
  * input edge too.
  */
 
-import {
-  type ColorConfig,
-  type ColorFormatPlugin,
-  type ColorString,
-} from '@css-bookends/css-calipers';
 import { type Color, formatRgb } from 'culori';
+
+import type {
+  ColorConfig,
+  ColorFormatPlugin,
+  ColorString,
+} from './calipers_examples.ts';
 
 // A custom format that renders a stored colour and tags it with a CSS custom property,
 // so its raw output (`var(--brand, <rgb>)`) is something a downstream tool might want

@@ -15,14 +15,14 @@
  * the literal `flamingo`.
  */
 
-import {
-  type ColorConfig,
-  type ColorFormatPlugin,
-  colorFormats,
-  type ColorString,
-  createColor,
-} from '@css-bookends/css-calipers';
+import { createColor } from '@css-bookends/css-calipers';
 import { type Color, converter, parse as parseCulori } from 'culori';
+
+import type {
+  ColorConfig,
+  ColorFormatPlugin,
+  ColorString,
+} from './calipers_examples.ts';
 
 // The same rgb conversion primitive the built-in `rgb` descriptor uses: convert the
 // stored OKLCH colour to rgb, then quantize to the nearest animal.
@@ -145,7 +145,7 @@ export const white = myColor('#ffffff').zoo.css(); // 'white'
 export const fromPriority = myColor('pink', {
   output: [
     zoo,
-    colorFormats.oklch,
+    myColor.formats.oklch,
   ],
 }).css(); // 'pink'
 

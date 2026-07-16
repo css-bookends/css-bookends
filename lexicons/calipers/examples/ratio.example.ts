@@ -2,7 +2,7 @@
  * Example-only file.
  *
  * Not part of the public API surface and not published. It demonstrates the `r()`
- * (ratio) primitive: a numerator over a denominator that renders as `n/d` CSS (for
+ * (ratio) lexicon: a numerator over a denominator that renders as `n/d` CSS (for
  * `aspect-ratio` and friends). One argument implies a denominator of 1; `{ simplify:
  * true }` reduces and drops a denominator of 1. The helper family
  * (`simplifyRatio` / `reduceRatio` / `normalizeRatio` / `parseRatio`) and the
@@ -19,7 +19,7 @@ import {
   r,
   reduceRatio,
   simplifyRatio,
-} from '@css-bookends/css-calipers';
+} from './calipers_examples.ts';
 
 // --- construction and render ----------------------------------------------------
 

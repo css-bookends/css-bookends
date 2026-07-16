@@ -6,6 +6,8 @@
  * `culori` in the dependency graph. This is the standalone, minimal-footprint way to
  * use calipers when you want typed lengths / angles / etc. and nothing else.
  */
+/* eslint-disable no-restricted-syntax -- this example demonstrates the colour-free
+   /measurements + /units subpaths; the create* calls are the point of the example. */
 import { createCalipers } from '@css-bookends/css-calipers/measurements';
 import {
   createFontRelativeUnits,

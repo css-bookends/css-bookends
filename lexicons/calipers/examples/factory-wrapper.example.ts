@@ -1,3 +1,5 @@
+/* eslint-disable no-restricted-syntax -- this example demonstrates building your own
+   binder and wrapping the factories; the create* calls are the point of the example. */
 import { createCalipersBundle } from '@css-bookends/css-calipers/codex';
 import { createCalipers } from '@css-bookends/css-calipers/factory';
 

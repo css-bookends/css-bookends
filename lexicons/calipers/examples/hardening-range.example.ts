@@ -1,8 +1,4 @@
-import {
-  inRange,
-  type InRangeMeasurement,
-  m,
-} from '@css-bookends/css-calipers';
+import { inRange, type InRangeMeasurement, m } from './calipers_examples.ts';
 
 /**
  * `inRange(min, max)` exposes its bounds in the type. A function can demand a measurement

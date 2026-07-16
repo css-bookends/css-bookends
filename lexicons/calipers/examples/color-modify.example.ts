@@ -15,12 +15,7 @@
  * format. Amounts are 0..1 fractions applied in OKLCH; hue uses a `DegMeasurement`.
  */
 
-import {
-  type ColorObject,
-  createCalipersBundle,
-} from '@css-bookends/css-calipers';
-
-const { color, mDeg } = createCalipersBundle();
+import { color, type ColorObject, mDeg } from './calipers_examples.ts';
 
 // --- construct from a structured ColorObject ------------------------------------
 
