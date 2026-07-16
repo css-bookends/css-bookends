@@ -184,11 +184,13 @@ lives on `CalipersFactoryConfig` (today `{ errorConfig? }`) and is reachable fro
 
 ### Colour is a Layer-1 calipers lexicon (locked 2026-06-27)
 
-The colour VALUE (parse/store/resolve, `colorFormats`, types) lives in `@css-bookends/css-calipers`
-already; the separate `@css-bookends/color` package is only a thin `publishBookColor` wrapper that
-re-exports it. When calipers splits, the colour lexicon becomes the `@css-bookends/color` package
-(a Layer-1 calipers lexicon, using `createColor`), and the thin wrapper is folded in. Colour is a
-LEXICON, not a Layer-2 book.
+The colour VALUE (parse/store/resolve, `colorFormats`, types) lives in `@css-bookends/css-calipers`.
+Colour is a LEXICON, not a Layer-2 book: its factory `createColor` is the config-driven entry,
+carrying the FULL colour config (`formats`, the default `output` format, `strictness`, `transparent`,
+`omitOpaqueAlpha`) and inheriting it through the cascade (compendium `calipers.color` → codex `color`
+key → `createColor` → `defaultColorConfig`). The old `@css-bookends/color` / `publishBookColor` BOOK
+wrapper is REMOVED — it added nothing once `createColor` carries the config; a book that needs colour
+self-instantiates it via `createColor(...)`.
 
 ---
 

@@ -32,7 +32,8 @@ favour of "lexicon".)
   inputs and no helpers at all.
 - Contains: the lexicons and the machinery they need, and nothing else. `m()`
   measurements, `r()` ratios, `i()` integers, `f()` floats, `color()` (the colour
-  VALUE lexicon, including custom-format registration), plus the hardening,
+  VALUE lexicon; its factory `createColor` carries the FULL colour config — formats, output,
+  strictness, transparent — so colour is config-driven like every lexicon and needs NO book), plus the hardening,
   refinement, and factory support those lexicons require.
 - MUST NOT contain: any helper, any book, any composed concern, or the `publishBook`
   / self-publish engine. No book code lives in calipers, ever.
@@ -208,6 +209,20 @@ goes through the factory). Each bundle ships its factory called at defaults, re-
 - bookends: the compendium's main entry is `publishCompendium` (the configurable path); the
   bound-at-defaults bundle is the `@css-bookends/compendium/defaults` SUBPATH, re-exporting
   every book + lexicon by name. (`compendium` REPLACED the old `shelf` / `publishShelf`.)
+
+## Rollout and commit priority (absolute)
+
+Roll changes out — and commit them — in priority order: **spec → enforcement → foundational →
+leaves → bookends**.
+
+- **Spec first.** Document the target (these rules / `docs/` / skills) BEFORE any code, per
+  test-first, and land it as its OWN commit once the user approves. Code never leads the spec.
+- **Then code, foundational → leaves.** The shared machinery everything depends on (the core, the
+  error / hardening infra, the bundle / cascade) before the individual lexicons / units that ride
+  on it; the bookends layer last.
+- **Descend when a step needs a lower level.** If a batch surfaces a deeper dependency, descend to
+  that level, complete and commit it, then bump back UP and continue the cycle.
+- Keep each commit green and reviewable; do not mix layers in one pile.
 
 ## Test-first, always (absolute)
 

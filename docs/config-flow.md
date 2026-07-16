@@ -25,7 +25,7 @@ publishCompendium(cfg)                        cfg = { global?, calipers?, color?
     │
     ├── createCalipers(measurement)  ─► m      { hardening, errorConfig, defaultUnit }
     ├── create*Units × 13  (unit-group keys) ─► mPx, mVh, mPercent, …   { hardening, errorConfig }
-    ├── createColor(color)            ─► color  { formats } + own `strictness`
+    ├── createColor(color)            ─► color  { formats, output, strictness, transparent, omitOpaqueAlpha }
     └── createScalarBundle({ global, integer, float, ratio })          ← SCALAR FAMILY level
         │   global = { hardening, errorConfig }  (merges under codex.global)
         │
@@ -79,7 +79,7 @@ own unit key  →  this level's global  →  the outer level's global  →  fact
 | `hardening` | `'ignore' \| 'warn' \| 'fail'` | compendium, codex, scalar | `m`, `i`, `f`, unit groups (the range-breach reaction) | `'fail'` |
 | `errorConfig.stackHints` | `'auto' \| 'on' \| 'off'` | compendium, codex, scalar | every error-producing factory: `m`, `i`, `f`, `r`, unit groups | `'auto'` |
 | `defaultUnit` | a CSS unit string | — (the codex `measurement` key only) | `m` | `'px'` |
-| `formats` | colour-format plugins | — (the codex `color` key only) | `color` | `[]` |
+| colour config | `formats`, `output`, `strictness`, `transparent`, `omitOpaqueAlpha` | — (the codex `color` key only) | `color` | `defaultColorConfig` |
 | `format` | `'object' \| 'string'` | — (per-book key today) | books | `'object'` |
 
 `hardening` and `errorConfig` are the two CROSS-CUTTING options: they live in every level's

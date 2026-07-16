@@ -49,6 +49,20 @@ detailed below.
 
 ## Global rules
 
+### Rollout and commit priority (absolute)
+
+Roll changes out — and commit them — in priority order: **spec → enforcement → foundational →
+leaves → bookends**.
+
+- **Spec first.** Document the target (these rules / `docs/` / skills) BEFORE any code, per
+  test-first, and land it as its OWN commit once the user approves. Code never leads the spec.
+- **Then code, foundational → leaves.** The shared machinery everything depends on (the core, the
+  error / hardening infra, the bundle / cascade) before the individual lexicons / units that ride on
+  it; the bookends layer last.
+- **Descend when a step needs a lower level.** If a batch surfaces a deeper dependency, descend to
+  that level, complete and commit it, then bump back UP and continue the cycle.
+- Keep each commit green and reviewable; do not mix layers in one pile.
+
 ### Source of truth: css-bookends drives; the calipers repo MIRRORS (absolute)
 
 This monorepo (css-bookends) is the SOURCE OF TRUTH for all calipers code, authored here under
