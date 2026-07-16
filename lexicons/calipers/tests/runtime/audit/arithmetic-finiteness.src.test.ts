@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { f } from '../../../src/float';
-import { type IMeasurement, m } from '../../../src/index';
-import { i } from '../../../src/integer';
-import { r } from '../../../src/ratio';
+import { type IMeasurement } from '../../../src/index';
+import { f, i, m, r } from '../../support/calipers_tests.src';
 
 /*
  * Publish-readiness pin: ARITHMETIC FINITENESS.

@@ -1,3 +1,5 @@
+/* eslint-disable no-restricted-syntax -- this whole file tests the scalar factories;
+   every create{Integer,Float,Ratio}() call is the subject under test. */
 // Direct behavioral tests for the scalar factories `createInteger` / `createFloat`.
 // They were only reached indirectly through the bundle cascade; the split turns each
 // into its own package, so drive the factory directly here: the configured hardening
@@ -73,5 +75,43 @@ describe('createRatio (direct factory behavior)', () => {
     const c = createRatio({});
     expect(c.isRatio(c.r(16, 9))).toBe(true);
     expect(c.isRatio(42)).toBe(false);
+  });
+});
+
+describe('scalar errorConfig (stackHints) rendering', () => {
+  const captureMessage = (fn: () => void): string => {
+    try {
+      fn();
+    } catch (error) {
+      return (error as Error).message;
+    }
+    return '';
+  };
+
+  it('createInteger renders a stack hint when stackHints is "on"', () => {
+    const c = createInteger({ errorConfig: { stackHints: 'on' } });
+    expect(
+      captureMessage(() => c.i(8, { min: 0, max: 10 }).multiply(2)),
+    ).toContain('stack=');
+  });
+
+  it('createInteger omits the stack hint when stackHints is "off"', () => {
+    const c = createInteger({ errorConfig: { stackHints: 'off' } });
+    expect(
+      captureMessage(() => c.i(8, { min: 0, max: 10 }).multiply(2)),
+    ).not.toContain('stack=');
+  });
+
+  it('createFloat renders a stack hint when stackHints is "on"', () => {
+    const c = createFloat({ errorConfig: { stackHints: 'on' } });
+    expect(
+      captureMessage(() => c.f(0.6, { min: 0, max: 1 }).multiply(2)),
+    ).toContain('stack=');
+  });
+
+  it('createRatio renders a stack hint on a structural error when stackHints is "on"', () => {
+    const c = createRatio({ errorConfig: { stackHints: 'on' } });
+    // a zero denominator is a structural ratio error (always throws).
+    expect(captureMessage(() => c.r(1, 0))).toContain('stack=');
   });
 });

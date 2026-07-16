@@ -1,7 +1,11 @@
 import { describe, expect, it } from 'vitest';
 
-import { f, hardenFloat, isFloat } from '../../../src/float';
-import { i } from '../../../src/integer';
+import {
+  f,
+  hardenFloat,
+  i,
+  isFloat,
+} from '../../support/calipers_tests.src';
 
 describe('Float primitive (src)', () => {
   it('creates a float and renders it', () => {

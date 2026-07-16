@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
+import type { ErrorCode } from '../../../src/internal/errors';
 import {
   assertCondition,
   assertUnit,
@@ -7,12 +8,9 @@ import {
   inRange,
   m,
   makeUnitAssert,
+  mPx,
   nonNegative,
-} from '../../../src/index';
-import type { ErrorCode } from '../../../src/internal/errors';
-import { createAbsoluteUnits } from '../../../src/units/absolute';
-
-const { mPx } = createAbsoluteUnits();
+} from '../../support/calipers_tests.src';
 
 /*
  * Publish-readiness: ERROR-CODE CONSISTENCY.

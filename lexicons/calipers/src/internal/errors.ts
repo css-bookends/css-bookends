@@ -51,8 +51,12 @@ export interface MeasurementMethodErrorContext {
 export interface HelperErrorContext {
   /** Operation name (for example, "assertMatchingUnits"). */
   operation: string;
-  /** Measurements involved in the helper call (for example, left/right, min/max). */
-  params: IMeasurement<string>[];
+  /**
+   * Measurements involved in the helper call (for example, left/right, min/max).
+   * Optional: the scalar surfaces (i / f / r) render through this same thrower but
+   * carry no measurement params.
+   */
+  params?: IMeasurement<string>[];
   /** Core human-readable description of what went wrong. */
   message: string;
   /** Optional caller-supplied context prefix. */
@@ -67,8 +71,9 @@ const DEFAULT_ERROR_CONFIG: Required<ErrorConfig> = {
   stackHints: 'auto',
 };
 
-let errorConfig: Required<ErrorConfig> = { ...DEFAULT_ERROR_CONFIG };
-
+// NO process-global error config exists (see docs/config-flow.md "The map"): the
+// cascade is the only path in. Every factory builds ONE per-instance store here and
+// throws through the helpers bound to it; there is no module-level config to read.
 export const createErrorConfigStore = (
   initial: ErrorConfig = {},
 ): ErrorConfigStore => {
@@ -83,13 +88,6 @@ export const createErrorConfigStore = (
     },
   };
 };
-
-export const setErrorConfig = (next: ErrorConfig): void => {
-  errorConfig = { ...errorConfig, ...next };
-};
-
-export const getErrorConfig = (): Required<ErrorConfig> =>
-  errorConfig;
 
 export const createErrorHelpers = (store: ErrorConfigStore) => {
   const getConfig = (): Required<ErrorConfig> =>
@@ -126,7 +124,25 @@ export const createErrorHelpers = (store: ErrorConfigStore) => {
       }),
     );
   };
-  return { throwMeasurementMethodError, throwHelperError };
+  // The SCALAR (i / f / r) thrower: the scalar + colour layers throw plain
+  // messages WITHOUT a `[code=...]` (see tests/runtime/audit/error-codes) — the
+  // message is already fully formed, so this only appends the optional
+  // `[stack=...]` block per the instance's resolved `stackHints` config.
+  const throwScalarError = (message: string): never => {
+    const includeStack = shouldIncludeStackHint(
+      undefined,
+      getConfig(),
+    );
+    const stackHint = includeStack
+      ? extractStackHint(new Error().stack)
+      : undefined;
+    throw new Error(`${message}${formatDetailBlock({ stackHint })}`);
+  };
+  return {
+    throwMeasurementMethodError,
+    throwHelperError,
+    throwScalarError,
+  };
 };
 
 const isProductionEnv = (): boolean => {
@@ -138,8 +154,8 @@ const isProductionEnv = (): boolean => {
 };
 
 const shouldIncludeStackHint = (
-  override?: boolean,
-  config: Required<ErrorConfig> = errorConfig,
+  override: boolean | undefined,
+  config: Required<ErrorConfig>,
 ): boolean => {
   if (override === false) return false;
   if (config.stackHints === 'off') return false;
@@ -186,34 +202,4 @@ const extractStackHint = (stack?: string): string | undefined => {
   );
   const hint = filtered[0] ?? lines[0];
   return hint.replace(/^at\s+/, '');
-};
-
-/** Throw an Error for a Measurement instance method using a structured context. */
-export const throwMeasurementMethodError = (
-  ctx: MeasurementMethodErrorContext,
-): never => {
-  const includeStack = shouldIncludeStackHint(ctx.includeStackHint);
-  const stackHint = includeStack
-    ? extractStackHint(new Error().stack)
-    : undefined;
-  throw new Error(
-    formatErrorMessage(ctx.operation, ctx.message, ctx.context, {
-      ...ctx.details,
-      stackHint,
-    }),
-  );
-};
-
-/** Throw an Error for a helper/free function using a structured context. */
-export const throwHelperError = (ctx: HelperErrorContext): never => {
-  const includeStack = shouldIncludeStackHint(ctx.includeStackHint);
-  const stackHint = includeStack
-    ? extractStackHint(new Error().stack)
-    : undefined;
-  throw new Error(
-    formatErrorMessage(ctx.operation, ctx.message, ctx.context, {
-      ...ctx.details,
-      stackHint,
-    }),
-  );
 };

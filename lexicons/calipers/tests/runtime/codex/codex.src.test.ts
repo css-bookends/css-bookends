@@ -1,3 +1,5 @@
+/* eslint-disable no-restricted-syntax -- this whole file tests the codex bundle
+   factory; every createCalipersBundle() call here is the subject under test. */
 // The codex config cascade: each unit (m / i / f) resolves a setting as
 // own keyed config -> bundle `global` -> factory default. Worked example: the
 // shared `hardening` reaction. The bundle must expose the CONFIGURED i / f / m,
@@ -5,6 +7,7 @@
 import { describe, expect, it } from 'vitest';
 
 import {
+  type CalipersBundle,
   type ColorFormatPlugin,
   type ColorString,
   hardenInteger,
@@ -18,7 +21,7 @@ describe('codex config cascade (own key -> global -> factory default)', () => {
     it('unit key wins over global', () => {
       const c = createCalipersBundle({
         global: { hardening: 'fail' },
-        measurements: { hardening: 'ignore' },
+        measurement: { hardening: 'ignore' },
       });
       expect(c.m(hardenedI()).multiply(2).css()).toBe('16px');
     });
@@ -196,5 +199,89 @@ describe('codex config cascade (own key -> global -> factory default)', () => {
         captureMessage(() => withoutHints.mVh(Number.NaN)),
       ).not.toContain('stack=');
     });
+  });
+});
+
+describe('codex errorConfig cascade (global -> unit key -> factory default)', () => {
+  const captureMessage = (fn: () => void): string => {
+    try {
+      fn();
+    } catch (error) {
+      return (error as Error).message;
+    }
+    return '';
+  };
+  // m core: divide-by-zero always throws through the instance error store, so it
+  // renders a stack hint iff the resolved errorConfig says so (independent of hardening).
+  const mError = (c: CalipersBundle): string =>
+    captureMessage(() => c.m(2, 'px').divide(0));
+
+  it('global.errorConfig applies to m when there is no unit key', () => {
+    const on = createCalipersBundle({
+      global: { errorConfig: { stackHints: 'on' } },
+    });
+    expect(mError(on)).toContain('stack=');
+    const off = createCalipersBundle({
+      global: { errorConfig: { stackHints: 'off' } },
+    });
+    expect(mError(off)).not.toContain('stack=');
+  });
+
+  it('the measurements key overrides global.errorConfig', () => {
+    const c = createCalipersBundle({
+      global: { errorConfig: { stackHints: 'on' } },
+      measurement: { errorConfig: { stackHints: 'off' } },
+    });
+    expect(mError(c)).not.toContain('stack=');
+  });
+
+  it('global.errorConfig reaches the unit-group helpers too', () => {
+    // `mVh(NaN)` passes a stack-hint override, so 'auto' already shows a stack;
+    // 'off' is the discriminating oracle (it suppresses despite the override).
+    const off = createCalipersBundle({
+      global: { errorConfig: { stackHints: 'off' } },
+    });
+    expect(captureMessage(() => off.mVh(Number.NaN))).not.toContain(
+      'stack=',
+    );
+  });
+
+  it('factory default (auto, no override -> no stack) when neither is set', () => {
+    expect(mError(createCalipersBundle())).not.toContain('stack=');
+  });
+
+  // The scalar family (i / f / r) is composed through createScalarBundle; the
+  // codex `global.errorConfig` must reach it, same as it reaches m + unit groups.
+  const iError = (c: CalipersBundle): string =>
+    captureMessage(() => c.i(8, { min: 0, max: 10 }).multiply(2));
+  const fError = (c: CalipersBundle): string =>
+    captureMessage(() => c.f(0.6, { min: 0, max: 1 }).multiply(2));
+  const rError = (c: CalipersBundle): string =>
+    captureMessage(() => c.r(1, 0));
+
+  it('global.errorConfig reaches i, f and r (the scalar family)', () => {
+    const on = createCalipersBundle({
+      global: { errorConfig: { stackHints: 'on' } },
+    });
+    expect(iError(on)).toContain('stack=');
+    expect(fError(on)).toContain('stack=');
+    expect(rError(on)).toContain('stack=');
+    const off = createCalipersBundle({
+      global: { errorConfig: { stackHints: 'off' } },
+    });
+    expect(iError(off)).not.toContain('stack=');
+    expect(fError(off)).not.toContain('stack=');
+    expect(rError(off)).not.toContain('stack=');
+  });
+
+  it('a scalar unit key overrides global.errorConfig', () => {
+    const c = createCalipersBundle({
+      global: { errorConfig: { stackHints: 'on' } },
+      integer: { errorConfig: { stackHints: 'off' } },
+    });
+    // integer key wins -> no stack; float / ratio fall back to global -> stack
+    expect(iError(c)).not.toContain('stack=');
+    expect(fError(c)).toContain('stack=');
+    expect(rError(c)).toContain('stack=');
   });
 });

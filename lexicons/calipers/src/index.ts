@@ -8,6 +8,13 @@ export {
   type CalipersBundleConfig,
   createCalipersBundle,
 } from './bundle';
+// The scalar FAMILY bundle (integer / float / ratio), the same pattern one level down.
+// The codex composes it; a consumer who wants only the scalars can bind it directly.
+export {
+  createScalarBundle,
+  type ScalarBundle,
+  type ScalarBundleConfig,
+} from './scalar-bundle';
 // The bare default-instance helpers (`m`, refinements, unit-helper builders,
 // error-config accessors) come from the single construction path in `./default`,
 // which assembles them via `createCalipers()` at its defaults.

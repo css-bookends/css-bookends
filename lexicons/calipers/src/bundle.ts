@@ -15,23 +15,16 @@ import {
   type CalipersInstance,
   createCalipers,
 } from './factory';
-import {
-  createFloat,
-  type FloatApi,
-  type FloatFactoryConfig,
-} from './float';
+import { type FloatApi, type FloatFactoryConfig } from './float';
 import { type Hardening } from './hardening';
 import {
-  createInteger,
   type IntegerApi,
   type IntegerFactoryConfig,
 } from './integer';
+import { type ErrorConfig } from './internal/errors';
 import { type UnitsApi } from './internal/unitsApi';
-import {
-  createRatio,
-  type RatioApi,
-  type RatioFactoryConfig,
-} from './ratio';
+import { type RatioApi, type RatioFactoryConfig } from './ratio';
+import { createScalarBundle } from './scalar-bundle';
 import {
   createAbsoluteUnits,
   createAngleUnits,
@@ -59,9 +52,11 @@ export interface CalipersBundleConfig<
   global?: {
     /** Hardening reaction for the measurement / scalar surface. */
     hardening?: Hardening;
+    /** Error-rendering config (e.g. stack hints) shared across every unit. */
+    errorConfig?: ErrorConfig;
   };
   /** forwarded to `createCalipers` (the measurement / scalar surface + units). */
-  measurements?: CalipersFactoryConfig;
+  measurement?: CalipersFactoryConfig;
   /** forwarded to `createInteger` (the integer surface). */
   integer?: IntegerFactoryConfig;
   /** forwarded to `createFloat` (the float surface). */
@@ -125,9 +120,10 @@ export const createCalipersBundle = <
   ): CalipersFactoryConfig => ({
     ...own,
     hardening: own?.hardening ?? config.global?.hardening,
+    errorConfig: own?.errorConfig ?? config.global?.errorConfig,
   });
   return {
-    ...createCalipers(cascade(config.measurements)),
+    ...createCalipers(cascade(config.measurement)),
     // The per-group factories are spread AFTER createCalipers so a group's own
     // config (e.g. viewport) wins over the base measurement instance's helpers.
     ...createAbsoluteUnits(cascade(config.absolute)),
@@ -143,14 +139,15 @@ export const createCalipersBundle = <
     ...createViewportDynamicUnits(cascade(config.viewportDynamic)),
     ...createViewportLargeUnits(cascade(config.viewportLarge)),
     ...createViewportSmallUnits(cascade(config.viewportSmall)),
-    ...createInteger({
-      hardening:
-        config.integer?.hardening ?? config.global?.hardening,
+    // the scalar family (integer / float / ratio) is composed through its own
+    // family bundle, same pattern one level down; it applies the identical
+    // own-key -> global -> default cascade internally.
+    ...createScalarBundle({
+      global: config.global,
+      integer: config.integer,
+      float: config.float,
+      ratio: config.ratio,
     }),
-    ...createFloat({
-      hardening: config.float?.hardening ?? config.global?.hardening,
-    }),
-    ...createRatio(config.ratio),
     // when no colour config is given, P is the default `readonly []` (no custom formats),
     // so an empty formats list is the right default; the double cast satisfies the generic.
     color: createColor(

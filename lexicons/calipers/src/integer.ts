@@ -4,6 +4,12 @@ import {
   type HardeningConfig,
   reactToBreach,
 } from './hardening';
+import {
+  createErrorConfigStore,
+  createErrorHelpers,
+  type ErrorConfig,
+  type ErrorConfigStore,
+} from './internal/errors';
 import { toPlainDecimal } from './internal/toPlainDecimal';
 import { type Scalar, toNumber } from './scalar';
 
@@ -20,6 +26,12 @@ export type IntegerOptions = IntegerConstraints & {
    * the historical behaviour). A bundle `global` can relax it.
    */
   hardening?: Hardening;
+  /**
+   * The per-instance error store this value throws through (carries the
+   * resolved `stackHints` config). Threaded by `createInteger`; the free `i()`
+   * export leaves it undefined and falls back to a default store.
+   */
+  errorStore?: ErrorConfigStore;
 };
 
 export interface IInteger {
@@ -52,22 +64,25 @@ class IntegerImpl implements IInteger {
   #max?: number;
   #context?: string;
   #hardening: Hardening;
+  #errorStore?: ErrorConfigStore;
 
   constructor(value: number, options: IntegerOptions = {}) {
     const { min, max, context } = options;
     const hardening = options.hardening ?? DEFAULT_HARDENING;
+    // Set the error store FIRST so every throw below renders through it.
+    this.#errorStore = options.errorStore;
     if (min !== undefined && max !== undefined && min > max) {
-      throw new Error(
+      this.#throwScalar(
         `i: min (${min}) must be <= max (${max})${suffix(context)}`,
       );
     }
     if (!Number.isFinite(value)) {
-      throw new Error(
+      this.#throwScalar(
         `i: expected a finite number (got ${value})${suffix(context)}`,
       );
     }
     if (!Number.isInteger(value)) {
-      throw new Error(
+      this.#throwScalar(
         `i: expected an integer (got ${value})${suffix(context)}`,
       );
     }
@@ -77,12 +92,14 @@ class IntegerImpl implements IInteger {
       reactToBreach(
         hardening,
         `i: ${value} is below the minimum ${min}${suffix(context)}`,
+        (message) => this.#throwScalar(message),
       );
     }
     if (max !== undefined && value > max) {
       reactToBreach(
         hardening,
         `i: ${value} is above the maximum ${max}${suffix(context)}`,
+        (message) => this.#throwScalar(message),
       );
     }
     this.#value = value;
@@ -92,12 +109,20 @@ class IntegerImpl implements IInteger {
     this.#hardening = hardening;
   }
 
+  // Throw a scalar error through this instance's error store (or a default one
+  // for the storeless free `i()` path), so `stackHints` decides the stack block.
+  #throwScalar(message: string): never {
+    const store = this.#errorStore ?? createErrorConfigStore();
+    return createErrorHelpers(store).throwScalarError(message);
+  }
+
   #options(): IntegerOptions {
     return {
       min: this.#min,
       max: this.#max,
       context: this.#context,
       hardening: this.#hardening,
+      errorStore: this.#errorStore,
     };
   }
 
@@ -156,13 +181,13 @@ class IntegerImpl implements IInteger {
   divide(divisor: Scalar): IInteger {
     const numeric = coerce(divisor);
     if (numeric === 0) {
-      throw new Error(
+      this.#throwScalar(
         `i: cannot divide ${this.#value} by zero${suffix(this.#context)}`,
       );
     }
     const result = this.#value / numeric;
     if (!Number.isFinite(result)) {
-      throw new Error(
+      this.#throwScalar(
         `i: non-finite result dividing ${this.#value} by ${numeric}${suffix(this.#context)}`,
       );
     }
@@ -171,7 +196,7 @@ class IntegerImpl implements IInteger {
 
   clamp(min: number, max: number): IInteger {
     if (min > max) {
-      throw new Error(
+      this.#throwScalar(
         `i.clamp: min (${min}) must be <= max (${max})`,
       );
     }
@@ -205,8 +230,14 @@ export const hardenInteger =
 export const isInteger = (value: unknown): value is IInteger =>
   value instanceof IntegerImpl;
 
-/** The integer factory config: the shared hardening slice (identical to m / f). */
-export type IntegerFactoryConfig = HardeningConfig;
+/**
+ * The integer factory config: the shared hardening slice (identical to m / f)
+ * plus the shared `errorConfig` (stack-hint rendering), so a `createInteger`
+ * instance builds its own per-instance error store like `createCalipers`.
+ */
+export type IntegerFactoryConfig = HardeningConfig & {
+  errorConfig?: ErrorConfig;
+};
 
 /** The bound integer surface a `createInteger` instance exposes. */
 export interface IntegerApi {
@@ -227,12 +258,16 @@ export const createInteger = (
   config: IntegerFactoryConfig = {},
 ): IntegerApi => {
   const hardening = config.hardening ?? DEFAULT_HARDENING;
+  // One per-instance error store, shared by every value this factory binds, so
+  // the resolved `stackHints` config reaches both `i` and `hardenInteger`.
+  const errorStore = createErrorConfigStore(config.errorConfig ?? {});
   return {
-    i: (value, options = {}) => i(value, { hardening, ...options }),
+    i: (value, options = {}) =>
+      i(value, { hardening, errorStore, ...options }),
     hardenInteger:
       (constraints = {}) =>
       (value, context) =>
-        i(value, { hardening, ...constraints, context }),
+        i(value, { hardening, errorStore, ...constraints, context }),
     isInteger,
   };
 };

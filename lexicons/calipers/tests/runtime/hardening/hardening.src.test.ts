@@ -9,15 +9,13 @@
 // exercise the new m behaviour.
 import { describe, expect, it, vi } from 'vitest';
 
+import { hardenFloat, hardenInteger, i } from '../../../src';
+import { createCalipers } from '../../../src/factory';
 import {
-  hardenFloat,
-  hardenInteger,
-  i,
   inRange,
   m,
   nonNegative,
-} from '../../../src';
-import { createCalipers } from '../../../src/factory';
+} from '../../support/calipers_tests.src';
 
 describe('hardening spectrum', () => {
   /* ---- i / f imperative hardening (existing behaviour; regression) ---- */

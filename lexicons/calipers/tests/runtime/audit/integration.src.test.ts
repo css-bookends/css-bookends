@@ -6,7 +6,7 @@ import {
   m,
   nonNegative,
   nonPositive,
-} from '../../support/calipers.src';
+} from '../../support/calipers_tests.src';
 
 /*
  * Publish-readiness: CROSS-MODULE INTEGRATION.
@@ -74,6 +74,7 @@ describe('measurement + refinement + arithmetic in one flow', () => {
 
 describe('the factory instance integrates the same way as the bare defaults', () => {
   it('a custom instance hardens and computes identically', () => {
+    // eslint-disable-next-line no-restricted-syntax -- the factory instance IS this block's subject
     const c = createCalipers();
     const safe = c.m(-3, 'em').absolute();
     expect(c.nonNegative.is(safe)).toBe(true);

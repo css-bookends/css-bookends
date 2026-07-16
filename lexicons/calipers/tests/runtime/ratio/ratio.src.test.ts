@@ -1,17 +1,25 @@
 import { describe, expect, it } from 'vitest';
 
-import { f, isFloat } from '../../../src/float';
-import { i, isInteger } from '../../../src/integer';
+/* eslint-disable no-restricted-imports -- this source-tier test's SUBJECT is the ratio
+   math statics (normalizeRatio / parseRatio / reduceRatio / simplifyRatio / ratioToFloat
+   / toFloat); per eslint.config.js such a subject test imports them from src directly. */
 import {
-  isRatio,
   normalizeRatio,
   parseRatio,
-  r,
   ratioToFloat,
   reduceRatio,
   simplifyRatio,
   toFloat,
 } from '../../../src/ratio';
+/* eslint-enable no-restricted-imports */
+import {
+  f,
+  i,
+  isFloat,
+  isInteger,
+  isRatio,
+  r,
+} from '../../support/calipers_tests.src';
 
 describe('Ratio helper (src)', () => {
   it('creates ratios with implied denominator', () => {

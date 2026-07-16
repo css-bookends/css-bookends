@@ -1,5 +1,11 @@
 import { f, type IFloat, isFloat } from './float';
 import { i, type IInteger, isInteger } from './integer';
+import {
+  createErrorConfigStore,
+  createErrorHelpers,
+  type ErrorConfig,
+  type ErrorConfigStore,
+} from './internal/errors';
 import { type Scalar, toNumber } from './scalar';
 
 /** A value `ratio` can consume: a raw number or a typed scalar primitive. */
@@ -43,22 +49,28 @@ class RatioImpl implements IRatio {
   #numeratorScalar: IInteger | IFloat;
   #denominatorScalar: IInteger | IFloat;
   #omitDenominatorWhenOne: boolean;
+  #errorStore?: ErrorConfigStore;
 
   constructor(
     numerator: RatioValue,
     denominator: RatioValue,
-    options: { omitDenominatorWhenOne?: boolean } = {},
+    options: {
+      omitDenominatorWhenOne?: boolean;
+      errorStore?: ErrorConfigStore;
+    } = {},
   ) {
+    // Set the error store FIRST so the structural throws below render through it.
+    this.#errorStore = options.errorStore;
     const numeratorValue = ratioValueToNumber(numerator);
     const denominatorValue = ratioValueToNumber(denominator);
     if (
       !Number.isFinite(numeratorValue) ||
       !Number.isFinite(denominatorValue)
     ) {
-      throw new Error('Ratio values must be finite numbers.');
+      this.#throwScalar('Ratio values must be finite numbers.');
     }
     if (denominatorValue === 0) {
-      throw new Error('Ratio denominator cannot be zero.');
+      this.#throwScalar('Ratio denominator cannot be zero.');
     }
     this.#numerator = numeratorValue;
     this.#denominator = denominatorValue;
@@ -66,6 +78,13 @@ class RatioImpl implements IRatio {
     this.#denominatorScalar = toScalar(denominator);
     this.#omitDenominatorWhenOne =
       options.omitDenominatorWhenOne ?? false;
+  }
+
+  // Throw a scalar error through this instance's error store (or a default one
+  // for the storeless free `r()` path), so `stackHints` decides the stack block.
+  #throwScalar(message: string): never {
+    const store = this.#errorStore ?? createErrorConfigStore();
+    return createErrorHelpers(store).throwScalarError(message);
   }
 
   numerator(): number {
@@ -85,11 +104,15 @@ class RatioImpl implements IRatio {
   }
 
   withNumerator(numerator: RatioValue): IRatio {
-    return new RatioImpl(numerator, this.#denominatorScalar);
+    return new RatioImpl(numerator, this.#denominatorScalar, {
+      errorStore: this.#errorStore,
+    });
   }
 
   withDenominator(denominator: RatioValue): IRatio {
-    return new RatioImpl(this.#numeratorScalar, denominator);
+    return new RatioImpl(this.#numeratorScalar, denominator, {
+      errorStore: this.#errorStore,
+    });
   }
 
   valueOf(): number {
@@ -112,6 +135,30 @@ type RatioCreateOptions = {
   simplify?: boolean;
 };
 
+// The shared `r` body. Both the free `r()` export and the `createRatio` factory
+// delegate here; the factory passes its per-instance `errorStore` so structural
+// throws render the resolved `stackHints`, while the free path leaves it unset.
+const makeRatio = (
+  numeratorOrDenominator: RatioValue,
+  denominatorOrOptions?: RatioValue | RatioCreateOptions,
+  options?: RatioCreateOptions,
+  errorStore?: ErrorConfigStore,
+): IRatio => {
+  let resolvedDenominator: RatioValue = 1;
+  let resolvedOptions = options;
+  if (isRatioValue(denominatorOrOptions)) {
+    resolvedDenominator = denominatorOrOptions;
+  } else if (denominatorOrOptions !== undefined) {
+    resolvedOptions = denominatorOrOptions;
+  }
+  const ratio = new RatioImpl(
+    numeratorOrDenominator,
+    resolvedDenominator,
+    { errorStore },
+  );
+  return resolvedOptions?.simplify ? simplifyRatio(ratio) : ratio;
+};
+
 export function r(
   denominator: RatioValue,
   options?: RatioCreateOptions,
@@ -126,18 +173,11 @@ export function r(
   denominatorOrOptions?: RatioValue | RatioCreateOptions,
   options?: RatioCreateOptions,
 ): IRatio {
-  let resolvedDenominator: RatioValue = 1;
-  let resolvedOptions = options;
-  if (isRatioValue(denominatorOrOptions)) {
-    resolvedDenominator = denominatorOrOptions;
-  } else if (denominatorOrOptions !== undefined) {
-    resolvedOptions = denominatorOrOptions;
-  }
-  const ratio = new RatioImpl(
+  return makeRatio(
     numeratorOrDenominator,
-    resolvedDenominator,
+    denominatorOrOptions,
+    options,
   );
-  return resolvedOptions?.simplify ? simplifyRatio(ratio) : ratio;
 }
 
 export const isRatio = (value: unknown): value is IRatio => {
@@ -154,11 +194,14 @@ export const isRatio = (value: unknown): value is IRatio => {
 };
 
 /**
- * The ratio factory config. Ratio is config-free today; the empty config keeps
- * `createRatio` shaped like `createInteger` / `createFloat` / `createColor` and
- * leaves room to add options later without changing call sites.
+ * The ratio factory config. Ratio has NO hardening (its throws are structural,
+ * not bound breaches), so it carries only the shared `errorConfig` (stack-hint
+ * rendering) — enough for `createRatio` to build its own per-instance error
+ * store like the other lexicon factories.
  */
-export type RatioFactoryConfig = Record<string, never>;
+export type RatioFactoryConfig = {
+  errorConfig?: ErrorConfig;
+};
 
 /** The bound ratio surface a `createRatio` instance exposes. */
 export interface RatioApi {
@@ -167,18 +210,31 @@ export interface RatioApi {
 }
 
 /**
- * The ratio FACTORY. Ratio carries no configuration today, so this returns the
- * ratio surface as-is; it exists for CONSISTENCY with the other lexicon
- * factories (`createCalipers` / `createInteger` / `createFloat` / `createColor`)
- * and to future-proof adding config without touching call sites. Mirrors
- * `createInteger`.
+ * The ratio FACTORY: build a per-instance error store from `config.errorConfig`
+ * and bind an `r` that threads it, so a `createRatio({ errorConfig })` instance
+ * renders `stackHints` on its structural throws. Mirrors `createInteger` /
+ * `createFloat` (minus hardening, which ratio has no bounds for).
  */
 export const createRatio = (
-  _config: RatioFactoryConfig = {},
-): RatioApi => ({
-  r,
-  isRatio,
-});
+  config: RatioFactoryConfig = {},
+): RatioApi => {
+  const errorStore = createErrorConfigStore(config.errorConfig ?? {});
+  const boundR = ((
+    numeratorOrDenominator: RatioValue,
+    denominatorOrOptions?: RatioValue | RatioCreateOptions,
+    options?: RatioCreateOptions,
+  ): IRatio =>
+    makeRatio(
+      numeratorOrDenominator,
+      denominatorOrOptions,
+      options,
+      errorStore,
+    )) as typeof r;
+  return {
+    r: boundR,
+    isRatio,
+  };
+};
 
 export const parseRatio = (
   value: number | string | IRatio | IInteger | IFloat,

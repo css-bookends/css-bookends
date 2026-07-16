@@ -1,3 +1,5 @@
+/* eslint-disable no-restricted-syntax -- this whole file tests the per-group unit
+   factories; every create*Units() call is the subject under test. */
 // Per-group unit factories. Each existing units/<group> module now also exposes a
 // create<Group>Units factory that binds that group's helpers through createCalipers,
 // so a consumer can construct them from config. The bare helpers still exist for now

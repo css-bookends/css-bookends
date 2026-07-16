@@ -64,11 +64,19 @@ export const describeBound = (c: Constraints): string => {
  * React to a broken bound per the mode. The `i` / `f`-side helper: `fail`
  * throws a plain `Error`, `warn` logs, `ignore` is a no-op. (`m` uses its own
  * coded-error infra for `fail` but the same `Hardening` type.)
+ *
+ * `onFail` lets the caller route the `fail` throw through its own per-instance
+ * error store (so the resolved `stackHints` config can append a `[stack=...]`
+ * block); when omitted the throw is a plain `Error`, unchanged.
  */
 export const reactToBreach = (
   mode: Hardening,
   message: string,
+  onFail?: (message: string) => never,
 ): void => {
-  if (mode === 'fail') throw new Error(message);
+  if (mode === 'fail') {
+    if (onFail) onFail(message);
+    throw new Error(message);
+  }
   if (mode === 'warn') console.warn(message);
 };

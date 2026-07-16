@@ -5,6 +5,12 @@ import {
   reactToBreach,
 } from './hardening';
 import { i, type IInteger } from './integer';
+import {
+  createErrorConfigStore,
+  createErrorHelpers,
+  type ErrorConfig,
+  type ErrorConfigStore,
+} from './internal/errors';
 import { toPlainDecimal } from './internal/toPlainDecimal';
 import { type Scalar, toNumber } from './scalar';
 
@@ -21,6 +27,12 @@ export type FloatOptions = FloatConstraints & {
    * the historical behaviour). A bundle `global` can relax it.
    */
   hardening?: Hardening;
+  /**
+   * The per-instance error store this value throws through (carries the
+   * resolved `stackHints` config). Threaded by `createFloat`; the free `f()`
+   * export leaves it undefined and falls back to a default store.
+   */
+  errorStore?: ErrorConfigStore;
 };
 
 export interface IFloat {
@@ -53,17 +65,20 @@ class FloatImpl implements IFloat {
   #max?: number;
   #context?: string;
   #hardening: Hardening;
+  #errorStore?: ErrorConfigStore;
 
   constructor(value: number, options: FloatOptions = {}) {
     const { min, max, context } = options;
     const hardening = options.hardening ?? DEFAULT_HARDENING;
+    // Set the error store FIRST so every throw below renders through it.
+    this.#errorStore = options.errorStore;
     if (min !== undefined && max !== undefined && min > max) {
-      throw new Error(
+      this.#throwScalar(
         `f: min (${min}) must be <= max (${max})${suffix(context)}`,
       );
     }
     if (!Number.isFinite(value)) {
-      throw new Error(
+      this.#throwScalar(
         `f: expected a finite number (got ${value})${suffix(context)}`,
       );
     }
@@ -73,12 +88,14 @@ class FloatImpl implements IFloat {
       reactToBreach(
         hardening,
         `f: ${value} is below the minimum ${min}${suffix(context)}`,
+        (message) => this.#throwScalar(message),
       );
     }
     if (max !== undefined && value > max) {
       reactToBreach(
         hardening,
         `f: ${value} is above the maximum ${max}${suffix(context)}`,
+        (message) => this.#throwScalar(message),
       );
     }
     this.#value = value;
@@ -88,12 +105,20 @@ class FloatImpl implements IFloat {
     this.#hardening = hardening;
   }
 
+  // Throw a scalar error through this instance's error store (or a default one
+  // for the storeless free `f()` path), so `stackHints` decides the stack block.
+  #throwScalar(message: string): never {
+    const store = this.#errorStore ?? createErrorConfigStore();
+    return createErrorHelpers(store).throwScalarError(message);
+  }
+
   #options(): FloatOptions {
     return {
       min: this.#min,
       max: this.#max,
       context: this.#context,
       hardening: this.#hardening,
+      errorStore: this.#errorStore,
     };
   }
 
@@ -154,13 +179,13 @@ class FloatImpl implements IFloat {
   divide(divisor: Scalar): IFloat {
     const numeric = coerce(divisor);
     if (numeric === 0) {
-      throw new Error(
+      this.#throwScalar(
         `f: cannot divide ${this.#value} by zero${suffix(this.#context)}`,
       );
     }
     const result = this.#value / numeric;
     if (!Number.isFinite(result)) {
-      throw new Error(
+      this.#throwScalar(
         `f: non-finite result dividing ${this.#value} by ${numeric}${suffix(this.#context)}`,
       );
     }
@@ -169,7 +194,7 @@ class FloatImpl implements IFloat {
 
   clamp(min: number, max: number): IFloat {
     if (min > max) {
-      throw new Error(
+      this.#throwScalar(
         `f.clamp: min (${min}) must be <= max (${max})`,
       );
     }
@@ -199,8 +224,14 @@ export const hardenFloat =
 export const isFloat = (value: unknown): value is IFloat =>
   value instanceof FloatImpl;
 
-/** The float factory config: the shared hardening slice (identical to m / i). */
-export type FloatFactoryConfig = HardeningConfig;
+/**
+ * The float factory config: the shared hardening slice (identical to m / i)
+ * plus the shared `errorConfig` (stack-hint rendering), so a `createFloat`
+ * instance builds its own per-instance error store like `createCalipers`.
+ */
+export type FloatFactoryConfig = HardeningConfig & {
+  errorConfig?: ErrorConfig;
+};
 
 /** The bound float surface a `createFloat` instance exposes. */
 export interface FloatApi {
@@ -221,12 +252,16 @@ export const createFloat = (
   config: FloatFactoryConfig = {},
 ): FloatApi => {
   const hardening = config.hardening ?? DEFAULT_HARDENING;
+  // One per-instance error store, shared by every value this factory binds, so
+  // the resolved `stackHints` config reaches both `f` and `hardenFloat`.
+  const errorStore = createErrorConfigStore(config.errorConfig ?? {});
   return {
-    f: (value, options = {}) => f(value, { hardening, ...options }),
+    f: (value, options = {}) =>
+      f(value, { hardening, errorStore, ...options }),
     hardenFloat:
       (constraints = {}) =>
       (value, context) =>
-        f(value, { hardening, ...constraints, context }),
+        f(value, { hardening, errorStore, ...constraints, context }),
     isFloat,
   };
 };

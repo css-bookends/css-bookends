@@ -1,3 +1,5 @@
+/* eslint-disable no-restricted-syntax -- this shared harness exercises the passed-in
+   factory (factory.createCalipers()); those calls are the whole subject under test. */
 import { describe, expect, it } from 'vitest';
 
 type FactoryApi = {
