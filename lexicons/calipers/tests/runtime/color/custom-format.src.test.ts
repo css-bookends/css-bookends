@@ -3,17 +3,13 @@ import { converter, parse as parseCulori } from 'culori';
 import { describe, expect, it } from 'vitest';
 
 import {
-  color,
   type ColorConfig,
   type ColorFormatPlugin,
-  colorFormats,
   type ColorString,
   createColor,
   defineColorSpace,
 } from '../../../src/color';
-import { createAngleUnits } from '../../../src/units/angle';
-
-const { mDeg } = createAngleUnits();
+import { color, mDeg } from '../../support/calipers_tests.src';
 
 /*
  * GOAL B: a user-defined custom format (authored via `defineColorSpace`) must work
@@ -98,7 +94,7 @@ describe('custom format — escalation reads the custom descriptor fidelity', ()
       color('#3366cc', {
         output: [
           rgbPercent,
-          colorFormats.oklch,
+          color.formats.oklch,
         ],
       }).css(),
     ).toBe('rgb(20% 40% 80%)');
@@ -109,7 +105,7 @@ describe('custom format — escalation reads the custom descriptor fidelity', ()
       color('#3366cc80', {
         output: [
           rgbPercent,
-          colorFormats.oklch,
+          color.formats.oklch,
         ],
       }).css(),
     ).toMatch(/^oklch\(.+ \/ 0\.502\)$/);
@@ -219,7 +215,7 @@ describe('custom format — a whimsical "zoo" colour format proves the foundatio
       color('pink', {
         output: [
           zoo,
-          colorFormats.oklch,
+          color.formats.oklch,
         ],
       }).css(),
     ).toBe('pink');
@@ -263,7 +259,7 @@ describe('custom format — zoo as a full INPUT + OUTPUT plugin (round trip)', (
       myColor('pink', {
         output: [
           zoo,
-          colorFormats.oklch,
+          color.formats.oklch,
         ],
       }).css(),
     ).toBe('pink');
@@ -284,12 +280,12 @@ describe('custom format — zoo as a full INPUT + OUTPUT plugin (round trip)', (
 
   it('the per-instance registry exposes built-ins plus the plugin', () => {
     expect(myColor.formats.zoo).toBe(zoo);
-    expect(myColor.formats.hex).toBe(colorFormats.hex);
+    expect(myColor.formats.hex).toBe(color.formats.hex);
   });
 });
 
 /*
- * #26 + #27: a custom-format `createColor` instance is the SAME colour primitive at
+ * #26 + #27: a custom-format `createColor` instance is the SAME colour lexicon at
  * the edges, so it must carry the WHOLE colour surface, not just `.formatAs` / `.zoo`
  * / `.css()`. A custom-parsed input normalizes to the canonical OKLCH store, so every
  * modify (`darken`, `mix`, `setHue`, `alpha`, `transparentAs`) and every built-in

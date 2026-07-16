@@ -1,6 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 
-import { color, colorFormats } from '../../../src/color';
+import { color } from '../../support/calipers_tests.src';
 
 /*
  * OUTPUT step (Part 3): formats + `.css()`. Default is rgba with the alpha slot always
@@ -55,9 +55,9 @@ describe('color output — selectors and named format selectors', () => {
 
 describe('color output — config binds the default format', () => {
   it('per-call config overrides the default output', () => {
-    expect(color('#3366cc', { output: colorFormats.hex }).css()).toBe(
-      '#3366cc',
-    );
+    expect(
+      color('#3366cc', { output: color.formats.hex }).css(),
+    ).toBe('#3366cc');
   });
 });
 

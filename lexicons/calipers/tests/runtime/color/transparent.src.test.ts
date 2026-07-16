@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { color } from '../../../src/color';
+import { color } from '../../support/calipers_tests.src';
 
 /*
  * GOAL C: fully-transparent (alpha 0) rendering policy. The default ladder is

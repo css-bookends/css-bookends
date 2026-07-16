@@ -1,7 +1,7 @@
 import { describe, expectTypeOf, it } from 'vitest';
 
 import type { ColorString } from '../../../src/color/formats';
-import { color } from '../../support/calipers.src';
+import { color } from '../../support/calipers_tests.src';
 
 /**
  * Selector hardening: a specific format selector hardens `.css()` to that format's

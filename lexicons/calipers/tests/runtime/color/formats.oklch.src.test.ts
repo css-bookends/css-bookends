@@ -1,13 +1,13 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  color,
   type ColorInput,
   defaultColorConfig,
   parseColor,
   storeColor,
 } from '../../../src/color';
 import { oklch } from '../../../src/color/formats/oklch/oklch';
+import { color } from '../../support/calipers_tests.src';
 
 /**
  * The oklch format descriptor. Two things: its fallback metadata, and that its

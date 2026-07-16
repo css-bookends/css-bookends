@@ -1,10 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  color as colorValue,
-  colorFormats,
-  type ColorInput,
-} from '../../../src/color';
+import { type ColorInput } from '../../../src/color';
+import { color as colorValue } from '../../support/calipers_tests.src';
 
 /**
  * Output escalation: when `output` is a priority list, `.css()` emits the FIRST
@@ -15,17 +12,17 @@ import {
 
 // The planned default ladder (hex first), as an explicit config.
 const PRIORITY = [
-  colorFormats.hex,
-  colorFormats.rgb,
-  colorFormats.hexAlpha,
-  colorFormats.rgba,
-  colorFormats.hsl,
-  colorFormats.hwb,
-  colorFormats.displayP3,
-  colorFormats.lab,
-  colorFormats.lch,
-  colorFormats.oklab,
-  colorFormats.oklch,
+  colorValue.formats.hex,
+  colorValue.formats.rgb,
+  colorValue.formats.hexAlpha,
+  colorValue.formats.rgba,
+  colorValue.formats.hsl,
+  colorValue.formats.hwb,
+  colorValue.formats.displayP3,
+  colorValue.formats.lab,
+  colorValue.formats.lch,
+  colorValue.formats.oklab,
+  colorValue.formats.oklch,
 ];
 // Bind the explicit priority-list config, mirroring the old factory-bound book.
 const color = (input: ColorInput) =>
@@ -52,7 +49,9 @@ describe('output escalation — emit the simplest faithful format', () => {
 
   it('a single-format config does not escalate', () => {
     expect(
-      colorValue('#3366cc', { output: colorFormats.rgba }).css(),
+      colorValue('#3366cc', {
+        output: colorValue.formats.rgba,
+      }).css(),
     ).toBe('rgba(51, 102, 204, 1)');
   });
 });

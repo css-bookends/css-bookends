@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
-import { color, parseColor, type Store } from '../../../src/color';
+import { parseColor, type Store } from '../../../src/color';
+import { color } from '../../support/calipers_tests.src';
 
 /*
  * INPUT step (Part 1 of the color book): every `make` form must parse into the

@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
 import {
-  color,
   type ColorInput,
   defaultColorConfig,
   parseColor,
@@ -21,6 +20,7 @@ import type {
   ColorSpaceDescriptor,
   Gamut,
 } from '../../../src/color/formats/types';
+import { color } from '../../support/calipers_tests.src';
 
 /**
  * Per-format descriptor coverage: each descriptor's `render` must match the book's

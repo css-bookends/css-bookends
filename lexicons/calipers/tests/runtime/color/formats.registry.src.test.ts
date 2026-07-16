@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 
 import type { FormatName } from '../../../src/color';
+// eslint-disable-next-line no-restricted-imports -- this file tests the colorFormats registry itself (the registry IS its subject)
 import { colorFormats } from '../../../src/color/formats';
 
 /**

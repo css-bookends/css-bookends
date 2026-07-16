@@ -8,8 +8,6 @@ import {
 import { describe, expect, it } from 'vitest';
 
 import {
-  color,
-  colorFormats,
   type ColorInput,
   type ColorObject,
   type ColorSpace,
@@ -17,9 +15,9 @@ import {
   parseColor,
   storeColor,
 } from '../../../src/color';
-import { createAngleUnits } from '../../../src/units/angle';
-
-const { mDeg } = createAngleUnits();
+// eslint-disable-next-line no-restricted-imports -- this file enumerates the built-in format CATALOG (every descriptor) for emit-parity; that static catalog is its subject, and it needs the precise CssFormat types the widened per-instance color.formats does not yet carry
+import { colorFormats } from '../../../src/color';
+import { color, mDeg } from '../../support/calipers_tests.src';
 
 /*
  * The color book's coverage MATRIX (from color-coverage.md + the modification surface).

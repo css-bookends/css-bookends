@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { color } from '../../support/calipers.src';
+import { color } from '../../support/calipers_tests.src';
 
 /*
  * The SPECIAL (symbolic) color words: keywords with no fixed value. Separate suite

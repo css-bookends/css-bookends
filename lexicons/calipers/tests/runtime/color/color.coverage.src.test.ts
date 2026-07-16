@@ -1,13 +1,12 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import {
-  color,
-  colorFormats,
   type ColorInput,
   defaultColorConfig,
   parseColor,
   resolve as resolveColor,
 } from '../../../src/color';
+import { color } from '../../support/calipers_tests.src';
 
 /*
  * Targeted branch coverage for the colour engine paths the matrix / modify suites do
@@ -96,8 +95,8 @@ describe('color — escalation fallback (no format fits)', () => {
     // so chooseFormat returns the last entry (rgb), which then clamps to fit.
     const out = color('oklch(0.7 0.37 150)', {
       output: [
-        colorFormats.hex,
-        colorFormats.rgb,
+        color.formats.hex,
+        color.formats.rgb,
       ],
       // silence the clamp violation so we observe the format choice, not a throw.
       strictness: 'silent',
@@ -120,11 +119,11 @@ describe('color — asDescriptor name-vs-object resolution', () => {
   });
 
   it('resolves a FULL descriptor object directly (it carries render)', () => {
-    // colorFormats.hex IS a descriptor with a `render`, so asDescriptor uses it
+    // color.formats.hex IS a descriptor with a `render`, so asDescriptor uses it
     // as-is (the true branch), no registry lookup.
-    expect(color('#3366cc', { output: colorFormats.hex }).css()).toBe(
-      '#3366cc',
-    );
+    expect(
+      color('#3366cc', { output: color.formats.hex }).css(),
+    ).toBe('#3366cc');
   });
 });
 
