@@ -74,11 +74,14 @@ preference order, not dead weight.
 
 ## Configured via the factory
 
-The list is `ColorConfig.output`, set per bound book:
+The list is `ColorConfig.output`, set through the colour lexicon factory:
 
 ```ts
-const color = publishBookColor({
-  config: { output: [colorFormats.oklch, colorFormats.rgb] },
+import { createColor, colorFormats } from '@css-bookends/css-calipers';
+
+const color = createColor({
+  formats: [],
+  output: [colorFormats.oklch, colorFormats.rgb],
 });
 ```
 

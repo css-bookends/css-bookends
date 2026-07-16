@@ -1,11 +1,12 @@
 import {
-  publishBookColor,
+  createColor,
+  type IMeasurement,
+  m,
   type ResolvedColor,
-} from '@css-bookends/color';
-import { type IMeasurement, m } from '@css-bookends/css-calipers';
+} from '@css-bookends/css-calipers';
 import type * as CSS_TYPES from 'csstype';
 
-const color = publishBookColor();
+const color = createColor({ formats: [] });
 
 // Neutral built-in defaults (inherited from the portfolio drop-shadow tokens;
 // review them, see notes.md). Callers override any field per call.

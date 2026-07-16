@@ -1,10 +1,12 @@
-import type { ResolvedColor } from '@css-bookends/color';
-import type { IMeasurement } from '@css-bookends/css-calipers';
+import type {
+  IMeasurement,
+  ResolvedColor,
+} from '@css-bookends/css-calipers';
 import type { Property } from 'csstype';
 
 /* ---------- value primitives ---------- */
 
-/** A border color is always whatever the color book's `publishBookColor()` returns. */
+/** A border color is always whatever the calipers colour lexicon (`createColor()`) returns. */
 export type BorderColor = ResolvedColor;
 /** A border width: a measurement, or 0 / null for "no width". */
 export type BorderWidth = IMeasurement | 0 | null;

@@ -1,5 +1,4 @@
-import { publishBookColor } from '@css-bookends/color';
-import { m } from '@css-bookends/css-calipers';
+import { createColor, m } from '@css-bookends/css-calipers';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -10,7 +9,7 @@ import {
   shadowTotalY,
 } from '../../src/shadows';
 
-const color = publishBookColor();
+const color = createColor({ formats: [] });
 
 describe('shadow.helper', () => {
   it('formats single and multiple box shadows', () => {

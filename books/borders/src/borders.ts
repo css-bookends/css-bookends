@@ -1,8 +1,9 @@
 import {
-  publishBookColor,
+  createColor,
+  type IMeasurement,
+  m,
   type ResolvedColor,
-} from '@css-bookends/color';
-import { type IMeasurement, m } from '@css-bookends/css-calipers';
+} from '@css-bookends/css-calipers';
 import {
   type Manuscript,
   publishBook,
@@ -25,7 +26,7 @@ import type {
 } from './types';
 
 // The book binds its own color factory for built-in defaults (e.g. the default black).
-const color = publishBookColor();
+const color = createColor({ formats: [] });
 
 /* The book's built-in defaults. A project overrides these via publishBookBorders({ config }). */
 export const defaultConfig: BordersConfig = {

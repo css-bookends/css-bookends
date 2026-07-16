@@ -240,7 +240,7 @@ export type BlendMode =
   | 'difference'
   | 'exclusion';
 
-/** The color book's config (factory-settable via `publishBookColor`). */
+/** The colour config (factory-settable via `createColor`). */
 export interface ColorConfig {
   /**
    * What `.css()` renders with no argument: a single format, or a priority list that

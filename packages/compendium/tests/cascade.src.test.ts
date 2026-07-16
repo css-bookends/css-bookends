@@ -46,4 +46,19 @@ describe('compendium config cascade -> calipers primitives', () => {
         .css(),
     ).toBe('16px');
   });
+
+  it('compendium.global.errorConfig reaches m error rendering', () => {
+    // divide-by-zero always throws through the instance store, so it renders a
+    // stack hint iff the resolved errorConfig says so — proving the global reaches m.
+    const on = publishCompendium({
+      global: { errorConfig: { stackHints: 'on' } },
+    });
+    let message = '';
+    try {
+      on.m(2, 'px').divide(0);
+    } catch (error) {
+      message = (error as Error).message;
+    }
+    expect(message).toContain('stack=');
+  });
 });

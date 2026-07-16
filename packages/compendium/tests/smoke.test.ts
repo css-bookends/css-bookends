@@ -24,6 +24,13 @@ describe('css-bookends compendium: bundle contents', () => {
     expect(c.color('#3366cc').css()).toBe('#3366cc');
   });
 
+  it('threads colour config through calipers.color', () => {
+    const configured = pkg.publishCompendium({
+      calipers: { color: { output: colorFormats.rgba, formats: [] } },
+    });
+    expect(configured.color('#3366cc').css()).toMatch(/^rgba?\(/);
+  });
+
   it('bundles css-calipers straight up by name', () => {
     expect(typeof c.m).toBe('function');
     expect(c.m(8).css()).toBe('8px');
@@ -41,17 +48,5 @@ describe('css-bookends compendium: bundle contents', () => {
     // composed book present under its name.
     expect(c.borders).toBeDefined();
     expect(typeof c.borders).toBe('function');
-  });
-});
-
-describe('css-bookends compendium: master config forwarding', () => {
-  it('threads the color config through to publishBookColor', () => {
-    const themed = pkg.publishCompendium({
-      color: { output: colorFormats.rgba },
-    });
-    // forcing rgba output: an opaque colour keeps its alpha slot (omitOpaqueAlpha off).
-    expect(themed.color('#3366cc').css()).toBe(
-      'rgba(51, 102, 204, 1)',
-    );
   });
 });

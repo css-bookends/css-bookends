@@ -21,7 +21,7 @@ export {
 export * from './default';
 // The native colour input, alongside `m()` / `r()` / `i()` / `f()`. The full value
 // surface also lives at the `./color` subpath (for bundler/node16 consumers); the root
-// re-exports it too so classic-resolution consumers (e.g. @css-bookends/color) can reach
+// re-exports it too so classic-resolution consumers (e.g. downstream books) can reach
 // it without a subpath. The lower-level value primitives are color-prefixed (and
 // `resolve` is re-exported as `resolveColor`) to avoid colliding with calipers' own names.
 export {

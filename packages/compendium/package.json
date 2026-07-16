@@ -50,7 +50,6 @@
   "dependencies": {
     "@css-bookends/self-publish": "workspace:*",
     "@css-bookends/css-calipers": "workspace:*",
-    "@css-bookends/color": "workspace:*",
     "@css-bookends/animation-iteration-count": "workspace:*",
     "@css-bookends/backdrop-filter": "workspace:*",
     "@css-bookends/border-image-outset": "workspace:*",

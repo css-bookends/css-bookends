@@ -6,7 +6,7 @@
 // export IS the factory itself, so `import publishCompendium from '@css-bookends/compendium'`
 // and the named `{ publishCompendium }` are the same function.
 //
-//   const c = publishCompendium({ color: { output: colorFormats.rgba } });
+//   const c = publishCompendium({ calipers: { color: { output: colorFormats.rgba } } });
 //   c.color('#3366cc').darken(0.2).css();
 //   c.m(8).css();
 //   c.opacity(0.5).css();
@@ -42,10 +42,6 @@ import {
   publishBookBorders,
 } from '@css-bookends/borders';
 import {
-  type ColorConfig,
-  publishBookColor,
-} from '@css-bookends/color';
-import {
   type ColumnCountConfig,
   publishBookColumnCount,
 } from '@css-bookends/column-count';
@@ -64,6 +60,7 @@ import {
 import {
   type CalipersBundleConfig,
   createCalipersBundle,
+  type ErrorConfig,
   type Hardening,
 } from '@css-bookends/css-calipers';
 import * as calipers from '@css-bookends/css-calipers';
@@ -203,8 +200,9 @@ import { publishBookZoom, type ZoomConfig } from '@css-bookends/zoom';
 
 /**
  * The master config. One OPTIONAL key per FACTORY book, keyed to that book's config
- * type. `color` takes `Partial<ColorConfig>` (as the shelf does); every per-property
- * book takes its own `<Name>Config`. The composed books (backdropFilter, positioning,
+ * type. Colour is configured through the nested `calipers` key (it is a calipers
+ * lexicon now, not a book); every per-property book takes its own `<Name>Config`.
+ * The composed books (backdropFilter, positioning,
  * shadows, supportsFallback, transforms) have NO key here: they expose no factory
  * config to forward, so there is nothing to tune. A bare `publishCompendium()` binds
  * every book at its defaults; supply any subset of these keys to configure.
@@ -218,6 +216,8 @@ export interface CompendiumConfig {
   global?: {
     /** Hardening reaction, forwarded into the calipers primitives. */
     hardening?: Hardening;
+    /** Error-rendering config (e.g. stack hints), forwarded into the calipers primitives. */
+    errorConfig?: ErrorConfig;
   };
   /**
    * The whole calipers (codex) config, forwarded to `createCalipersBundle`.
@@ -225,7 +225,6 @@ export interface CompendiumConfig {
    * (codex global) -> `compendium.global` -> factory default.
    */
   calipers?: CalipersBundleConfig;
-  color?: Partial<ColorConfig>;
   animationIterationCount?: AnimationIterationCountConfig;
   borderImageOutset?: BorderImageOutsetConfig; // empty config (Record<string, never>)
   borderImageSlice?: BorderImageSliceConfig; // empty config (Record<string, never>)
@@ -272,12 +271,11 @@ export interface CompendiumConfig {
 
 /**
  * The bound compendium: every book under its name + the lexicons spread by name.
- * `color` is the bound color BOOK (the factory result), so it shadows the calipers
- * `color` value primitive of the same name (excluded from the spread surface here).
- * The composed books are bound under their whole namespace.
+ * `color` arrives with the spread calipers surface (it is a calipers lexicon now),
+ * configured through the nested `calipers` key. The composed books are bound under
+ * their whole namespace.
  */
-export type Compendium = Omit<typeof calipers, 'color'> & {
-  color: ReturnType<typeof publishBookColor>;
+export type Compendium = typeof calipers & {
   animationIterationCount: ReturnType<
     typeof publishBookAnimationIterationCount
   >;
@@ -334,8 +332,8 @@ export type Compendium = Omit<typeof calipers, 'color'> & {
 /**
  * Bind the whole compendium: each factory book via its own factory (under its name),
  * each composed book under its namespace, with the lexicons (`css-calipers`) spread
- * straight up by their names. The color book is assigned LAST so it wins the `color`
- * slot over the calipers value fn.
+ * straight up by their names. Colour comes straight from the spread calipers surface
+ * (it is a lexicon), configured through the nested `calipers` key.
  */
 export const publishCompendium = (
   config: CompendiumConfig = {},
@@ -352,6 +350,9 @@ export const publishCompendium = (
       hardening:
         config.calipers?.global?.hardening ??
         config.global?.hardening,
+      errorConfig:
+        config.calipers?.global?.errorConfig ??
+        config.global?.errorConfig,
     },
   }),
   animationIterationCount: publishBookAnimationIterationCount(
@@ -564,8 +565,6 @@ export const publishCompendium = (
   shadows,
   supportsFallback,
   transforms,
-  // color book assigned LAST so it wins the `color` slot over the calipers value fn.
-  color: publishBookColor({ config: config.color }),
 });
 
 export default publishCompendium;

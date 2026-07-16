@@ -1,8 +1,8 @@
 // The colour VALUE primitive: a native typed CSS input alongside `m()`, `r()`,
 // `i()`, `f()`. Parse a `ColorInput` into an OKLCH store, then resolve it to an
 // immutable, navigable `ResolvedColor` (modify via `.darken()` / `.mix()` / ...,
-// render via `.css()`). This module carries ZERO self-publish coupling; the
-// `publishBook`-based colour BOOK lives in `@css-bookends/color`.
+// render via `.css()`). This module carries ZERO self-publish coupling; colour is
+// a config-driven calipers lexicon, configured through the `createColor` factory.
 import type {
   Color,
   Hsl,
@@ -720,7 +720,7 @@ export const resolve = <F extends FormatName = FormatName>(
 /**
  * The default output priority: the simplest faithful format first. With no argument
  * `.css()` escalates down this ladder to the first format that holds the color (see
- * `formats/README.md`). Overridable per book via `publishBookColor({ config })`.
+ * `formats/README.md`). Overridable via the colour lexicon factory `createColor({ output })`.
  *
  * Pared to one format per distinct output space, most popular first (see
  * `docs/color-format-popularity.md`). Every other built-in format is a redundant

@@ -1,10 +1,9 @@
-import { publishBookColor } from '@css-bookends/color';
-import { m } from '@css-bookends/css-calipers';
+import { createColor, m } from '@css-bookends/css-calipers';
 import { describe, expect, it } from 'vitest';
 
 import { publishBookBorders } from '../../src';
 
-const color = publishBookColor();
+const color = createColor({ formats: [] });
 const borders = publishBookBorders();
 const red = color('red');
 

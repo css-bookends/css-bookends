@@ -101,7 +101,7 @@ same lowering to its bound unit.
   scalar under the hood (e.g. `opacity` = `hardenFloat({ min: 0, max: 1 })`) and ties
   to the matching csstype `Property.*` type. The property layer is csstype; the value
   layer is the primitive. Built on top of this foundation, not part of it.
-- **Colour consolidation** into css-calipers (today `@css-bookends/color`).
+- **Colour consolidation** into css-calipers (the colour lexicon).
 
 ## Relationship to the measurement refinements
 

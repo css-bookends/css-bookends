@@ -1,7 +1,7 @@
-import type { ResolvedColor } from '@css-bookends/color';
 import type {
   IMeasurement,
   PercentMeasurement,
+  ResolvedColor,
 } from '@css-bookends/css-calipers';
 import { createSupportsFallback } from '@css-bookends/supports-fallback';
 import type * as CSS_TYPES from 'csstype';
