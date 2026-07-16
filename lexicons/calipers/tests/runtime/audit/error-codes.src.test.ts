@@ -86,8 +86,8 @@ describe('every CALIPERS_E_* code in the union is reachable', () => {
           m(0, 'px'),
           // forge a non-finite bound past the constructor via a fake measurement
           {
-            getUnit: () => 'px',
-            getValue: () => Number.POSITIVE_INFINITY,
+            unit: () => 'px',
+            value: () => Number.POSITIVE_INFINITY,
             css: () => 'Infinitypx',
           } as unknown as ReturnType<typeof mPx>,
         ),

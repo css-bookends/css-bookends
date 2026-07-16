@@ -61,7 +61,7 @@ describe('measurement arithmetic re-validates finiteness', () => {
     for (let n = 0; n < 1000; n += 1) acc = acc.add(0.1);
     // Floating drift is expected; the contract is that it stays finite and
     // renders as a plain decimal (no scientific notation, no NaN).
-    expect(Number.isFinite(acc.getValue())).toBe(true);
+    expect(Number.isFinite(acc.value())).toBe(true);
     expect(acc.css()).toMatch(/^[0-9]+(\.[0-9]+)?px$/);
   });
 });

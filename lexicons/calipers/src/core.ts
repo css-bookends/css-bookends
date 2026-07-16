@@ -86,10 +86,6 @@ export interface IMeasurement<Unit extends string = string> {
   unit: () => Unit;
   /** The raw numeric value. The unified accessor across value types. */
   value: () => number;
-  /** @deprecated Use {@link unit}; kept as a back-compat alias. */
-  getUnit: () => Unit;
-  /** @deprecated Use {@link value}; kept as a back-compat alias. */
-  getValue: () => number;
   valueOf: () => number;
   /**
    * The range bound this measurement carries (from an ingested hardened

@@ -4,9 +4,9 @@ import {
   type IMeasurement,
   type InRangeMeasurement,
   type InscribedMeasurement,
-  m,
   type NonNegativeMeasurement,
 } from '../../dist/index';
+import { m } from '../support/calipers_tests.dist';
 
 /*
  * Publish-readiness pin: BRAND FORGEABILITY is a compile-time contract.
@@ -30,8 +30,8 @@ import {
 // A bare object cannot name the unit brand, so it is not an InscribedMeasurement.
 expectNotAssignable<InscribedMeasurement<'px'>>({
   css: () => '10px',
-  getUnit: () => 'px',
-  getValue: () => 10,
+  unit: () => 'px',
+  value: () => 10,
 });
 
 // A plain (un-refined) measurement carries no constraint brand.

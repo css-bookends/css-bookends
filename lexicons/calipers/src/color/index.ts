@@ -597,7 +597,7 @@ const resolveWith = <F extends string = FormatName>(
         ? self()
         : withColor({
             ...c,
-            h: wrapHue((c.h ?? 0) + value.getValue()),
+            h: wrapHue((c.h ?? 0) + value.value()),
           });
     },
     setLightness: (value: number) => {
@@ -612,7 +612,7 @@ const resolveWith = <F extends string = FormatName>(
       const c = modifiable('set the hue of');
       return c === undefined
         ? self()
-        : withColor({ ...c, h: wrapHue(value.getValue()) });
+        : withColor({ ...c, h: wrapHue(value.value()) });
     },
     complement: () => {
       const c = modifiable('complement');

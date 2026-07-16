@@ -98,7 +98,7 @@ describe('errors — throwMeasurementMethodError (per-instance store)', () => {
     const message = messageOf(() =>
       throwMeasurementMethodError({
         operation: 'divide',
-        caller: { getUnit: () => 'px' } as never,
+        caller: { unit: () => 'px' } as never,
         params: baseParams,
         message: 'cannot divide by zero',
         details: { code: 'CALIPERS_E_DIVIDE_BY_ZERO' },
@@ -116,7 +116,7 @@ describe('errors — throwMeasurementMethodError (per-instance store)', () => {
     const message = messageOf(() =>
       throwMeasurementMethodError({
         operation: 'add',
-        caller: { getUnit: () => 'px' } as never,
+        caller: { unit: () => 'px' } as never,
         params: baseParams,
         message: 'unit mismatch',
       }),
@@ -132,7 +132,7 @@ describe('errors — throwMeasurementMethodError (per-instance store)', () => {
     const message = messageOf(() =>
       throwMeasurementMethodError({
         operation: 'clamp',
-        caller: { getUnit: () => 'px' } as never,
+        caller: { unit: () => 'px' } as never,
         params: baseParams,
         message: 'invalid range',
         includeStackHint: true,

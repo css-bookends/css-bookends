@@ -34,8 +34,8 @@ describe('spacing tokens (example unit test)', () => {
     const { spaceSm, spaceLg } = spacingTokens;
 
     // Ordering invariant: small should never exceed large.
-    const smValue = spaceSm.getValue();
-    const lgValue = spaceLg.getValue();
+    const smValue = spaceSm.value();
+    const lgValue = spaceLg.value();
 
     if (!(smValue <= lgValue)) {
       throw new Error(

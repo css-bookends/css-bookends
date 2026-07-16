@@ -105,10 +105,10 @@ export const shadowTotalY = (
 ): IMeasurement => {
   const y = props.y ?? shadowDefaults.offsetY;
   const blur = props.blur ?? shadowDefaults.blur;
-  const unit = y.getUnit();
+  const unit = y.unit();
   y.assertUnit(unit, 'shadowTotalY offsetY');
   blur.assertUnit(unit, 'shadowTotalY blur');
-  return m(y.getValue() + 2 * blur.getValue(), unit);
+  return m(y.value() + 2 * blur.value(), unit);
 };
 
 // Convenience: total horizontal span needed for the shadow (offsetX + 2 * blur)
@@ -117,10 +117,10 @@ export const shadowTotalX = (
 ): IMeasurement => {
   const x = props.x ?? shadowDefaults.offsetX;
   const blur = props.blur ?? shadowDefaults.blur;
-  const unit = x.getUnit();
+  const unit = x.unit();
   x.assertUnit(unit, 'shadowTotalX offsetX');
   blur.assertUnit(unit, 'shadowTotalX blur');
-  return m(x.getValue() + 2 * blur.getValue(), unit);
+  return m(x.value() + 2 * blur.value(), unit);
 };
 
 export interface ITextShadow {

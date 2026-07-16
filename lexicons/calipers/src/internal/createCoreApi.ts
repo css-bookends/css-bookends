@@ -52,8 +52,8 @@ export const createCoreApi = (
     right: IMeasurement<Unit>,
     context: string,
   ): void => {
-    const leftUnit = left.getUnit();
-    const rightUnit = right.getUnit();
+    const leftUnit = left.unit();
+    const rightUnit = right.unit();
     if (leftUnit !== rightUnit) {
       throwHelperError({
         operation: 'css-calipers.assertMatchingUnits',
@@ -74,7 +74,7 @@ export const createCoreApi = (
   ): number => {
     if (typeof delta === 'number') return delta;
     assertMatchingUnits(base, delta, 'deltaToNumber');
-    return delta.getValue();
+    return delta.value();
   };
 
   class Measurement<
@@ -115,14 +115,6 @@ export const createCoreApi = (
     }
 
     value(): number {
-      return this.#value;
-    }
-
-    getUnit(): Unit {
-      return this.#unit;
-    }
-
-    getValue(): number {
       return this.#value;
     }
 
@@ -211,7 +203,7 @@ export const createCoreApi = (
     }
 
     equals(other: IMeasurement<string>, strict = true): boolean {
-      const otherUnit = other.getUnit();
+      const otherUnit = other.unit();
       if (this.#unit !== otherUnit) {
         if (strict) {
           assertMatchingUnits(
@@ -222,7 +214,7 @@ export const createCoreApi = (
         }
         return false;
       }
-      return this.#value === other.getValue();
+      return this.#value === other.value();
     }
 
     compare(other: IMeasurement<string>, strict = true): number {
@@ -232,10 +224,10 @@ export const createCoreApi = (
           other as IMeasurement<Unit>,
           'compare(strict)',
         );
-      } else if (this.#unit !== other.getUnit()) {
-        return this.#unit < other.getUnit() ? -1 : 1;
+      } else if (this.#unit !== other.unit()) {
+        return this.#unit < other.unit() ? -1 : 1;
       }
-      const diff = this.#value - other.getValue();
+      const diff = this.#value - other.value();
       if (diff === 0) return 0;
       return diff < 0 ? -1 : 1;
     }
@@ -326,8 +318,8 @@ export const createCoreApi = (
       assertMatchingUnits(this, min, 'clamp(min)');
       assertMatchingUnits(this, max, 'clamp(max)');
 
-      const minValue = min.getValue();
-      const maxValue = max.getValue();
+      const minValue = min.value();
+      const maxValue = max.value();
 
       if (!Number.isFinite(minValue) || !Number.isFinite(maxValue)) {
         throwMeasurementMethodError({
@@ -573,7 +565,7 @@ export const createCoreApi = (
     b: IMeasurement<NoInfer<Unit>>,
   ): IMeasurement<Unit> => {
     assertMatchingUnits(a, b, 'measurementMin');
-    return a.getValue() <= b.getValue() ? a : b;
+    return a.value() <= b.value() ? a : b;
   };
 
   const measurementMax = <Unit extends string>(
@@ -581,7 +573,7 @@ export const createCoreApi = (
     b: IMeasurement<NoInfer<Unit>>,
   ): IMeasurement<Unit> => {
     assertMatchingUnits(a, b, 'measurementMax');
-    return a.getValue() >= b.getValue() ? a : b;
+    return a.value() >= b.value() ? a : b;
   };
 
   const assertUnit = <Unit extends string>(
@@ -618,7 +610,7 @@ export const createCoreApi = (
   }): MeasurementRefinement<B> => {
     const is = <M extends IMeasurement>(
       measurement: M,
-    ): measurement is M & B => spec.predicate(measurement.getValue());
+    ): measurement is M & B => spec.predicate(measurement.value());
 
     const ensure = <M extends IMeasurement>(
       measurement: M,
@@ -661,7 +653,7 @@ export const createCoreApi = (
       if (defaultFallback !== undefined) {
         return createMeasurement(
           defaultFallback,
-          measurement.getUnit(),
+          measurement.unit(),
         ) as unknown as M & B;
       }
       return throwHelperError({

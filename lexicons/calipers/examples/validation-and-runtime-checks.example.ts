@@ -43,7 +43,7 @@ export const renderIconWithLabelHtml = (
       'iconWithLabel: icon and line-height units must match',
     );
 
-    if (iconSize.getValue() > bodyLineHeight.getValue()) {
+    if (iconSize.value() > bodyLineHeight.value()) {
       throw new Error(
         `iconWithLabel: icon must not exceed line-height; ` +
           `iconSize=${iconSize.css()}, bodyLineHeight=${bodyLineHeight.css()}`,
@@ -72,12 +72,12 @@ export const buildTocHeadingStyles = () => {
     // text, using the same measurement token.
     const minBodyLineHeight = m(1.2, 'rem');
     const maxBodyLineHeight = m(1.8, 'rem');
-    const bodyValue = bodyLineHeight.getValue();
+    const bodyValue = bodyLineHeight.value();
 
     if (
       !(
-        bodyValue >= minBodyLineHeight.getValue() &&
-        bodyValue <= maxBodyLineHeight.getValue()
+        bodyValue >= minBodyLineHeight.value() &&
+        bodyValue <= maxBodyLineHeight.value()
       )
     ) {
       throw new Error(
@@ -94,7 +94,7 @@ export const buildTocHeadingStyles = () => {
       'tocHeading: row height and line-height units must match',
     );
 
-    if (tocHeadingRowHeight.getValue() < bodyLineHeight.getValue()) {
+    if (tocHeadingRowHeight.value() < bodyLineHeight.value()) {
       throw new Error(
         `tocHeading: row height must be >= line-height; ` +
           `row=${tocHeadingRowHeight.css()}, bodyLineHeight=${bodyLineHeight.css()}`,

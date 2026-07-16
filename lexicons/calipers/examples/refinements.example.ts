@@ -30,7 +30,7 @@ export const zeroIsNonPositive = nonPositive.is(m(0)); // true
 export const positiveIsNonPositive = nonPositive.is(m(1)); // false
 
 // `ensure` is "fail loud": it returns the branded value, or throws on a positive one.
-export const ensuredZero = nonPositive.ensure(m(0)).getValue(); // 0
+export const ensuredZero = nonPositive.ensure(m(0)).value(); // 0
 export const ensurePositiveThrows = (): string => {
   try {
     nonPositive.ensure(m(1));
@@ -68,8 +68,8 @@ const even = makeMeasurementRefinement<{ readonly even: true }>({
 
 export const fourIsEven = even.is(m(4)); // true
 export const threeIsEven = even.is(m(3)); // false
-export const ensuredEven = even.ensure(m(4)).getValue(); // 4
+export const ensuredEven = even.ensure(m(4)).value(); // 4
 export const oddCheckFails = even.check(m(3)).ok; // false
 
 // `hardenWith` falls back to the declared default (0) when the value is odd.
-export const hardenedOdd = even.hardenWith(m(3)).getValue(); // 0
+export const hardenedOdd = even.hardenWith(m(3)).value(); // 0

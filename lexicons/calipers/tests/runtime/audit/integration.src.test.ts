@@ -30,7 +30,7 @@ describe('measurement + refinement + arithmetic in one flow', () => {
 
     // The brand was dropped by arithmetic; re-checking succeeds at runtime.
     const rechecked = nonNegative.ensure(scaled);
-    expect(rechecked.getValue()).toBe(20);
+    expect(rechecked.value()).toBe(20);
   });
 
   it('an inRange refinement composes with clamp on the same unit', () => {
@@ -60,7 +60,7 @@ describe('measurement + refinement + arithmetic in one flow', () => {
     const scaledDown = safe.multiply(2); // -24px, brand dropped
     expect(nonPositive.is(scaledDown)).toBe(true);
     const rechecked = nonPositive.ensure(scaledDown);
-    expect(rechecked.getValue()).toBe(-24);
+    expect(rechecked.value()).toBe(-24);
     expect(rechecked.css()).toBe('-24px');
 
     // arithmetic that CROSSES zero: -12 + 30 = +18px, re-check throws the code.

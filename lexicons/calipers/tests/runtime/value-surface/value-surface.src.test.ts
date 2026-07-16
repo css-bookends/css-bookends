@@ -1,9 +1,8 @@
 // The UNIFIED value surface: one raw/unit accessor across all value types —
 // `.value()` (raw number) + `.unit()` (unit string, empty for unitless).
-// Measurements keep `.getValue()` / `.getUnit()` as DEPRECATED aliases.
 import { describe, expect, it } from 'vitest';
 
-import { f, i, m } from '../../support/calipers.src';
+import { f, i, m } from '../../support/calipers_tests.src';
 
 describe('unified value surface: .value() + .unit()', () => {
   describe('measurement', () => {
@@ -15,11 +14,6 @@ describe('unified value surface: .value() + .unit()', () => {
     it('.unit() returns the unit string', () => {
       expect(m(8).unit()).toBe('px');
       expect(m(2.5, 'rem').unit()).toBe('rem');
-    });
-
-    it('keeps getValue() / getUnit() as (deprecated) aliases', () => {
-      expect(m(8).getValue()).toBe(8);
-      expect(m(8, 'rem').getUnit()).toBe('rem');
     });
   });
 

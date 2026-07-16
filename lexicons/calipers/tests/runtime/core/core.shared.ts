@@ -3,8 +3,8 @@ import { describe, expect, it } from 'vitest';
 export interface MeasurementLike {
   css: () => string;
   toString: () => string;
-  getUnit: () => string;
-  getValue: () => number;
+  unit: () => string;
+  value: () => number;
   valueOf: () => number;
   equals: (other: MeasurementLike, strict?: boolean) => boolean;
   compare: (other: MeasurementLike, strict?: boolean) => number;
@@ -154,14 +154,14 @@ export const runCoreTests = (label: string, api: CoreApi): void => {
     it('creates lowercase units and exposes css/value helpers', () => {
       const measurement = m(12.5, 'PX');
       expect(measurement.css()).toBe('12.5px');
-      expect(measurement.getUnit()).toBe('px');
-      expect(measurement.getValue()).toBe(12.5);
+      expect(measurement.unit()).toBe('px');
+      expect(measurement.value()).toBe(12.5);
       expect(measurement.toString()).toBe('12.5px');
     });
 
     it('defaults shorthand measurements to px', () => {
       const measurement = m(10);
-      expect(measurement.getUnit()).toBe('px');
+      expect(measurement.unit()).toBe('px');
       expect(measurement.css()).toBe('10px');
     });
 
@@ -275,7 +275,7 @@ export const runCoreTests = (label: string, api: CoreApi): void => {
     it('performs arithmetic safely within the same unit', () => {
       const base = m(10);
       expect(base.add(5).css()).toBe('15px');
-      expect(base.subtract(m(2)).getValue()).toBe(8);
+      expect(base.subtract(m(2)).value()).toBe(8);
       expect(base.multiply(2).css()).toBe('20px');
       expect(base.divide(2).css()).toBe('5px');
     });
@@ -457,23 +457,23 @@ export const runCoreTests = (label: string, api: CoreApi): void => {
         'keeps the $unit unit through arithmetic and range operations',
         ({ unit, make }) => {
           expect(make(8).add(make(2)).css()).toBe(`10${unit}`);
-          expect(make(8).subtract(make(2)).getValue()).toBe(6);
-          expect(make(8).multiply(2).getUnit()).toBe(unit);
-          expect(make(8).divide(2).getUnit()).toBe(unit);
-          expect(make(8).double().getUnit()).toBe(unit);
-          expect(make(8).half().getUnit()).toBe(unit);
-          expect(make(8).negation().getUnit()).toBe(unit);
-          expect(make(-8).absolute().getUnit()).toBe(unit);
-          expect(make(8.4).round().getUnit()).toBe(unit);
-          expect(make(8.4).floor().getUnit()).toBe(unit);
-          expect(make(8.4).ceil().getUnit()).toBe(unit);
+          expect(make(8).subtract(make(2)).value()).toBe(6);
+          expect(make(8).multiply(2).unit()).toBe(unit);
+          expect(make(8).divide(2).unit()).toBe(unit);
+          expect(make(8).double().unit()).toBe(unit);
+          expect(make(8).half().unit()).toBe(unit);
+          expect(make(8).negation().unit()).toBe(unit);
+          expect(make(-8).absolute().unit()).toBe(unit);
+          expect(make(8.4).round().unit()).toBe(unit);
+          expect(make(8.4).floor().unit()).toBe(unit);
+          expect(make(8.4).ceil().unit()).toBe(unit);
 
           const lo = make(1);
           const hi = make(5);
           expect(measurementMin(lo, hi)).toBe(lo);
           expect(measurementMax(lo, hi)).toBe(hi);
-          expect(make(10).clamp(lo, hi).getValue()).toBe(5);
-          expect(make(3).clamp(lo, hi).getValue()).toBe(3);
+          expect(make(10).clamp(lo, hi).value()).toBe(5);
+          expect(make(3).clamp(lo, hi).value()).toBe(3);
         },
       );
     });
@@ -481,7 +481,7 @@ export const runCoreTests = (label: string, api: CoreApi): void => {
     it('exposes helpers generated from unit definitions', () => {
       const percent = mPercent(50);
       expect(percent.css()).toBe('50%');
-      expect(percent.getUnit()).toBe('%');
+      expect(percent.unit()).toBe('%');
 
       const px = mPx(4);
       expect(px.css()).toBe('4px');
@@ -493,15 +493,15 @@ export const runCoreTests = (label: string, api: CoreApi): void => {
     it('covers additional unit families via helpers', () => {
       const cm = mCm(1.5);
       expect(cm.css()).toBe('1.5cm');
-      expect(cm.getUnit()).toBe('cm');
+      expect(cm.unit()).toBe('cm');
 
       const em = mEm(2);
       expect(em.css()).toBe('2em');
-      expect(em.getUnit()).toBe('em');
+      expect(em.unit()).toBe('em');
 
       const vh = mVh(50);
       expect(vh.css()).toBe('50vh');
-      expect(vh.getUnit()).toBe('vh');
+      expect(vh.unit()).toBe('vh');
 
       const svw = mSvw(10);
       expect(svw.css()).toBe('10svw');
@@ -685,13 +685,13 @@ export const runCoreTests = (label: string, api: CoreApi): void => {
     it('asserts arbitrary predicates via Measurement.assert', () => {
       const measurement = m(2, 'px');
       expect(() =>
-        measurement.assert((mm) => mm.getValue() > 10, 'too small'),
+        measurement.assert((mm) => mm.value() > 10, 'too small'),
       ).toThrow(
         'css-calipers.Measurement.assert: too small [code=CALIPERS_E_ASSERT_PREDICATE]',
       );
       expect(() =>
         measurement.assert(
-          (mm) => mm.getValue() > 1,
+          (mm) => mm.value() > 1,
           'should not throw',
         ),
       ).not.toThrow();
@@ -748,9 +748,7 @@ export const runCoreTests = (label: string, api: CoreApi): void => {
       ).not.toThrow();
       expect(() =>
         assertCondition(
-          () =>
-            paddingBlock.getValue() > 0 &&
-            paddingInline.getValue() > 0,
+          () => paddingBlock.value() > 0 && paddingInline.value() > 0,
           'Button padding must be positive',
         ),
       ).not.toThrow();
@@ -770,7 +768,7 @@ export const runCoreTests = (label: string, api: CoreApi): void => {
       );
       expect(() =>
         assertCondition(
-          () => badPaddingBlock.getValue() > 0,
+          () => badPaddingBlock.value() > 0,
           'Button padding must be positive',
         ),
       ).toThrow(

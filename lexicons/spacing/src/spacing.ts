@@ -126,7 +126,7 @@ const checkValue = (
   }
   if (
     isMeasurement(value) &&
-    value.getValue() < 0 &&
+    value.value() < 0 &&
     policy.negative === false
   ) {
     throw new Error(

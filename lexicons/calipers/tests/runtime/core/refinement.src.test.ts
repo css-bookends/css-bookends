@@ -1,16 +1,14 @@
 import { describe, expect, it } from 'vitest';
 
+import { createCalipers } from '../../../src/factory';
 import {
   inRange,
   m,
   makeMeasurementRefinement,
+  mPercent,
   nonNegative,
   nonPositive,
-} from '../../../src';
-import { createCalipers } from '../../../src/factory';
-import { createPercentUnits } from '../../../src/units/percent';
-
-const { mPercent } = createPercentUnits();
+} from '../../support/calipers_tests.src';
 
 /*
  * Value-constraint refinements. Each refinement runs a measurement through a runtime
@@ -35,7 +33,7 @@ describe('nonNegative (>= 0)', () => {
     });
 
     it('accepts zero', () => {
-      expect(nonNegative.ensure(m(0)).getValue()).toBe(0);
+      expect(nonNegative.ensure(m(0)).value()).toBe(0);
     });
 
     it('throws on a negative value', () => {
@@ -58,8 +56,8 @@ describe('nonNegative (>= 0)', () => {
 
     it('preserves the value and unit', () => {
       const out = nonNegative.ensure(m(4, 'em'));
-      expect(out.getValue()).toBe(4);
-      expect(out.getUnit()).toBe('em');
+      expect(out.value()).toBe(4);
+      expect(out.unit()).toBe('em');
     });
 
     it('is unit-agnostic (percentages)', () => {
@@ -116,7 +114,7 @@ describe('nonPositive (<= 0)', () => {
   it('ensure passes negatives and zero, throws on positive', () => {
     const v = m(-4);
     expect(nonPositive.ensure(v)).toBe(v);
-    expect(nonPositive.ensure(m(0)).getValue()).toBe(0);
+    expect(nonPositive.ensure(m(0)).value()).toBe(0);
     expect(() => nonPositive.ensure(m(1))).toThrow(/<= 0/);
   });
 
@@ -183,7 +181,7 @@ describe('makeMeasurementRefinement (custom constraints)', () => {
   it('builds a working guard / ensure / check', () => {
     expect(even.is(m(4))).toBe(true);
     expect(even.is(m(3))).toBe(false);
-    expect(even.ensure(m(4)).getValue()).toBe(4);
+    expect(even.ensure(m(4)).value()).toBe(4);
     expect(() => even.ensure(m(3))).toThrow(/even/);
     expect(even.check(m(3)).ok).toBe(false);
   });
@@ -207,6 +205,7 @@ describe('makeMeasurementRefinement (custom constraints)', () => {
 });
 
 describe('createCalipers() instances expose the refinements', () => {
+  // eslint-disable-next-line no-restricted-syntax -- the factory instance IS this block's subject
   const calipers = createCalipers();
 
   it('provides nonNegative / nonPositive / inRange / makeMeasurementRefinement', () => {

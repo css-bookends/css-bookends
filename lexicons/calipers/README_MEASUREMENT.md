@@ -102,7 +102,7 @@ const maxCardWidth = m(360);
 const cardWidth = contentBase.clamp(minCardWidth, maxCardWidth);
 
 // Unitless ratio you can reuse elsewhere
-const ratio = contentBase.getValue() / spacing.getValue(); // returns a number, no unit
+const ratio = contentBase.value() / spacing.value(); // returns a number, no unit
 
 // Apply ratio to a different unit family
 const heroHeight = mVh(40).multiply(ratio);
