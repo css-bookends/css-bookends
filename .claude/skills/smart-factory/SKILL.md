@@ -6,14 +6,16 @@ description: How a CSS-Bookends book's factory should behave - bound via `publis
 # smart-factory
 
 A book is obtained ONLY through its `publishBook<Name>` factory: the override seam and
-the home of smart defaults. Modeled by `publishBookColor`. This is the how-to for the
-"consume from a factory" rule in `AGENTS.md`.
+the home of smart defaults. Modeled by `publishBookBorders` (the gold-standard book).
+(Colour is a Layer-1 LEXICON via `createColor`, NOT a book; it shows the same
+smart-default / library-agnostic / strictness patterns, referenced below as a lexicon.)
+This is the how-to for the "consume from a factory" rule in `AGENTS.md`.
 
 ## The rules
 
 - **Bind via `publishBook<Name>`, never a pre-made instance.** The package exports the
   factory (plus value builders / composition helpers); a consumer binds once
-  (`const color = publishBookColor()`) and calls it. No default-instance export.
+  (`const borders = publishBookBorders()`) and calls it. No default-instance export.
   - **Composed-book exception (closed list).** Five books are multi-function utility
     namespaces, not single value->CSS manuscripts, so they expose NO factory:
     `shadows`, `positioning`, `supports-fallback`, `backdrop-filter`, `transforms`. Their
@@ -25,8 +27,8 @@ the home of smart defaults. Modeled by `publishBookColor`. This is the how-to fo
   `publishBook<Name>({ config })`. Export the default so consumers can reference or
   extend it (color's default is the fidelity-escalation `defaultFormatPriority`).
   ```ts
-  const color = publishBookColor();                                // smart default
-  const custom = publishBookColor({ config: { output: [...] } });  // override
+  const borders = publishBookBorders();                                // smart default
+  const custom = publishBookBorders({ config: { output: 'short' } });  // override
   ```
 - **Library-agnostic public surface.** The backing library (culori, chroma, ...) is
   named ONLY inside the canonical store; author-facing types never expose it. This is
@@ -54,5 +56,6 @@ the home of smart defaults. Modeled by `publishBookColor`. This is the how-to fo
 
 ## Reference
 
-`publishBookColor` + `defaultColorConfig` / `defaultFormatPriority` in
-`lexicons/color/src/color.ts`; the factory rule in `AGENTS.md` and `ARCHITECTURE.md`.
+`publishBookBorders` (`books/borders`) for the book pattern; the colour LEXICON
+`createColor` + `defaultColorConfig` / `defaultFormatPriority` in
+`lexicons/calipers/src/color/`; the factory rule in `AGENTS.md`.

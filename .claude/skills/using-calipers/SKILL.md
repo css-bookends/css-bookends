@@ -109,14 +109,14 @@ base.double(); // 16px   (.half(), .negation(), .absolute() too)
 base.round(); // .round(precision?) / .floor() / .ceil()
 m(15).clamp(m(10), m(12)); // 12px  (bounds must be the same unit)
 measurementMin(a, b); // smaller of two same-unit measurements (measurementMax too)
-base.getValue(); // 8 (a plain number, no unit)
+base.value(); // 8 (a plain number, no unit)
 ```
 
 - **Unit-safe.** Mixing units is a **compile-time** error and a runtime throw:
   `m(8).add(m(1, 'em'))` is rejected. There is no implicit conversion.
-- **Cross-unit / cross-family math** goes through plain numbers: take `.getValue()`,
+- **Cross-unit / cross-family math** goes through plain numbers: take `.value()`,
   compute a ratio, multiply the other measurement by that number
-  (`mVh(40).multiply(contentPx.getValue() / m(8).getValue())`).
+  (`mVh(40).multiply(contentPx.value() / m(8).value())`).
 
 ## Validate (dev-only)
 

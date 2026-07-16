@@ -36,14 +36,17 @@ favour of "lexicon".)
   refinement, and factory support those lexicons require.
 - MUST NOT contain: any helper, any book, any composed concern, or the `publishBook`
   / self-publish engine. No book code lives in calipers, ever.
-- SEPARATE PACKAGES (the unit model): each lexicon is its OWN npm package on a shared
-  `@css-bookends/core` (`@css-bookends/measurement`, `/ratio`, `/integer`, `/float`, and the
-  colour lexicon), so a consumer installs only what they want, e.g. measurement without
-  colour and its `culori` dependency (colour + culori arrive ONLY with the colour lexicon
-  package). `css-calipers` is the BUNDLE (the "codex"): it depends on + re-exports every
-  lexicon and owns `createCalipersBundle`. This mirrors the books + compendium model in
-  Layer 2 exactly: per-unit packages + a bundle. (Supersedes the earlier one-package +
-  subpath-exports design.)
+- SEPARATE PACKAGES (the unit model): each lexicon is installable as its OWN npm package
+  (`@css-bookends/measurement`, `/ratio`, `/integer`, `/float`, and the colour lexicon), so a
+  consumer installs only what they want, e.g. measurement without colour and its `culori`
+  dependency (colour + culori arrive ONLY with the colour lexicon package). These are
+  PUBLISH-TIME SLICES built from the single `lexicons/calipers/src` source: there is NO shared
+  `@css-bookends/core` package, no files move out of calipers, and no slice depends on another
+  `@css-bookends/*` slice (each is self-contained, so no cross-package cycles). `css-calipers`
+  is the BUNDLE (the "codex"): the everything-slice (entry `.`, the whole source) that owns
+  `createCalipersBundle`. This mirrors the books + compendium model in Layer 2: per-unit
+  packages + a bundle. `docs/calipers-split.md` is authoritative on the split. (Supersedes the
+  earlier one-package + subpath-exports design, and an intermediate shared-`core` idea.)
 
 ### Layer 2, css-bookends = the helpers (books) that consume the lexicons
 
@@ -149,6 +152,21 @@ lexicon/book × codex/compendium grid and the foundation→family model, e.g. `s
   to avoid). Multi-property books ALSO keep their decomposition axis (longhand/shorthand;
   long/line/short); per-property books keep `.value()` for the raw scalar.
 
+### Output terminal: always `.css()` (absolute)
+
+Every helper (lexicon or book) renders its final CSS string through a SINGLE `.css()`
+terminal; universal, not per-helper. (Distinct from Pattern 2's output SHAPE.)
+
+- `.css()` is the ONLY renderer; no method returns a rendered string per variant (no
+  `.hex(): string`, `.toLong(): string`). `.css()` itself takes NO argument.
+- Variants are TYPED objects, never magic strings: a book exports a named preset namespace
+  (`colorFormats.hex`, `borderFormats.long`) as a discriminated union. The default variant is
+  chosen by factory config (`output: colorFormats.hex`).
+- Pick a one-off variant ONLY via a selector that returns the navigable result (it does NOT
+  render), then finish with `.css()`: `color(x).hex().css()`, or `.formatAs(descriptor).css()`
+  for a custom/list. The configured default wins when no override is given; the chosen variant
+  persists through later modifications.
+
 ### Pattern 3: everything is config-driven, resolved by a three-tier cascade
 
 **First principle: everything is config-driven.** A behaviour that could reasonably vary is a config
@@ -164,6 +182,14 @@ design forces a "should it do X or Y?" choice, it is a config, not a baked-in br
 - Set a value once in `global` and every applicable unit inherits it; a unit's own key
   overrides. Both bundle factories (`publishCompendium`, `createCalipersBundle`) implement the
   `global` slot + this cascade.
+- **Same pattern all the way down; mirror `src/bundle.ts`.** Every grouping is the SAME
+  bundle-factory shape, recursively: a lexicon family (e.g. `scalar` = integer/float/ratio), the
+  codex, the compendium. A sub-factory can itself be a bundle (the codex composes a family bundle
+  exactly as it composes a lexicon factory). `createCalipersBundle` in
+  `lexicons/calipers/src/bundle.ts` is the ONE canonical implementation. Before designing or
+  changing ANY factory, bundle, or NEW grouping / family factory, invoke the `config-cascade` +
+  `smart-factory` skills and MIRROR `src/bundle.ts`; never design a bundle shape from memory. A
+  grouping that does not take `global` and cascade is wrong.
 - **A book self-instantiates its calipers dependency; it never requires a calipers config.** If a
   book needs a calipers lexicon configured a certain way, it builds its OWN calipers instance
   via the factory (`createCalipers` / `createColor`) internally, with the config it needs. It

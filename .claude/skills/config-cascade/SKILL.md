@@ -1,6 +1,6 @@
 ---
 name: config-cascade
-description: How configurable behaviour flows through CSS-Bookends - every unit (calipers primitive / bookends book) has a factory config, units of a kind share an IDENTICAL config shape, and a bundle (codex / compendium) carries a `global` plus per-unit keys that resolve unit-key -> global -> factory default. Use when adding or changing ANY config option, a unit factory, or bundle wiring. Always paired with failing-first tests.
+description: How configurable behaviour flows through CSS-Bookends - every unit (calipers lexicon / bookends book) has a factory config, units of a kind share an IDENTICAL config shape, and a bundle (codex / compendium) carries a `global` plus per-unit keys that resolve unit-key -> global -> factory default. Same pattern all the way down: any grouping (a lexicon family like `scalar`, the codex, the compendium) IS a bundle factory that mirrors `src/bundle.ts`. Use when adding or changing ANY config option, a unit factory, a bundle, or a NEW grouping / family factory. Always paired with failing-first tests.
 ---
 
 # config-cascade
@@ -12,7 +12,7 @@ implement; copy it, never reinvent a per-feature scheme.
 
 ## The rules
 
-- **Every unit has a FACTORY that takes a config.** A calipers primitive: `createCalipers`
+- **Every unit has a FACTORY that takes a config.** A calipers lexicon: `createCalipers`
   (`m`), `createInteger` (`i`), `createFloat` (`f`), `createColor`. A bookends book:
   `publishBook<Name>`. The factory bakes the config into the unit it produces. No bare
   pre-made instance is the configurable path.
@@ -23,7 +23,7 @@ implement; copy it, never reinvent a per-feature scheme.
   configs. A new shared option is added to that one shared type, then it is automatically
   identical across the units.
 - **A bundle exposes `global` PLUS one key per unit.** `CalipersBundleConfig` (codex):
-  `{ global?, measurements?, integer?, float?, ratio?, color? }`. `CompendiumConfig`:
+  `{ global?, measurement?, integer?, float?, ratio?, color? }`. `CompendiumConfig`:
   `{ global?, <book keys>…, calipers?: CalipersBundleConfig }`. The bundle factory must
   return the CONFIGURED units (spread `createInteger(...)` / `createFloat(...)` / … into the
   bundle object), so a `global` or per-unit key actually reaches the unit a consumer calls.
@@ -34,7 +34,7 @@ implement; copy it, never reinvent a per-feature scheme.
   its built-in default when that is `undefined`).
 - **Bundles NEST; the inner global overrides the outer.** The compendium carries the whole
   codex config under a `calipers` key and forwards it to `createCalipersBundle`, merging so a
-  primitive resolves `own -> codex.global -> compendium.global -> default`. Build the codex
+  lexicon resolves `own -> codex.global -> compendium.global -> default`. Build the codex
   global as `calipers.global.<opt> ?? compendium.global.<opt>` so codex-specific wins.
 - **Reachability is mandatory.** No unit config the bundle factory cannot reach. If you add a
   unit option, you ALSO add it to the bundle config + cascade in the SAME change. An option
@@ -43,6 +43,44 @@ implement; copy it, never reinvent a per-feature scheme.
   `defaults <- config`. So per-book global resolution happens INSIDE `publishCompendium` (merge
   the global-applicable fields under each book's own config before calling the factory), and a
   global field is applied only to books whose config actually has it.
+
+## Same pattern all the way down (a grouping IS a bundle factory)
+
+Every grouping is the SAME bundle-factory shape, recursively. `createCalipersBundle` in
+`lexicons/calipers/src/bundle.ts` is the ONE canonical implementation — MIRROR it, never
+invent a new shape. A bundle factory always has the same four parts:
+
+1. a `<Name>BundleConfig` with a `global?` slot PLUS one OPTIONAL key per sub-factory;
+2. a `cascade(own)` helper that fills each shared option `own?.opt ?? config.global?.opt`;
+3. a body that SPREADS every sub-factory, each called through `cascade`, into ONE bound object;
+4. a `<Name>Bundle` return type intersecting the sub-factory APIs.
+
+This RECURSES: a sub-factory can itself be a bundle. The codex composes lexicon factories
+AND family bundles; a **family** bundle (e.g. `createScalarBundle`, grouping `integer` /
+`float` / `ratio`) is ITSELF a bundle factory of the same four parts, and the codex composes
+it by spreading it under the cascade, exactly like any other sub-factory:
+
+```ts
+// src/scalar-bundle.ts — mirrors src/bundle.ts, one level down
+export const createScalarBundle = (config: ScalarBundleConfig = {}) => {
+  const cascade = (own) => ({ ...own, hardening: own?.hardening ?? config.global?.hardening });
+  return {
+    ...createInteger(cascade(config.integer)),
+    ...createFloat(cascade(config.float)),
+    ...createRatio(config.ratio), // ratio has no hardening; passes through
+  };
+};
+
+// src/bundle.ts — the codex composes the family, same as any sub-factory
+...createScalarBundle({
+  global: config.global,
+  integer: config.integer, float: config.float, ratio: config.ratio,
+}),
+```
+
+The test: when a "should this be its OWN shape?" question comes up, the answer is NO — it is
+`createCalipersBundle` one level in or out. Re-read `src/bundle.ts` and mirror it. A grouping
+that does not take `global` and cascade is wrong.
 
 ## Tests are NOT optional
 
@@ -62,8 +100,11 @@ Use a real worked option (today: `hardening`) with an observable effect (`ignore
 
 ## Reference
 
-`lexicons/calipers/src/codex.ts` (`createCalipersBundle` = the canonical cascade);
+`lexicons/calipers/src/bundle.ts` (`createCalipersBundle` = the canonical cascade — MIRROR
+it for every new grouping; `src/codex.ts` only re-exports it);
 `createInteger` / `createFloat` in `lexicons/calipers/src/integer.ts` / `float.ts`;
 the shared `Hardening` / `HardeningConfig` in `lexicons/calipers/src/hardening.ts`;
 `packages/compendium/src/index.ts` (`publishCompendium`). Companion skills: `doc-test-code`
 (build order), `smart-factory` (the factory itself), `output-shape` (the `format` option).
+The concrete end-to-end MAP of every setting's path (compendium → codex → scalar family →
+standalone lexicon + per-instance error store) is `docs/config-flow.md`.

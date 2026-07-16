@@ -24,7 +24,9 @@ config). Learn the four names once, because the two layers are the same machine:
 A **lexicon is to the codex what a book is to the compendium.** Both bundles take
 `{ global?, <unitKey>? }` and resolve each setting **own key → `global` → factory default**;
 `createCalipersBundle`'s own docstring says it mirrors `publishCompendium`. ("Primitive" is the
-older synonym for "lexicon"; prefer **lexicon**.)
+older synonym for "lexicon"; prefer **lexicon**.) For the full end-to-end path a setting takes
+through every level (compendium → codex → scalar family → standalone lexicon), see
+`docs/config-flow.md`.
 
 Consumption is one-way: **lexicon → book → squire (TBD)**. A book peer-depends on the lexicons it
 uses and self-instantiates them; a lexicon never depends on a book.
@@ -103,7 +105,7 @@ A lexicon is a typed CSS input value type (measurement, ratio, integer, float, c
 5. **Shared `Scalar` arithmetic interop.** Arithmetic accepts `Scalar = number | IInteger | IFloat`
    via one `toNumber` (`scalar.ts`); no duck-typing.
 6. **Error-config store, separate from core logic.** `createErrorConfigStore` holds per-instance
-   config (e.g. `stackHints`), settable at runtime, with a global fallback. (`internal/errors.ts`.)
+   config (e.g. `stackHints`), resolved through the cascade; NO process-global fallback. (`internal/errors.ts`.)
 7. **Central metadata registry.** Units live in one `UNIT_DEFINITIONS` registry; builders reference
    it, never hardcoded strings; types derive from it. (`unitDefinitions.ts`.)
 8. **Strict file split.** `core.ts` (types only) · `internal/create*.ts` (impl + factories) ·
@@ -113,8 +115,8 @@ A lexicon is a typed CSS input value type (measurement, ratio, integer, float, c
 
 ### The value surface (what a lexicon value exposes)
 
-`m()` / `IMeasurement` (`core.ts:72-105`): render `.css()` / `.toString()`; raw `.getValue()` /
-`.getUnit()` / `.valueOf()`; predicates `.isUnit` / `.assert*` / `.equals` / `.compare`; arithmetic
+`m()` / `IMeasurement` (`core.ts:72-105`): render `.css()` / `.toString()`; raw `.value()` /
+`.unit()` / `.valueOf()`; predicates `.isUnit` / `.assert*` / `.equals` / `.compare`; arithmetic
 `.add` / `.subtract` / `.multiply` / `.divide` / `.double` / `.half` / `.negation` / `.absolute`
 (hardened `>=0`) / `.round` / `.floor` / `.ceil` / `.clamp`.
 
@@ -127,9 +129,9 @@ The accessors were inconsistent (measurements `.getValue()`/`.getUnit()`; scalar
 ratio `.numerator()`/`.denominator()`). The conformance target:
 
 - **One raw/unit accessor across all value types: `.value()` (raw) + `.unit()` (unit string,
-  empty for unitless).** Measurements keep `.getValue()`/`.getUnit()` as DEPRECATED aliases for
-  back-compat. So `result.value.value()` / `result.value.unit()` are uniform whether the leaf is
-  a scalar or a measurement.
+  empty for unitless).** The old measurement `.getValue()`/`.getUnit()` are REMOVED (a breaking
+  change, no deprecation window). So `result.value.value()` / `result.value.unit()` are uniform
+  whether the leaf is a scalar or a measurement.
 - **`m()` accepts `number | i | f`** (via the existing `Scalar` / `toNumber`), not just `number`.
 - **Interconversion helpers on every value:** a generic `.toTypedValue()` (returns the matching
   `i()`/`f()`) plus `.isInt` / `.isFloat` queries (modelled on the colour object's queries), so a
@@ -178,8 +180,7 @@ happens when later ARITHMETIC on that hardened `m` crosses (breaks) the carried 
 So `fail` gives the `i`/`f`-style enforce-through-math, `ignore` a loose drop, `warn` the middle. An
 in-bounds operation keeps the constraint; ingesting an UNHARDENED scalar carries nothing. The config
 lives on `CalipersFactoryConfig` (today `{ errorConfig? }`) and is reachable from
-`createCalipersBundle` under the `measurement` key + the `global` cascade. (Key name + default still
-being finalised; lean default `warn`.)
+`createCalipersBundle` under the `measurement` key + the `global` cascade (default `fail`).
 
 ### Colour is a Layer-1 calipers lexicon (locked 2026-06-27)
 

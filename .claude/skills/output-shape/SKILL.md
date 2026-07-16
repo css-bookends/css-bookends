@@ -6,7 +6,7 @@ description: The output contract every CSS-Bookends book follows - a single `.cs
 # output-shape
 
 A book's OUTPUT step renders the canonical store into a result. Every book's result
-follows the same contract, modeled by the color lexicon (`lexicons/color/`). This is
+follows the same contract, modeled by the color lexicon (`lexicons/calipers/src/color/`). This is
 the how-to for the "Output is always `.css()`" rule in `AGENTS.md`.
 
 ## The rules
@@ -46,5 +46,5 @@ the how-to for the "Output is always `.css()`" rule in `AGENTS.md`.
 
 ## Reference
 
-`lexicons/color/src/formats/` (variant registry + branding), `ResolvedColor<F>` in
-`lexicons/color/src/types.ts`, the `.css()` rule in `AGENTS.md`.
+`lexicons/calipers/src/color/formats/` (variant registry + branding), `ResolvedColor<F>` in
+`lexicons/calipers/src/color/types.ts`, the `.css()` rule in `AGENTS.md`.

@@ -34,5 +34,5 @@ half-measure: the next function has no way to demand the checked value.
 ## Reference
 
 calipers refinements (`nonNegative` / `inRange` / `NonNegativeMeasurement`) and
-`docs/hardening.md`; `ColorString<F>` + `ResolvedColor<F>` in `lexicons/color/`; the
+`docs/hardening.md`; `ColorString<F>` + `ResolvedColor<F>` in `lexicons/calipers/src/color/`; the
 `formats.hardening` type test.
