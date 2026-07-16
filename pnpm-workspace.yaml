@@ -1,7 +1,11 @@
 packages:
   - 'self-publish'
   - 'lexicons/*'
-  - 'books/*'
+  # Books scoped down to the in-focus set (spacing lexicon via lexicons/*, plus these two
+  # books). Re-enable the glob below to bring every book back.
+  # - 'books/*'
+  - 'books/borders'
+  - 'books/padding'
   - 'packages/*'
 allowBuilds:
   esbuild: true

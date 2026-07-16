@@ -77,16 +77,25 @@ css-calipers.refinement.ensure: expected a measurement >= 0 (got -4px) [code=CAL
 ## Stack hints and configuration
 
 For `m` and the unit helpers, errors include a trimmed stack hint in non-production by
-default. You can disable or force stack hints globally:
+default. Stack hints are configured PER INSTANCE through the factory. There is no
+process-global error config: the cascade is the only path in (see
+[`docs/config-flow.md`](../../../docs/config-flow.md)).
 
 ```ts
-import { setErrorConfig } from "@css-bookends/css-calipers";
+import { createCalipers } from "@css-bookends/css-calipers";
 
-// Disable stack hints everywhere (for production).
-setErrorConfig({ stackHints: "off" });
+// Force stack hints on for THIS instance (useful in dev or tests).
+const strict = createCalipers({ errorConfig: { stackHints: "on" } });
 
-// Force stack hints everywhere (useful in dev or tests).
-setErrorConfig({ stackHints: "on" });
+// Disable them for THIS instance (e.g. production).
+const quiet = createCalipers({ errorConfig: { stackHints: "off" } });
 ```
 
-For instance-scoped configuration, use the [factory entrypoint](../README.md#factory-entrypoint-optional).
+`stackHints` also flows through the bundle cascade: set it once via
+`createCalipersBundle({ global: { errorConfig: { stackHints: "off" } } })` and every unit
+inherits it, while a unit's own `errorConfig` key overrides.
+
+The bare package exports `getErrorConfig` / `setErrorConfig` are the DEFAULT INSTANCE's
+accessors: they read/mutate that one instance's store, not a global. A custom
+`createCalipers(...)` instance carries its own independent config, so two instances never
+collide.
