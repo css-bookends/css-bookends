@@ -5,19 +5,17 @@
 // subpath now exposes the per-group FACTORIES rather than bare helpers.
 import { describe, expect, it } from 'vitest';
 
-import { createCalipersBundle } from '../../../src';
 import { UNIT_DEFINITIONS } from '../../../src/unitDefinitions';
+// eslint-disable-next-line no-restricted-imports -- verifies the ./units subpath exposes the group factories
 import * as unitsModule from '../../../src/units';
+import { bundle } from '../../support/calipers_tests.src';
 
 type UnitHelper = (value: number) => {
   css: () => string;
   category: () => string | undefined;
 };
 
-const helpers = createCalipersBundle() as unknown as Record<
-  string,
-  UnitHelper
->;
+const helpers = bundle as unknown as Record<string, UnitHelper>;
 
 describe('every unit helper round-trips its CSS unit + reports its category', () => {
   for (const [

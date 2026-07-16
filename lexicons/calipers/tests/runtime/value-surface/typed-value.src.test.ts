@@ -3,7 +3,7 @@
 // across m / i / f.
 import { describe, expect, it } from 'vitest';
 
-import { f, i, m } from '../../support/calipers.src';
+import { f, i, m } from '../../support/calipers_tests.src';
 
 describe('value introspection: .isInt() / .isFloat()', () => {
   it('measurement reflects its numeric value', () => {

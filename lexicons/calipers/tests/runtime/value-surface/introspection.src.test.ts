@@ -3,7 +3,7 @@
 // (time / frequency / resolution / flex) are answered via .category().
 import { describe, expect, it } from 'vitest';
 
-import { m } from '../../support/calipers.src';
+import { m } from '../../support/calipers_tests.src';
 
 describe('m introspection: .category()', () => {
   it('returns the unit category', () => {

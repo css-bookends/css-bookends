@@ -4,12 +4,10 @@
 // source for the harness.
 import { describe, expect, it } from 'vitest';
 
-import { createCalipersBundle } from '../../../src';
+import { bundle, f, i, m } from '../../support/calipers_tests.src';
 import type { CoreApi } from './core.shared';
 import { runCoreTests } from './core.shared';
 
-const bundle = createCalipersBundle();
-const { m, i, f } = bundle;
 const api = bundle as unknown as CoreApi;
 
 runCoreTests('src', api);
