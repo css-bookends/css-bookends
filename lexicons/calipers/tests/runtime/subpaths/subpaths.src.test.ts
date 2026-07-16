@@ -1,4 +1,7 @@
-// Per-primitive subpath contract (src level). Each entry must expose only the
+/* eslint-disable no-restricted-syntax, no-restricted-imports -- this whole file
+   verifies each subpath's export SURFACE: it imports the bound values and calls the
+   factories from every subpath to assert they are (or are not) exported. */
+// Per-lexicon subpath contract (src level). Each entry must expose only the
 // surface it owns. The measurements / ratio / integer / float entries MUST be
 // colour-free (no `color`, no `createColor`), so a consumer who imports them
 // never pulls in culori. The `codex` lazy-defaults entry re-exports the full
@@ -11,7 +14,7 @@ import { createInteger, i as iEntry } from '../../../src/integer';
 import * as meas from '../../../src/measurements';
 import { createRatio, r as rEntry } from '../../../src/ratio';
 
-describe('per-primitive subpaths (src)', () => {
+describe('per-lexicon subpaths (src)', () => {
   it('measurements entry exposes a working `m`', () => {
     expect(typeof meas.m).toBe('function');
     expect(meas.m(8).css()).toBe('8px');
@@ -82,7 +85,7 @@ describe('per-primitive subpaths (src)', () => {
     expect(c.color('#3366cc').css()).toBe('#3366cc');
     // the keyed config threads through to the sub-factory.
     const strict = codex.createCalipersBundle({
-      measurements: { errorConfig: { stackHints: 'off' } },
+      measurement: { errorConfig: { stackHints: 'off' } },
     });
     expect(strict.m(8).css()).toBe('8px');
   });

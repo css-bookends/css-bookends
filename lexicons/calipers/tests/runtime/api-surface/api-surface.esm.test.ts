@@ -140,6 +140,7 @@ describe('API surface (ESM)', () => {
       'createInteger',
       'createFloat',
       'createRatio',
+      'createScalarBundle',
       'createCalipersBundle',
       ...groupFactoryNames,
       'getErrorConfig',

@@ -143,6 +143,7 @@ describe('API surface (CJS)', () => {
       'createInteger',
       'createFloat',
       'createRatio',
+      'createScalarBundle',
       'createCalipersBundle',
       ...groupFactoryNames,
       'getErrorConfig',

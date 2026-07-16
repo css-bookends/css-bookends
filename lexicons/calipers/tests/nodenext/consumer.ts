@@ -3,18 +3,16 @@
 // carried 185 extensionless relative imports that nodenext could not resolve
 // (fine under bundler). This file type-checking green is the proof the PUBLISHED
 // types resolve under nodenext. If it goes red, the exports/build regressed.
-import {
-  color,
-  f,
-  i,
-  m,
-  nonNegative,
-  r,
-} from '@css-bookends/css-calipers';
+import { createCalipersBundle } from '@css-bookends/css-calipers';
+// eslint-disable-next-line no-restricted-imports -- consumer resolution smoke: imports the built package surface directly to prove it resolves under nodenext
 import { colorFormats } from '@css-bookends/css-calipers/color';
 import { createAbsoluteUnits } from '@css-bookends/css-calipers/units';
 
-// unit helpers come from their group factory now, not a bare export
+// A consumer smoke test: it MUST bind the built package itself (a test binder can't
+// stand in) to prove nodenext resolution, so these factory calls are the point.
+// eslint-disable-next-line no-restricted-syntax -- consumer resolution smoke
+const { color, f, i, m, nonNegative, r } = createCalipersBundle();
+// eslint-disable-next-line no-restricted-syntax -- consumer resolution smoke
 const { mPx } = createAbsoluteUnits();
 
 const px: string = m(8).css();
