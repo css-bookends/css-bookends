@@ -1,9 +1,4 @@
-import {
-  DEFAULT_HARDENING,
-  type Hardening,
-  type HardeningConfig,
-  reactToBreach,
-} from './hardening';
+import { DEFAULT_HARDENING, type HardeningConfig } from './hardening';
 import { i, type IInteger } from './integer';
 import type {
   GreaterOrEqualToZeroBrand,
@@ -14,7 +9,6 @@ import {
   createErrorConfigStore,
   createErrorHelpers,
   type ErrorConfig,
-  type ErrorConfigStore,
 } from './internal/errors';
 import {
   makeRefinement,
@@ -22,29 +16,16 @@ import {
   type RefinementAdapters,
   type RefinementSpec,
 } from './internal/refinement';
-import { toPlainDecimal } from './internal/toPlainDecimal';
-import { type Scalar, toNumber } from './scalar';
+import {
+  type ScalarConstraints,
+  ScalarImpl,
+  type ScalarOptions,
+} from './internal/scalarImpl';
+import type { Scalar } from './scalar';
 
-export type FloatConstraints = {
-  min?: number;
-  max?: number;
-};
+export type FloatConstraints = ScalarConstraints;
 
-export type FloatOptions = FloatConstraints & {
-  context?: string;
-  /**
-   * Reaction when a bound is breached (at construction or through arithmetic):
-   * the shared `'warn' | 'fail'` config (default `'fail'` = throw,
-   * the historical behaviour). A bundle `global` can relax it.
-   */
-  hardening?: Hardening;
-  /**
-   * The per-instance error store this value throws through (carries the
-   * resolved `stackHints` config). Threaded by `createFloat`; the free `f()`
-   * export leaves it undefined and falls back to a default store.
-   */
-  errorStore?: ErrorConfigStore;
-};
+export type FloatOptions = ScalarOptions;
 
 export interface IFloat {
   css: () => string;
@@ -92,161 +73,23 @@ export type InRangeFloat<
   Max extends number = number,
 > = IFloat & InRangeBrand<Min, Max>;
 
-const suffix = (context?: string): string =>
-  context ? ` [${context}]` : '';
-
-const coerce = (value: Scalar): number => toNumber(value);
-
-class FloatImpl implements IFloat {
-  #value: number;
-  #min?: number;
-  #max?: number;
-  #context?: string;
-  #hardening: Hardening;
-  #errorStore?: ErrorConfigStore;
-
-  constructor(value: number, options: FloatOptions = {}) {
-    const { min, max, context } = options;
-    const hardening = options.hardening ?? DEFAULT_HARDENING;
-    // Set the error store FIRST so every throw below renders through it.
-    this.#errorStore = options.errorStore;
-    if (min !== undefined && max !== undefined && min > max) {
-      this.#throwScalar(
-        `f: min (${min}) must be <= max (${max})${suffix(context)}`,
-      );
-    }
-    if (!Number.isFinite(value)) {
-      this.#throwScalar(
-        `f: expected a finite number (got ${value})${suffix(context)}`,
-      );
-    }
-    // Range breaches go through the shared hardening reaction; the finite
-    // invariant above always throws (a type invariant, not a bound).
-    // On a 'warn' breach the reaction returns here and the now-violated edge
-    // is DROPPED (its guarantee is broken); 'fail' has already thrown above.
-    let effectiveMin = min;
-    let effectiveMax = max;
-    if (min !== undefined && value < min) {
-      reactToBreach(
-        hardening,
-        `f: ${value} is below the minimum ${min}${suffix(context)}`,
-        (message) => this.#throwScalar(message),
-      );
-      effectiveMin = undefined;
-    }
-    if (max !== undefined && value > max) {
-      reactToBreach(
-        hardening,
-        `f: ${value} is above the maximum ${max}${suffix(context)}`,
-        (message) => this.#throwScalar(message),
-      );
-      effectiveMax = undefined;
-    }
-    this.#value = value;
-    this.#min = effectiveMin;
-    this.#max = effectiveMax;
-    this.#context = context;
-    this.#hardening = hardening;
+class FloatImpl extends ScalarImpl implements IFloat {
+  protected label(): string {
+    return 'f';
   }
 
-  // Throw a scalar error through this instance's error store (or a default one
-  // for the storeless free `f()` path), so `stackHints` decides the stack block.
-  #throwScalar(message: string): never {
-    const store = this.#errorStore ?? createErrorConfigStore();
-    return createErrorHelpers(store).throwScalarError(message);
+  protected validateInput(): void {
+    // Floats accept any finite value; the base's finiteness check is enough.
   }
 
-  #options(): FloatOptions {
-    return {
-      min: this.#min,
-      max: this.#max,
-      context: this.#context,
-      hardening: this.#hardening,
-      errorStore: this.#errorStore,
-    };
-  }
-
-  value(): number {
-    return this.#value;
-  }
-
-  unit(): string {
-    return '';
-  }
-
-  valueOf(): number {
-    return this.#value;
-  }
-
-  constraints(): FloatConstraints {
-    return { min: this.#min, max: this.#max };
-  }
-
-  isInt(): boolean {
-    return Number.isInteger(this.#value);
-  }
-
-  isFloat(): boolean {
-    return !Number.isInteger(this.#value);
+  protected rebuildWith(value: number): this {
+    return new FloatImpl(value, this.options()) as this;
   }
 
   toTypedValue(): IInteger | IFloat {
-    return Number.isInteger(this.#value)
-      ? i(this.#value)
-      : f(this.#value);
-  }
-
-  css(): string {
-    return toPlainDecimal(this.#value);
-  }
-
-  toString(): string {
-    return this.css();
-  }
-
-  withValue(value: number): IFloat {
-    return new FloatImpl(value, this.#options());
-  }
-
-  add(delta: Scalar): IFloat {
-    return this.withValue(this.#value + coerce(delta));
-  }
-
-  subtract(delta: Scalar): IFloat {
-    return this.withValue(this.#value - coerce(delta));
-  }
-
-  multiply(factor: Scalar): IFloat {
-    return this.withValue(this.#value * coerce(factor));
-  }
-
-  divide(divisor: Scalar): IFloat {
-    const numeric = coerce(divisor);
-    if (numeric === 0) {
-      this.#throwScalar(
-        `f: cannot divide ${this.#value} by zero${suffix(this.#context)}`,
-      );
-    }
-    const result = this.#value / numeric;
-    if (!Number.isFinite(result)) {
-      this.#throwScalar(
-        `f: non-finite result dividing ${this.#value} by ${numeric}${suffix(this.#context)}`,
-      );
-    }
-    return this.withValue(result);
-  }
-
-  clamp(min: number, max: number): IFloat {
-    if (min > max) {
-      this.#throwScalar(
-        `f.clamp: min (${min}) must be <= max (${max})`,
-      );
-    }
-    return this.withValue(Math.min(max, Math.max(min, this.#value)));
-  }
-
-  clone(): IFloat {
-    return new FloatImpl(this.#value, this.#options());
+    return Number.isInteger(this.value())
+      ? i(this.value())
+      : f(this.value());
   }
 }
 

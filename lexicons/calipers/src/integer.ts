@@ -1,9 +1,4 @@
-import {
-  DEFAULT_HARDENING,
-  type Hardening,
-  type HardeningConfig,
-  reactToBreach,
-} from './hardening';
+import { DEFAULT_HARDENING, type HardeningConfig } from './hardening';
 import type {
   GreaterOrEqualToZeroBrand,
   InRangeBrand,
@@ -13,7 +8,6 @@ import {
   createErrorConfigStore,
   createErrorHelpers,
   type ErrorConfig,
-  type ErrorConfigStore,
 } from './internal/errors';
 import {
   makeRefinement,
@@ -21,29 +15,17 @@ import {
   type RefinementAdapters,
   type RefinementSpec,
 } from './internal/refinement';
-import { toPlainDecimal } from './internal/toPlainDecimal';
-import { type Scalar, toNumber } from './scalar';
+import {
+  type ScalarConstraints,
+  ScalarImpl,
+  type ScalarOptions,
+  suffix,
+} from './internal/scalarImpl';
+import type { Scalar } from './scalar';
 
-export type IntegerConstraints = {
-  min?: number;
-  max?: number;
-};
+export type IntegerConstraints = ScalarConstraints;
 
-export type IntegerOptions = IntegerConstraints & {
-  context?: string;
-  /**
-   * Reaction when a bound is breached (at construction or through arithmetic):
-   * the shared `'warn' | 'fail'` config (default `'fail'` = throw,
-   * the historical behaviour). A bundle `global` can relax it.
-   */
-  hardening?: Hardening;
-  /**
-   * The per-instance error store this value throws through (carries the
-   * resolved `stackHints` config). Threaded by `createInteger`; the free `i()`
-   * export leaves it undefined and falls back to a default store.
-   */
-  errorStore?: ErrorConfigStore;
-};
+export type IntegerOptions = ScalarOptions;
 
 export interface IInteger {
   css: () => string;
@@ -91,164 +73,25 @@ export type InRangeInteger<
   Max extends number = number,
 > = IInteger & InRangeBrand<Min, Max>;
 
-const suffix = (context?: string): string =>
-  context ? ` [${context}]` : '';
+class IntegerImpl extends ScalarImpl implements IInteger {
+  protected label(): string {
+    return 'i';
+  }
 
-const coerce = (value: Scalar): number => toNumber(value);
-
-class IntegerImpl implements IInteger {
-  #value: number;
-  #min?: number;
-  #max?: number;
-  #context?: string;
-  #hardening: Hardening;
-  #errorStore?: ErrorConfigStore;
-
-  constructor(value: number, options: IntegerOptions = {}) {
-    const { min, max, context } = options;
-    const hardening = options.hardening ?? DEFAULT_HARDENING;
-    // Set the error store FIRST so every throw below renders through it.
-    this.#errorStore = options.errorStore;
-    if (min !== undefined && max !== undefined && min > max) {
-      this.#throwScalar(
-        `i: min (${min}) must be <= max (${max})${suffix(context)}`,
-      );
-    }
-    if (!Number.isFinite(value)) {
-      this.#throwScalar(
-        `i: expected a finite number (got ${value})${suffix(context)}`,
-      );
-    }
+  protected validateInput(value: number, context?: string): void {
     if (!Number.isInteger(value)) {
-      this.#throwScalar(
+      this.throwScalar(
         `i: expected an integer (got ${value})${suffix(context)}`,
       );
     }
-    // Range breaches go through the shared hardening reaction; the finite /
-    // integer invariants above always throw (type invariants, not a bound).
-    // On a 'warn' breach the reaction returns here and the now-violated edge
-    // is DROPPED (its guarantee is broken); 'fail' has already thrown above.
-    let effectiveMin = min;
-    let effectiveMax = max;
-    if (min !== undefined && value < min) {
-      reactToBreach(
-        hardening,
-        `i: ${value} is below the minimum ${min}${suffix(context)}`,
-        (message) => this.#throwScalar(message),
-      );
-      effectiveMin = undefined;
-    }
-    if (max !== undefined && value > max) {
-      reactToBreach(
-        hardening,
-        `i: ${value} is above the maximum ${max}${suffix(context)}`,
-        (message) => this.#throwScalar(message),
-      );
-      effectiveMax = undefined;
-    }
-    this.#value = value;
-    this.#min = effectiveMin;
-    this.#max = effectiveMax;
-    this.#context = context;
-    this.#hardening = hardening;
   }
 
-  // Throw a scalar error through this instance's error store (or a default one
-  // for the storeless free `i()` path), so `stackHints` decides the stack block.
-  #throwScalar(message: string): never {
-    const store = this.#errorStore ?? createErrorConfigStore();
-    return createErrorHelpers(store).throwScalarError(message);
-  }
-
-  #options(): IntegerOptions {
-    return {
-      min: this.#min,
-      max: this.#max,
-      context: this.#context,
-      hardening: this.#hardening,
-      errorStore: this.#errorStore,
-    };
-  }
-
-  value(): number {
-    return this.#value;
-  }
-
-  unit(): string {
-    return '';
-  }
-
-  valueOf(): number {
-    return this.#value;
-  }
-
-  constraints(): IntegerConstraints {
-    return { min: this.#min, max: this.#max };
-  }
-
-  isInt(): boolean {
-    return Number.isInteger(this.#value);
-  }
-
-  isFloat(): boolean {
-    return !Number.isInteger(this.#value);
+  protected rebuildWith(value: number): this {
+    return new IntegerImpl(value, this.options()) as this;
   }
 
   toTypedValue(): IInteger {
-    return i(this.#value);
-  }
-
-  css(): string {
-    return toPlainDecimal(this.#value);
-  }
-
-  toString(): string {
-    return this.css();
-  }
-
-  withValue(value: number): IInteger {
-    return new IntegerImpl(value, this.#options());
-  }
-
-  add(delta: Scalar): IInteger {
-    return this.withValue(this.#value + coerce(delta));
-  }
-
-  subtract(delta: Scalar): IInteger {
-    return this.withValue(this.#value - coerce(delta));
-  }
-
-  multiply(factor: Scalar): IInteger {
-    return this.withValue(this.#value * coerce(factor));
-  }
-
-  divide(divisor: Scalar): IInteger {
-    const numeric = coerce(divisor);
-    if (numeric === 0) {
-      this.#throwScalar(
-        `i: cannot divide ${this.#value} by zero${suffix(this.#context)}`,
-      );
-    }
-    const result = this.#value / numeric;
-    if (!Number.isFinite(result)) {
-      this.#throwScalar(
-        `i: non-finite result dividing ${this.#value} by ${numeric}${suffix(this.#context)}`,
-      );
-    }
-    return this.withValue(result);
-  }
-
-  clamp(min: number, max: number): IInteger {
-    if (min > max) {
-      this.#throwScalar(
-        `i.clamp: min (${min}) must be <= max (${max})`,
-      );
-    }
-    return this.withValue(Math.min(max, Math.max(min, this.#value)));
-  }
-
-  clone(): IInteger {
-    return new IntegerImpl(this.#value, this.#options());
+    return i(this.value());
   }
 }
 
