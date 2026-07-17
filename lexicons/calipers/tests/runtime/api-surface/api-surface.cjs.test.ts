@@ -138,8 +138,6 @@ describe('API surface (CJS)', () => {
       'f',
       'isInteger',
       'isFloat',
-      'hardenInteger',
-      'hardenFloat',
       'makeIntegerRefinement',
       'nonNegativeInteger',
       'nonPositiveInteger',

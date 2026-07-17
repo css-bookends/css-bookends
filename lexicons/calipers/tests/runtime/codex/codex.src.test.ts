@@ -10,12 +10,12 @@ import {
   type CalipersBundle,
   type ColorFormatPlugin,
   type ColorString,
-  hardenInteger,
+  i,
 } from '../../../src';
 import createCalipersBundle from '../../../src/codex';
 
 describe('codex config cascade (own key -> global -> factory default)', () => {
-  const hardenedI = () => hardenInteger({ min: 0, max: 10 })(8);
+  const hardenedI = () => i(8, { min: 0, max: 10 });
 
   describe('m (measurement)', () => {
     it('unit key wins over global', () => {
@@ -70,12 +70,13 @@ describe('codex config cascade (own key -> global -> factory default)', () => {
       );
     });
 
-    it('the bundle hardenInteger is configured too', () => {
+    it('the bundle i threads hardening to a per-call bound', () => {
       const c = createCalipersBundle({
         global: { hardening: 'warn' },
       });
-      const fontWeight = c.hardenInteger({ min: 0, max: 10 });
-      expect(fontWeight(8).multiply(2).value()).toBe(16);
+      expect(c.i(8, { min: 0, max: 10 }).multiply(2).value()).toBe(
+        16,
+      );
     });
   });
 
@@ -106,12 +107,13 @@ describe('codex config cascade (own key -> global -> factory default)', () => {
       );
     });
 
-    it('the bundle hardenFloat is configured too', () => {
+    it('the bundle f threads hardening to a per-call bound', () => {
       const c = createCalipersBundle({
         global: { hardening: 'warn' },
       });
-      const alpha = c.hardenFloat({ min: 0, max: 1 });
-      expect(alpha(0.6).multiply(2).value()).toBe(1.2);
+      expect(c.f(0.6, { min: 0, max: 1 }).multiply(2).value()).toBe(
+        1.2,
+      );
     });
   });
 

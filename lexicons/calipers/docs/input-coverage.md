@@ -46,7 +46,7 @@ each mapping:
 | ------------------ | ----------- | ------- | ------------- |
 | `<integer>` | `z-index: 3` | `i()` | `i(3)` |
 | `<number>` | `flex-grow: 2.5` | `f()` | `f(2.5)` |
-| `<alpha-value>` (number form) | `opacity: .5` | `f()` in `[0,1]` | `hardenFloat({ min: 0, max: 1 })(0.5)` |
+| `<alpha-value>` (number form) | `opacity: .5` | `f()` in `[0,1]` | `f(0.5, { min: 0, max: 1 })` |
 | `<ratio>` | `aspect-ratio: 16/9` | `r()` | `r(16, 9)` |
 | `<percentage>` | `width: 50%` | `m()` | `mPercent(50)` · `m(50, '%')` |
 | `<length>` | `margin: 8px` · `1.5rem` | `m()` | `m(8)` · `mRem(1.5)` |
@@ -80,7 +80,7 @@ The "constrained" primitives are the same four shapes plus a range/sign rule, ex
 hardening, never a new lexicon:
 
 - alpha `[0,1]`, font-weight `[1,1000]`, counts `>= 1`, `flex-grow >= 0` → `i()` / `f()` bounds
-  (`i(v, { min, max })`, `hardenFloat({ min, max })`).
+  (`i(v, { min, max })`, `f(v, { min, max })`).
 - non-negative / in-range measurements → the `m()` refinement quartet (`nonNegative`, `inRange`).
 
 So the constrained space is covered by the same four lexicons, hardened.

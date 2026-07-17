@@ -135,8 +135,6 @@ describe('API surface (ESM)', () => {
       'f',
       'isInteger',
       'isFloat',
-      'hardenInteger',
-      'hardenFloat',
       'makeIntegerRefinement',
       'nonNegativeInteger',
       'nonPositiveInteger',

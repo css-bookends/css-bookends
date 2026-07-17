@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  f,
-  hardenFloat,
-  i,
-  isFloat,
-} from '../../support/calipers_tests.src';
+import { f, i, isFloat } from '../../support/calipers_tests.src';
 
 describe('Float primitive (src)', () => {
   it('creates a float and renders it', () => {
@@ -46,17 +41,17 @@ describe('Float primitive (src)', () => {
     expect(f(-0.5).clamp(0, 1).value()).toBe(0);
   });
 
-  it('hardenFloat binds reusable constraints (opacity)', () => {
-    const opacity = hardenFloat({ min: 0, max: 1 });
+  it('a per-value bound enforces reusable constraints (opacity)', () => {
+    const opacity = (v: number) => f(v, { min: 0, max: 1 });
     expect(opacity(0.25).css()).toBe('0.25');
     expect(() => opacity(1.5)).toThrow(/above the maximum/);
     expect(() => opacity(-0.5)).toThrow(/below the minimum/);
   });
 
-  it('hardenFloat output RE-VALIDATES its bound through arithmetic', () => {
-    // the bound factory clones with the SAME constraints, so a result that leaves
-    // [min, max] throws. This proves the harden survives arithmetic, not just .css().
-    const opacity = hardenFloat({ min: 0, max: 1 });
+  it('a bounded value RE-VALIDATES its bound through arithmetic', () => {
+    // a bounded value clones with the SAME constraints, so a result that leaves
+    // [min, max] throws. This proves the bound survives arithmetic, not just .css().
+    const opacity = (v: number) => f(v, { min: 0, max: 1 });
     // in-range arithmetic still yields a hardened float
     expect(opacity(0.5).add(0.25).value()).toBe(0.75);
     expect(opacity(0.4).multiply(2).value()).toBe(0.8);

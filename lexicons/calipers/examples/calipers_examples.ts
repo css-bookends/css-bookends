@@ -14,8 +14,6 @@ export const {
   assertMatchingUnits,
   color,
   f,
-  hardenFloat,
-  hardenInteger,
   i,
   inRange,
   isMeasurement,

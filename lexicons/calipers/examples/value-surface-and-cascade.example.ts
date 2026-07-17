@@ -11,7 +11,7 @@ import {
   createInteger,
 } from '@css-bookends/css-calipers';
 
-import { f, hardenInteger, i, m } from './calipers_examples.ts';
+import { f, i, m } from './calipers_examples.ts';
 
 // The default value-surface helpers above come from the shared binder. The
 // configured `createInteger` / `createCalipersBundle` calls below are the point of
@@ -39,7 +39,7 @@ export const integral = m(8).isInt(); // true
 
 // --- m carries an ingested hardened bound; reaction is config-driven ------------
 
-const bounded = hardenInteger({ min: 0, max: 10 });
+const bounded = (v: number) => i(v, { min: 0, max: 10 });
 
 export const carriedBound = m(bounded(8)).constraints(); // { min: 0, max: 10 }
 

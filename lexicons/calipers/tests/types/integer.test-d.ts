@@ -1,7 +1,7 @@
 import { expectAssignable, expectError } from 'tsd';
 
 import { type IInteger } from '../../dist/index';
-import { hardenInteger, i, isInteger } from '../support/calipers_tests.dist';
+import { i, isInteger } from '../support/calipers_tests.dist';
 
 const n = i(5);
 expectAssignable<IInteger>(n);
@@ -13,8 +13,8 @@ expectAssignable<IInteger>(n.withValue(3));
 expectAssignable<IInteger>(n.clamp(0, 10));
 expectAssignable<IInteger>(i(5, { min: 0, max: 10 }));
 
-const bounded = hardenInteger({ min: 1, max: 1000 });
-expectAssignable<IInteger>(bounded(700));
+const bounded = i(700, { min: 1, max: 1000 });
+expectAssignable<IInteger>(bounded);
 
 const u: unknown = i(5);
 if (isInteger(u)) {

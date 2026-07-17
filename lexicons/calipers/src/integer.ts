@@ -108,16 +108,6 @@ export function i(
   return new IntegerImpl(value, options);
 }
 
-/**
- * Bind a set of integer constraints once and reuse the bound factory, the
- * scalar analogue of `makeUnitHelper`. For example, a font-weight value is
- * `hardenInteger({ min: 1, max: 1000 })`.
- */
-export const hardenInteger =
-  (constraints: IntegerConstraints = {}) =>
-  (value: number, context?: string): IInteger =>
-    new IntegerImpl(value, { ...constraints, context });
-
 export const isInteger = (value: unknown): value is IInteger =>
   value instanceof IntegerImpl;
 
@@ -198,9 +188,6 @@ export type IntegerFactoryConfig = HardeningConfig & {
 /** The bound integer surface a `createInteger` instance exposes. */
 export interface IntegerApi {
   i: (value: number, options?: IntegerOptions) => IInteger;
-  hardenInteger: (
-    constraints?: IntegerConstraints,
-  ) => (value: number, context?: string) => IInteger;
   isInteger: (value: unknown) => value is IInteger;
 }
 
@@ -217,7 +204,7 @@ export const createInteger = (
   const { min, max } = config;
   const factoryBounded = min !== undefined || max !== undefined;
   // One per-instance error store, shared by every value this factory binds, so
-  // the resolved `stackHints` config reaches both `i` and `hardenInteger`.
+  // the resolved `stackHints` config reaches `i`.
   const errorStore = createErrorConfigStore(config.errorConfig ?? {});
   // A bound is set ONCE, from one source: if the factory bakes a bound, a value
   // may not also carry its own. To change it, mint a fresh value.
@@ -242,19 +229,6 @@ export const createInteger = (
         ...options,
       });
     },
-    hardenInteger:
-      (constraints = {}) =>
-      (value, context) => {
-        guardBound(constraints);
-        return i(value, {
-          hardening,
-          errorStore,
-          min,
-          max,
-          ...constraints,
-          context,
-        });
-      },
     isInteger,
   };
 };

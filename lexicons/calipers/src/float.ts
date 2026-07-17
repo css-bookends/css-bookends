@@ -102,16 +102,6 @@ export function f(value: number, options: FloatOptions = {}): IFloat {
   return new FloatImpl(value, options);
 }
 
-/**
- * Bind a set of float constraints once and reuse the bound factory, the scalar
- * analogue of `makeUnitHelper`. For example, an opacity value is
- * `hardenFloat({ min: 0, max: 1 })`.
- */
-export const hardenFloat =
-  (constraints: FloatConstraints = {}) =>
-  (value: number, context?: string): IFloat =>
-    new FloatImpl(value, { ...constraints, context });
-
 export const isFloat = (value: unknown): value is IFloat =>
   value instanceof FloatImpl;
 
@@ -186,9 +176,6 @@ export type FloatFactoryConfig = HardeningConfig & {
 /** The bound float surface a `createFloat` instance exposes. */
 export interface FloatApi {
   f: (value: number, options?: FloatOptions) => IFloat;
-  hardenFloat: (
-    constraints?: FloatConstraints,
-  ) => (value: number, context?: string) => IFloat;
   isFloat: (value: unknown) => value is IFloat;
 }
 
@@ -205,7 +192,7 @@ export const createFloat = (
   const { min, max } = config;
   const factoryBounded = min !== undefined || max !== undefined;
   // One per-instance error store, shared by every value this factory binds, so
-  // the resolved `stackHints` config reaches both `f` and `hardenFloat`.
+  // the resolved `stackHints` config reaches `f`.
   const errorStore = createErrorConfigStore(config.errorConfig ?? {});
   // A bound is set ONCE, from one source: if the factory bakes a bound, a value
   // may not also carry its own. To change it, mint a fresh value.
@@ -230,19 +217,6 @@ export const createFloat = (
         ...options,
       });
     },
-    hardenFloat:
-      (constraints = {}) =>
-      (value, context) => {
-        guardBound(constraints);
-        return f(value, {
-          hardening,
-          errorStore,
-          min,
-          max,
-          ...constraints,
-          context,
-        });
-      },
     isFloat,
   };
 };

@@ -5,16 +5,11 @@
  * (integer) and `f()` (float) number primitives: native typed CSS scalars alongside
  * `m()`. Each carries optional range constraints that re-validate through arithmetic,
  * so a hardened value stays hardened (or throws). `clamp(min, max)` snaps instead of
- * throwing; `hardenInteger` / `hardenFloat` bind a constraint set into a reusable
- * factory (the scalar analogue of a unit helper).
+ * throwing; a per-value bound (`i(v, { min, max })`) or a factory bound
+ * (`createInteger({ min, max })`) sets range constraints.
  */
 
-import {
-  f,
-  hardenFloat,
-  hardenInteger,
-  i,
-} from './calipers_examples.ts';
+import { f, i } from './calipers_examples.ts';
 
 // --- construction and render ----------------------------------------------------
 
@@ -83,10 +78,10 @@ export const clampedHigh = i(15).clamp(0, 10).value(); // 10
 export const clampedLow = i(-3).clamp(0, 10).value(); // 0
 export const floatClamped = f(1.5).clamp(0, 1).value(); // 1
 
-// --- hardenInteger / hardenFloat: reusable bound factories ----------------------
+// --- reusable bound builders (a per-value i(v, { min, max }) / f) ----------------
 
 // A font-weight value is an integer in [1, 1000]; bind it once, reuse it.
-const fontWeight = hardenInteger({ min: 1, max: 1000 });
+const fontWeight = (v: number) => i(v, { min: 1, max: 1000 });
 export const validWeight = fontWeight(700).css(); // '700'
 export const weightThrows = (): string => {
   try {
@@ -99,7 +94,7 @@ export const weightThrows = (): string => {
 };
 
 // An opacity value is a float in [0, 1]; same pattern.
-const opacity = hardenFloat({ min: 0, max: 1 });
+const opacity = (v: number) => f(v, { min: 0, max: 1 });
 export const validOpacity = opacity(0.25).css(); // '0.25'
 export const opacityThrows = (): string => {
   try {

@@ -5,14 +5,12 @@ import {
   type FloatConstraints,
   type FloatFactoryConfig,
   type FloatOptions,
-  hardenFloat,
   type IFloat,
   isFloat,
 } from './float';
 import { type Constraints } from './hardening';
 import {
   createInteger,
-  hardenInteger,
   i,
   type IInteger,
   type IntegerApi,
@@ -256,16 +254,7 @@ export type {
   RatioParts,
   RatioValue,
 };
-export {
-  createFloat,
-  createInteger,
-  f,
-  hardenFloat,
-  hardenInteger,
-  i,
-  isFloat,
-  isInteger,
-};
+export { createFloat, createInteger, f, i, isFloat, isInteger };
 export type {
   FloatApi,
   FloatConstraints,

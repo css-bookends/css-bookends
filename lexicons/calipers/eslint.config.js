@@ -85,8 +85,6 @@ module.exports = [
                 'assertUnit',
                 'assertCondition',
                 'assertPercentMeasurement',
-                'hardenFloat',
-                'hardenInteger',
                 'measurementMin',
                 'measurementMax',
                 'measurementUnitMetadata',

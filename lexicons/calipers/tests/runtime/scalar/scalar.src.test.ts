@@ -61,14 +61,16 @@ describe('createScalarBundle (scalar family bundle)', () => {
       );
     });
 
-    it('propagates the reaction to the hardenInteger / hardenFloat builders', () => {
+    it('propagates the reaction to a per-call bound on i / f', () => {
       const loose = createScalarBundle({
         global: { hardening: 'warn' },
       });
-      const fontWeight = loose.hardenInteger({ min: 0, max: 10 });
-      expect(fontWeight(8).multiply(2).value()).toBe(16);
-      const alpha = loose.hardenFloat({ min: 0, max: 1 });
-      expect(alpha(0.6).multiply(2).value()).toBe(1.2);
+      expect(
+        loose.i(8, { min: 0, max: 10 }).multiply(2).value(),
+      ).toBe(16);
+      expect(
+        loose.f(0.6, { min: 0, max: 1 }).multiply(2).value(),
+      ).toBe(1.2);
     });
   });
 

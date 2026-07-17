@@ -218,7 +218,7 @@ This is the practical mapping from CSS shape to css-calipers primitive.
 
 `opacity`, `fill-opacity`, `stroke-opacity`, `stop-opacity`, `flood-opacity`,
 `shape-image-threshold`, plus any `<alpha-value>` number form. All clamp into
-`[0, 1]`. A single `hardenFloat({ min: 0, max: 1 })` factory covers the group.
+`[0, 1]`. A single `f(v, { min: 0, max: 1 })` bound covers the group.
 
 ### Maps to float `f()` with `>= 0`
 

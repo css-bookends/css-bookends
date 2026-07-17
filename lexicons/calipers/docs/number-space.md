@@ -57,10 +57,10 @@ from these scalars (a ratio of two hardened integers is itself hardened).
   `f(value, { min?, max?, context? })`. The constructor validates finiteness (and
   integer-ness for `i`) and the optional range. Operations re-validate against the
   same constraints, so a hardened value stays hardened (or throws) through arithmetic.
-- **Hardened factories:** `hardenInteger({ min?, max? })` and
-  `hardenFloat({ min?, max? })` return a bound factory, the scalar analogue of
-  `makeUnitHelper` for measurements. This is where a real CSS value is defined once
-  and reused, e.g. a `0..1` float factory.
+- **Bounded builders:** `i(v, { min?, max? })` / `f(v, { min?, max? })` (per value), or
+  `createInteger({ min?, max? })` / `createFloat({ min?, max? })` (a named-domain factory,
+  `const { i: fontWeight } = createInteger({ min: 100, max: 900 })`), carry a range bound. This is
+  where a real CSS value is defined once and reused, e.g. a `0..1` float.
 - **Composition:** `r()` accepts `number | IInteger | IFloat` and respects a passed
   primitive's already-validated value.
 
@@ -98,7 +98,7 @@ same lowering to its bound unit.
 
 - **csstype-typed CSS-value helpers** (`opacity`, `line-height`, `z-index`,
   `font-weight`, ...). These are the semantic layer: a named helper that is a hardened
-  scalar under the hood (e.g. `opacity` = `hardenFloat({ min: 0, max: 1 })`) and ties
+  scalar under the hood (e.g. `opacity` = a float in `[0, 1]`) and ties
   to the matching csstype `Property.*` type. The property layer is csstype; the value
   layer is the primitive. Built on top of this foundation, not part of it.
 - **Colour consolidation** into css-calipers (the colour lexicon).

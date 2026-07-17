@@ -9,7 +9,7 @@
 // exercise the new m behaviour.
 import { describe, expect, it, vi } from 'vitest';
 
-import { f, hardenFloat, hardenInteger, i } from '../../../src';
+import { createFloat, createInteger, f, i } from '../../../src';
 import { createCalipers } from '../../../src/factory';
 import {
   inRange,
@@ -19,16 +19,16 @@ import {
 
 describe('hardening spectrum', () => {
   /* ---- i / f imperative hardening (existing behaviour; regression) ---- */
-  describe('i / f harden + re-validate through arithmetic', () => {
-    it('hardenInteger enforces bounds at construction', () => {
-      const fontWeight = hardenInteger({ min: 1, max: 1000 });
+  describe('i / f bounded builders re-validate through arithmetic', () => {
+    it('a bounded integer enforces its bound at construction', () => {
+      const { i: fontWeight } = createInteger({ min: 1, max: 1000 });
       expect(fontWeight(700).value()).toBe(700);
       expect(() => fontWeight(0)).toThrow(/below the minimum/);
       expect(() => fontWeight(1200)).toThrow(/above the maximum/);
     });
 
-    it('hardenInteger re-validates through arithmetic (throws on breach)', () => {
-      const bounded = hardenInteger({ min: 0, max: 10 });
+    it('a bounded integer re-validates through arithmetic (throws on breach)', () => {
+      const { i: bounded } = createInteger({ min: 0, max: 10 });
       expect(bounded(4).multiply(2).value()).toBe(8); // in bounds
       expect(() => bounded(8).multiply(2)).toThrow(
         /above the maximum/,
@@ -36,22 +36,18 @@ describe('hardening spectrum', () => {
     });
 
     it('exposes its bounds via .constraints()', () => {
-      expect(
-        hardenInteger({ min: 0, max: 10 })(4).constraints(),
-      ).toEqual({
+      expect(i(4, { min: 0, max: 10 }).constraints()).toEqual({
         min: 0,
         max: 10,
       });
-      expect(
-        hardenFloat({ min: 0, max: 1 })(0.5).constraints(),
-      ).toEqual({
+      expect(f(0.5, { min: 0, max: 1 }).constraints()).toEqual({
         min: 0,
         max: 1,
       });
     });
 
-    it('hardenFloat re-validates through arithmetic', () => {
-      const alpha = hardenFloat({ min: 0, max: 1 });
+    it('a bounded float re-validates through arithmetic', () => {
+      const { f: alpha } = createFloat({ min: 0, max: 1 });
       expect(() => alpha(0.6).multiply(2)).toThrow(
         /above the maximum/,
       ); // 1.2 > 1
@@ -71,9 +67,10 @@ describe('hardening spectrum', () => {
   /* ---- NEW: m carries an ingested hardened scalar ---- */
   describe('m carries an ingested hardened scalar', () => {
     it('keeps the scalar bounds as m.constraints()', () => {
-      expect(
-        m(hardenInteger({ min: 0, max: 10 })(8)).constraints(),
-      ).toEqual({ min: 0, max: 10 });
+      expect(m(i(8, { min: 0, max: 10 })).constraints()).toEqual({
+        min: 0,
+        max: 10,
+      });
     });
 
     it('an unhardened scalar carries no constraints', () => {
@@ -83,7 +80,7 @@ describe('hardening spectrum', () => {
 
   /* ---- NEW: config-driven reaction when math breaks a carried bound ---- */
   describe('hardening config when arithmetic breaks a carried bound', () => {
-    const hardened = () => hardenInteger({ min: 0, max: 10 })(8);
+    const hardened = () => i(8, { min: 0, max: 10 });
 
     it("'warn' warns but proceeds", () => {
       const spy = vi

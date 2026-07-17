@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import {
-  f,
-  hardenInteger,
-  i,
-  isInteger,
-} from '../../support/calipers_tests.src';
+import { f, i, isInteger } from '../../support/calipers_tests.src';
 
 describe('Integer primitive (src)', () => {
   it('creates an integer and renders it', () => {
@@ -49,17 +44,17 @@ describe('Integer primitive (src)', () => {
     expect(() => i(5).clamp(10, 0)).toThrow(/min .* must be <= max/);
   });
 
-  it('hardenInteger binds reusable constraints (font-weight)', () => {
-    const fontWeight = hardenInteger({ min: 1, max: 1000 });
+  it('a per-value bound enforces reusable constraints (font-weight)', () => {
+    const fontWeight = (v: number) => i(v, { min: 1, max: 1000 });
     expect(fontWeight(700).css()).toBe('700');
     expect(() => fontWeight(1200)).toThrow(/above the maximum/);
     expect(() => fontWeight(0)).toThrow(/below the minimum/);
   });
 
-  it('hardenInteger output RE-VALIDATES its bound through arithmetic', () => {
-    // the bound factory clones with the SAME constraints, so a result that leaves
-    // [min, max] throws. This proves the harden survives arithmetic, not just .css().
-    const fontWeight = hardenInteger({ min: 1, max: 1000 });
+  it('a bounded value RE-VALIDATES its bound through arithmetic', () => {
+    // a bounded value clones with the SAME constraints, so a result that leaves
+    // [min, max] throws. This proves the bound survives arithmetic, not just .css().
+    const fontWeight = (v: number) => i(v, { min: 1, max: 1000 });
     // in-range arithmetic still yields a hardened integer
     expect(fontWeight(700).add(100).value()).toBe(800);
     expect(fontWeight(500).multiply(2).value()).toBe(1000);

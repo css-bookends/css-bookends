@@ -169,7 +169,7 @@ m(2.5).toTypedValue();  // f(2.5)             (integral -> i, fractional -> f)
 
 ## Integers and floats
 
-`i()` (a whole number) and `f()` (a real number) are constrained scalars for the unitless number space CSS leaves untyped. Both validate at construction and re-validate on every operation, so a constrained value stays valid (or throws) through arithmetic. `clamp(min, max)` snaps into range instead of throwing; `hardenInteger({ min, max })` / `hardenFloat({ min, max })` bind a constraint once into a reusable factory. The `createInteger` / `createFloat` factories return that same `i` / `hardenInteger` (resp. `f` / `hardenFloat`) surface with a `hardening` reaction baked in (see Hardening). See `examples/integers-floats.example.ts`.
+`i()` (a whole number) and `f()` (a real number) are constrained scalars for the unitless number space CSS leaves untyped. Both validate at construction and re-validate on every operation, so a constrained value stays valid (or throws) through arithmetic. `clamp(min, max)` snaps into range instead of throwing; a per-value bound (`i(v, { min, max })`) or a named-domain factory bound (`const { i: fontWeight } = createInteger({ min: 100, max: 900 })`) sets range constraints. The `createInteger` / `createFloat` factories bake a `hardening` reaction (and an optional bound) into the `i` / `f` they return (see Hardening). See `examples/integers-floats.example.ts`.
 
 ## Ratios
 
@@ -182,11 +182,11 @@ Refinements run a runtime check and return the same value branded with the const
 **Hardening through `m()` (config-driven).** When `m()` ingests a hardened `i` / `f`, it CARRIES the bound, readable via `.constraints()`. What happens when later arithmetic BREAKS that bound is one config knob, `hardening: 'warn' | 'fail'` (default `'fail'`): `fail` throws, `warn` warns and drops the bound. (There is no silent "ignore": dropping a bound silently is the same as never bounding the value.) The same knob governs `i` / `f`'s own re-validation. Set it per instance via `createCalipers({ hardening })` / `createInteger({ hardening })` / `createFloat({ hardening })`, or across the whole bundle via the cascade (see Factories).
 
 ```ts
-import { m, hardenInteger, createCalipersBundle } from '@css-bookends/css-calipers';
+import { m, i, createCalipersBundle } from '@css-bookends/css-calipers';
 
-const bounded = hardenInteger({ min: 0, max: 10 });
-m(bounded(8)).constraints();      // { min: 0, max: 10 }   (m carries the ingested bound)
-m(bounded(8)).multiply(2);        // throws                (16 breaks [0, 10]; default 'fail')
+const bounded = i(8, { min: 0, max: 10 });
+m(bounded).constraints();         // { min: 0, max: 10 }   (m carries the ingested bound)
+m(bounded).multiply(2);           // throws                (16 breaks [0, 10]; default 'fail')
 
 // configure the reaction via the bundle (createCalipers is on the /factory + /codex entries)
 const lenient = createCalipersBundle({ measurement: { hardening: 'warn' } });

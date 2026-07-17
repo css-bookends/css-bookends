@@ -7,7 +7,6 @@ import { describe, expect, it } from 'vitest';
 import {
   bundle,
   f,
-  hardenInteger,
   i,
   m,
   makeUnitHelperFromDefinition,
@@ -87,7 +86,7 @@ describe('m() options: direct bound + input modifier', () => {
 
   it('a direct bound + an ingested-scalar bound together throw (set once)', () => {
     expect(() =>
-      m(hardenInteger({ min: 0, max: 10 })(8), {
+      m(i(8, { min: 0, max: 10 }), {
         unit: 'px',
         min: 0,
         max: 5,

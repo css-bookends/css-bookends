@@ -207,14 +207,15 @@ The conformance rules that follow:
 - **`m()` / the lexicons stay PERMISSIVE.** Only truly-invalid input (non-finite) fails; range
   rules are not their job. Ordinary in-range variation (an opacity moving 1 -> 0.4) is never an
   error.
-- **Hardening is OPT-IN.** `m()`'s refinement quartet, and `hardenInteger`/`hardenFloat` on
-  `i`/`f`, let a consumer add strict bounds when they want them; it is never forced.
+- **Hardening is OPT-IN.** `m()`'s refinement quartet, and a bound on `i`/`f` (`i(v, {min,max})` /
+  `createInteger({min,max})`), let a consumer add strict bounds when they want them; it is never forced.
 
 ### Hardening: config-driven reaction to loss / breach (locked 2026-06-29)
 
-Each value type keeps its existing hardening tools: `hardenInteger` / `hardenFloat` on the scalars
-(runtime bounds, re-validated through arithmetic, exposed via `.constraints()`), and `m`'s
-refinement quartet (`nonNegative` / `nonPositive` / `inRange`) for hardening a measurement directly.
+Each value type keeps its existing hardening tools: a bound on the scalars (`i(v, {min,max})` /
+`createInteger({min,max})`, runtime bounds re-validated through arithmetic, exposed via
+`.constraints()`), and `m`'s refinement quartet (`nonNegative` / `nonPositive` / `inRange`) for
+hardening a measurement directly.
 `m` ALSO takes a DIRECT construction bound via its options object — `m(v, { min, max })` — making it a
 directly-bounded lexicon like `i`/`f` (a direct bound is checked at construction). A measurement's bound
 therefore comes from ONE source: the direct `min`/`max`, an ingested hardened scalar, or the refinement

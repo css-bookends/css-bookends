@@ -3,8 +3,7 @@
 // Direct behavioral tests for the scalar factories `createInteger` / `createFloat`.
 // They were only reached indirectly through the bundle cascade; the split turns each
 // into its own package, so drive the factory directly here: the configured hardening
-// reaction must reach both the bound `i` / `f` helper and the `hardenInteger` /
-// `hardenFloat` bound-constraint builders it returns.
+// reaction must reach the bound `i` / `f` helper it returns.
 import { describe, expect, it } from 'vitest';
 
 import { createFloat } from '../../../src/float';
@@ -13,21 +12,15 @@ import { createRatio } from '../../../src/ratio';
 
 describe('createInteger (direct factory behavior)', () => {
   it('binds an i carrying the configured hardening reaction', () => {
-    const strict = createInteger({ hardening: 'fail' });
+    const failing = createInteger({ hardening: 'fail' });
     expect(() =>
-      strict.i(8, { min: 0, max: 10 }).multiply(2),
+      failing.i(8, { min: 0, max: 10 }).multiply(2),
     ).toThrow(/maximum/);
 
-    const loose = createInteger({ hardening: 'warn' });
-    expect(loose.i(8, { min: 0, max: 10 }).multiply(2).value()).toBe(
-      16,
-    );
-  });
-
-  it('propagates the reaction to its hardenInteger builder', () => {
-    const loose = createInteger({ hardening: 'warn' });
-    const fontWeight = loose.hardenInteger({ min: 0, max: 10 });
-    expect(fontWeight(8).multiply(2).value()).toBe(16);
+    const warning = createInteger({ hardening: 'warn' });
+    expect(
+      warning.i(8, { min: 0, max: 10 }).multiply(2).value(),
+    ).toBe(16);
   });
 
   it('defaults to fail when no reaction is configured', () => {
@@ -40,21 +33,15 @@ describe('createInteger (direct factory behavior)', () => {
 
 describe('createFloat (direct factory behavior)', () => {
   it('binds an f carrying the configured hardening reaction', () => {
-    const strict = createFloat({ hardening: 'fail' });
+    const failing = createFloat({ hardening: 'fail' });
     expect(() =>
-      strict.f(0.6, { min: 0, max: 1 }).multiply(2),
+      failing.f(0.6, { min: 0, max: 1 }).multiply(2),
     ).toThrow(/maximum/);
 
-    const loose = createFloat({ hardening: 'warn' });
-    expect(loose.f(0.6, { min: 0, max: 1 }).multiply(2).value()).toBe(
-      1.2,
-    );
-  });
-
-  it('propagates the reaction to its hardenFloat builder', () => {
-    const loose = createFloat({ hardening: 'warn' });
-    const alpha = loose.hardenFloat({ min: 0, max: 1 });
-    expect(alpha(0.6).multiply(2).value()).toBe(1.2);
+    const warning = createFloat({ hardening: 'warn' });
+    expect(
+      warning.f(0.6, { min: 0, max: 1 }).multiply(2).value(),
+    ).toBe(1.2);
   });
 
   it('defaults to fail when no reaction is configured', () => {

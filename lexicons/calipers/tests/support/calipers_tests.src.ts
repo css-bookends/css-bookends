@@ -51,8 +51,6 @@ export const {
   r,
   i,
   f,
-  hardenInteger,
-  hardenFloat,
   isInteger,
   isFloat,
   isRatio,
