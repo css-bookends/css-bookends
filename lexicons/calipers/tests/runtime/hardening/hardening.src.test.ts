@@ -9,7 +9,7 @@
 // exercise the new m behaviour.
 import { describe, expect, it, vi } from 'vitest';
 
-import { hardenFloat, hardenInteger, i } from '../../../src';
+import { f, hardenFloat, hardenInteger, i } from '../../../src';
 import { createCalipers } from '../../../src/factory';
 import {
   inRange,
@@ -114,5 +114,36 @@ describe('hardening spectrum', () => {
       const cal = createCalipers({ hardening: 'fail' });
       expect(cal.m(i(8)).multiply(2).css()).toBe('16px');
     });
+  });
+});
+
+describe('construction-time hardening reaction (i / f)', () => {
+  it("'ignore' drops the violated edge, keeps the valid one", () => {
+    const v = i(50, { min: 0, max: 10, hardening: 'ignore' });
+    expect(v.value()).toBe(50);
+    // max (violated) is dropped; the still-valid min is kept
+    expect(v.constraints()).toEqual({ min: 0 });
+  });
+
+  it("'warn' warns and drops the violated edge", () => {
+    const spy = vi
+      .spyOn(console, 'warn')
+      .mockImplementation(() => {});
+    const v = i(50, { min: 0, max: 10, hardening: 'warn' });
+    expect(spy).toHaveBeenCalled();
+    expect(v.constraints()).toEqual({ min: 0 });
+    spy.mockRestore();
+  });
+
+  it("'fail' throws (unchanged)", () => {
+    expect(() =>
+      i(50, { min: 0, max: 10, hardening: 'fail' }),
+    ).toThrow(/above the maximum/);
+  });
+
+  it('float mirrors: ignore drops the violated edge', () => {
+    expect(
+      f(1.5, { min: 0, max: 1, hardening: 'ignore' }).constraints(),
+    ).toEqual({ min: 0 });
   });
 });

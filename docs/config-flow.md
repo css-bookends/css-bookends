@@ -82,7 +82,7 @@ own unit key  →  this level's global  →  the outer level's global  →  fact
 | colour config | `formats`, `output`, `strictness`, `transparent`, `omitOpaqueAlpha` | — (the codex `color` key only) | `color` | `defaultColorConfig` |
 | `format` | `'object' \| 'string'` | — (per-book key today) | books | `'object'` |
 | constraint bound (`min`, `max`) | a `number` | — (the unit's own key `integer` / `float` / `ratio`, or per value) | `i`, `f`, `r`: a bounded builder brands the value `InRange<min,max>` (System A) and stores the bound (System B) | unbounded |
-| `sealed` (`sealedMin`, `sealedMax`, `sealedRange`) | `boolean` per edge | — (the unit's own key, or on the value via `sealMin()` / `sealMax()`) | `i`, `f`, `m`, `r`: locks a bound edge against `clone` (control, not prevention) | unsealed |
+| `sealed` (`sealedMin`, `sealedMax`, `sealedRange`) | `boolean` per edge | — (the unit's own key, or on the value via `sealMin()` / `sealMax()`) | `i`, `f`, `m`, `r`: locks a bound edge against `clone` (control, not prevention) | sealed (bounds locked; opt out per edge with `sealedMin: false`) |
 
 `hardening` and `errorConfig` are the two CROSS-CUTTING options: they live in every level's
 `global` and reach every error-producing unit. `defaultUnit`, `formats`, `format`, the constraint

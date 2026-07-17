@@ -241,8 +241,9 @@ proof in the type (A) and its bound at runtime (B). The surface that follows:
   the source, so `token.clone({ min: 0 })` changes only `min` and keeps everything else. Clones
   respect seals.
 - **`sealed`, per boundary edge.** Config `sealedMin` / `sealedMax` / `sealedRange`; methods
-  `sealMin()` / `sealMax()` / `sealRange()`. A sealed edge cannot be changed through `clone`.
-  Sealing is additive and reseal-friendly; you never unseal a value.
+  `sealMin()` / `sealMax()` / `sealRange()`. **Bounds are SEALED by default** (safety by default);
+  opt into editability per edge with `sealedMin: false` (etc.). A sealed edge cannot be changed
+  through `clone`. Sealing is additive and reseal-friendly; you never unseal a value in place.
 - **Sealing is CONTROL, not prevention.** A sealed value's bound is fixed against `clone`, but
   anyone can mint a fresh value from its number with different bounds (`i(v.value(), { min, max })`),
   and that escape is intended and documented. A team that wants "sealed means sealed" adds the

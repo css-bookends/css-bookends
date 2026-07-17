@@ -2,7 +2,9 @@ import {
   DEFAULT_HARDENING,
   type Hardening,
   type HardeningConfig,
+  mergeCloneConstraints,
   reactToBreach,
+  resolveSealFlags,
 } from './hardening';
 import { i, type IInteger } from './integer';
 import type {
@@ -44,6 +46,12 @@ export type FloatOptions = FloatConstraints & {
    * export leaves it undefined and falls back to a default store.
    */
   errorStore?: ErrorConfigStore;
+  /**
+   * Whether the min / max edge is SEALED (locked against `clone`). Defaults to true for any edge
+   * that has a bound (safety by default); pass false to make that edge editable.
+   */
+  sealedMin?: boolean;
+  sealedMax?: boolean;
 };
 
 export interface IFloat {
@@ -63,6 +71,13 @@ export interface IFloat {
   multiply: (factor: Scalar) => IFloat;
   divide: (divisor: Scalar) => IFloat;
   clamp: (min: number, max: number) => IFloat;
+  /** An independent copy. A `patch` merges over the bound and re-validates; changing a SEALED
+   *  edge throws (mint a fresh value instead). */
+  clone: (patch?: FloatConstraints) => IFloat;
+  /** A copy with the min / max / both edge sealed (additive; you never unseal in place). */
+  sealMin: () => IFloat;
+  sealMax: () => IFloat;
+  sealRange: () => IFloat;
 }
 
 /**
@@ -101,6 +116,8 @@ class FloatImpl implements IFloat {
   #context?: string;
   #hardening: Hardening;
   #errorStore?: ErrorConfigStore;
+  #sealedMin: boolean;
+  #sealedMax: boolean;
 
   constructor(value: number, options: FloatOptions = {}) {
     const { min, max, context } = options;
@@ -119,12 +136,17 @@ class FloatImpl implements IFloat {
     }
     // Range breaches go through the shared hardening reaction; the finite
     // invariant above always throws (a type invariant, not a bound).
+    // On a 'warn' / 'ignore' breach the reaction returns here and the now-violated edge
+    // is DROPPED (its guarantee is broken); 'fail' has already thrown above.
+    let effectiveMin = min;
+    let effectiveMax = max;
     if (min !== undefined && value < min) {
       reactToBreach(
         hardening,
         `f: ${value} is below the minimum ${min}${suffix(context)}`,
         (message) => this.#throwScalar(message),
       );
+      effectiveMin = undefined;
     }
     if (max !== undefined && value > max) {
       reactToBreach(
@@ -132,12 +154,19 @@ class FloatImpl implements IFloat {
         `f: ${value} is above the maximum ${max}${suffix(context)}`,
         (message) => this.#throwScalar(message),
       );
+      effectiveMax = undefined;
     }
     this.#value = value;
-    this.#min = min;
-    this.#max = max;
+    this.#min = effectiveMin;
+    this.#max = effectiveMax;
     this.#context = context;
     this.#hardening = hardening;
+    const seal = resolveSealFlags(
+      { min: effectiveMin, max: effectiveMax },
+      options,
+    );
+    this.#sealedMin = seal.min;
+    this.#sealedMax = seal.max;
   }
 
   // Throw a scalar error through this instance's error store (or a default one
@@ -154,6 +183,8 @@ class FloatImpl implements IFloat {
       context: this.#context,
       hardening: this.#hardening,
       errorStore: this.#errorStore,
+      sealedMin: this.#sealedMin,
+      sealedMax: this.#sealedMax,
     };
   }
 
@@ -234,6 +265,45 @@ class FloatImpl implements IFloat {
       );
     }
     return this.withValue(Math.min(max, Math.max(min, this.#value)));
+  }
+
+  clone(patch: FloatConstraints = {}): IFloat {
+    const merged = mergeCloneConstraints(
+      { min: this.#min, max: this.#max },
+      { min: this.#sealedMin, max: this.#sealedMax },
+      patch,
+      (message) => this.#throwScalar(message),
+    );
+    return new FloatImpl(this.#value, {
+      ...merged,
+      context: this.#context,
+      hardening: this.#hardening,
+      errorStore: this.#errorStore,
+      sealedMin: this.#sealedMin,
+      sealedMax: this.#sealedMax,
+    });
+  }
+
+  sealMin(): IFloat {
+    return new FloatImpl(this.#value, {
+      ...this.#options(),
+      sealedMin: true,
+    });
+  }
+
+  sealMax(): IFloat {
+    return new FloatImpl(this.#value, {
+      ...this.#options(),
+      sealedMax: true,
+    });
+  }
+
+  sealRange(): IFloat {
+    return new FloatImpl(this.#value, {
+      ...this.#options(),
+      sealedMin: true,
+      sealedMax: true,
+    });
   }
 }
 
@@ -318,6 +388,13 @@ export const inRangeFloat = <Min extends number, Max extends number>(
  */
 export type FloatFactoryConfig = HardeningConfig & {
   errorConfig?: ErrorConfig;
+  /**
+   * Default seal state for this instance's bounded values, resolving per-value option ->
+   * this factory config -> built-in default (`true`). `sealed` is unit-local (no bundle
+   * `global`), like `min` / `max`.
+   */
+  sealedMin?: boolean;
+  sealedMax?: boolean;
 };
 
 /** The bound float surface a `createFloat` instance exposes. */
@@ -339,16 +416,30 @@ export const createFloat = (
   config: FloatFactoryConfig = {},
 ): FloatApi => {
   const hardening = config.hardening ?? DEFAULT_HARDENING;
+  const { sealedMin, sealedMax } = config;
   // One per-instance error store, shared by every value this factory binds, so
   // the resolved `stackHints` config reaches both `f` and `hardenFloat`.
   const errorStore = createErrorConfigStore(config.errorConfig ?? {});
   return {
     f: (value, options = {}) =>
-      f(value, { hardening, errorStore, ...options }),
+      f(value, {
+        hardening,
+        errorStore,
+        sealedMin,
+        sealedMax,
+        ...options,
+      }),
     hardenFloat:
       (constraints = {}) =>
       (value, context) =>
-        f(value, { hardening, errorStore, ...constraints, context }),
+        f(value, {
+          hardening,
+          errorStore,
+          sealedMin,
+          sealedMax,
+          ...constraints,
+          context,
+        }),
     isFloat,
   };
 };
