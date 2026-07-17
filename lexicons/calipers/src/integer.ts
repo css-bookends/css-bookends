@@ -186,6 +186,13 @@ export const inRangeInteger = <
  */
 export type IntegerFactoryConfig = HardeningConfig & {
   errorConfig?: ErrorConfig;
+  /**
+   * A bound baked into every value this factory builds (the named-domain pattern,
+   * e.g. `createInteger({ min: 100, max: 900 })` for font-weight). Set once here; a
+   * per-value bound on top throws. Unit-local (no bundle `global`).
+   */
+  min?: number;
+  max?: number;
 };
 
 /** The bound integer surface a `createInteger` instance exposes. */
@@ -207,25 +214,47 @@ export const createInteger = (
   config: IntegerFactoryConfig = {},
 ): IntegerApi => {
   const hardening = config.hardening ?? DEFAULT_HARDENING;
+  const { min, max } = config;
+  const factoryBounded = min !== undefined || max !== undefined;
   // One per-instance error store, shared by every value this factory binds, so
   // the resolved `stackHints` config reaches both `i` and `hardenInteger`.
   const errorStore = createErrorConfigStore(config.errorConfig ?? {});
+  // A bound is set ONCE, from one source: if the factory bakes a bound, a value
+  // may not also carry its own. To change it, mint a fresh value.
+  const guardBound = (constraints: IntegerConstraints): void => {
+    if (
+      factoryBounded &&
+      (constraints.min !== undefined || constraints.max !== undefined)
+    ) {
+      createErrorHelpers(errorStore).throwScalarError(
+        'i: a factory bound is already set; a value cannot take a second bound (a bound is set once, from one source). Mint a fresh value with the new bound instead.',
+      );
+    }
+  };
   return {
-    i: (value, options = {}) =>
-      i(value, {
+    i: (value, options = {}) => {
+      guardBound(options);
+      return i(value, {
         hardening,
         errorStore,
+        min,
+        max,
         ...options,
-      }),
+      });
+    },
     hardenInteger:
       (constraints = {}) =>
-      (value, context) =>
-        i(value, {
+      (value, context) => {
+        guardBound(constraints);
+        return i(value, {
           hardening,
           errorStore,
+          min,
+          max,
           ...constraints,
           context,
-        }),
+        });
+      },
     isInteger,
   };
 };

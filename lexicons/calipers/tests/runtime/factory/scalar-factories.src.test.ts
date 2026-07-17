@@ -115,3 +115,39 @@ describe('scalar errorConfig (stackHints) rendering', () => {
     expect(captureMessage(() => c.r(1, 0))).toContain('stack=');
   });
 });
+
+describe('scalar factory bounds (min / max)', () => {
+  it('createInteger bakes a factory bound every value inherits (fontWeight 100..900)', () => {
+    const { i: fontWeight } = createInteger({ min: 100, max: 900 });
+    expect(fontWeight(400).constraints()).toEqual({
+      min: 100,
+      max: 900,
+    });
+    expect(() => fontWeight(50)).toThrow(/minimum/);
+    expect(() => fontWeight(1000)).toThrow(/maximum/);
+  });
+
+  it('createInteger rejects a per-call bound when the factory already sets one', () => {
+    const { i: fontWeight } = createInteger({ min: 100, max: 900 });
+    expect(() => fontWeight(400, { min: 0, max: 1000 })).toThrow(
+      /already set/,
+    );
+  });
+
+  it('createInteger with no factory bound still takes a per-call bound', () => {
+    const { i } = createInteger();
+    expect(i(5, { min: 0, max: 10 }).constraints()).toEqual({
+      min: 0,
+      max: 10,
+    });
+  });
+
+  it('createFloat bakes a factory bound (opacity 0..1)', () => {
+    const { f: opacity } = createFloat({ min: 0, max: 1 });
+    expect(opacity(0.5).constraints()).toEqual({ min: 0, max: 1 });
+    expect(() => opacity(2)).toThrow(/maximum/);
+    expect(() => opacity(0.5, { min: 0, max: 1 })).toThrow(
+      /already set/,
+    );
+  });
+});

@@ -174,6 +174,13 @@ export const inRangeFloat = <Min extends number, Max extends number>(
  */
 export type FloatFactoryConfig = HardeningConfig & {
   errorConfig?: ErrorConfig;
+  /**
+   * A bound baked into every value this factory builds (the named-domain pattern,
+   * e.g. `createFloat({ min: 0, max: 1 })` for opacity). Set once here; a per-value
+   * bound on top throws. Unit-local (no bundle `global`).
+   */
+  min?: number;
+  max?: number;
 };
 
 /** The bound float surface a `createFloat` instance exposes. */
@@ -195,25 +202,47 @@ export const createFloat = (
   config: FloatFactoryConfig = {},
 ): FloatApi => {
   const hardening = config.hardening ?? DEFAULT_HARDENING;
+  const { min, max } = config;
+  const factoryBounded = min !== undefined || max !== undefined;
   // One per-instance error store, shared by every value this factory binds, so
   // the resolved `stackHints` config reaches both `f` and `hardenFloat`.
   const errorStore = createErrorConfigStore(config.errorConfig ?? {});
+  // A bound is set ONCE, from one source: if the factory bakes a bound, a value
+  // may not also carry its own. To change it, mint a fresh value.
+  const guardBound = (constraints: FloatConstraints): void => {
+    if (
+      factoryBounded &&
+      (constraints.min !== undefined || constraints.max !== undefined)
+    ) {
+      createErrorHelpers(errorStore).throwScalarError(
+        'f: a factory bound is already set; a value cannot take a second bound (a bound is set once, from one source). Mint a fresh value with the new bound instead.',
+      );
+    }
+  };
   return {
-    f: (value, options = {}) =>
-      f(value, {
+    f: (value, options = {}) => {
+      guardBound(options);
+      return f(value, {
         hardening,
         errorStore,
+        min,
+        max,
         ...options,
-      }),
+      });
+    },
     hardenFloat:
       (constraints = {}) =>
-      (value, context) =>
-        f(value, {
+      (value, context) => {
+        guardBound(constraints);
+        return f(value, {
           hardening,
           errorStore,
+          min,
+          max,
           ...constraints,
           context,
-        }),
+        });
+      },
     isFloat,
   };
 };

@@ -284,4 +284,12 @@ describe('codex errorConfig cascade (global -> unit key -> factory default)', ()
     expect(fError(c)).toContain('stack=');
     expect(rError(c)).toContain('stack=');
   });
+
+  it('a scalar unit key forwards a factory bound to that unit (min / max)', () => {
+    const c = createCalipersBundle({
+      integer: { min: 100, max: 900 },
+    });
+    expect(c.i(400).constraints()).toEqual({ min: 100, max: 900 });
+    expect(() => c.i(50)).toThrow(/minimum/);
+  });
 });
