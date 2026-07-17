@@ -215,8 +215,11 @@ The conformance rules that follow:
 Each value type keeps its existing hardening tools: `hardenInteger` / `hardenFloat` on the scalars
 (runtime bounds, re-validated through arithmetic, exposed via `.constraints()`), and `m`'s
 refinement quartet (`nonNegative` / `nonPositive` / `inRange`) for hardening a measurement directly.
-`m` does NOT get its own construction bounds (`m(v, {min,max})`) or a `hardenMeasurement` — to bound
-a measurement you either harden the scalar first and pass it in, or use `m`'s quartet.
+`m` ALSO takes a DIRECT construction bound via its options object — `m(v, { min, max })` — making it a
+directly-bounded lexicon like `i`/`f` (a direct bound is checked at construction). A measurement's bound
+therefore comes from ONE source: the direct `min`/`max`, an ingested hardened scalar, or the refinement
+quartet — passing both a direct bound AND an ingested-scalar bound throws (a bound is set once). There
+is no `hardenMeasurement`.
 
 `m()` accepts `number | i | f`. When it ingests a HARDENED `i`/`f`, `m` CARRIES the bound (exposed
 as a runtime `.constraints()`); ingestion itself is silent (nothing is lost, it is kept). What
@@ -231,6 +234,15 @@ is no silent "ignore": dropping a bound silently is the same as never bounding t
 in-bounds operation keeps the constraint; ingesting an UNHARDENED scalar carries nothing. The config
 lives on `CalipersFactoryConfig` (today `{ errorConfig? }`) and is reachable from
 `createCalipersBundle` under the `measurement` key + the `global` cascade (default `fail`).
+
+**The input `modifier` (generic normalization hook).** `m`'s options also take an optional
+`modifier: (n: number) => number`, applied to the raw value at INTAKE — before the bound is checked and
+before the value is stored (modify-then-validate). It is a generic MECHANISM, not policy: the core ships
+no built-in normalization. Domain-specific behaviour is built WHERE it is needed — e.g. a cyclic-angle
+helper that runs modulo 360 is its OWN unit helper carrying `modifier`, NOT a change to `mDeg` (angles
+legitimately exceed 360°, as in `rotate(720deg)`). A non-special clamp like opacity does NOT belong here
+at all — CSS already clamps it, so it is the opacity book's concern, not the lexicon's. Every unit
+helper can carry the same per-helper config (`min` / `max` / `modifier`), defaulting to none.
 
 ### The two constraint systems (brands and the runtime bound) (locked 2026-07-16)
 
@@ -249,8 +261,8 @@ proof in the type (A) and its bound at runtime (B). The surface that follows:
 - **Bounded builders mint branded values.** `createInteger({ min, max })` produces an `i` whose
   values are typed `InRange<min, max>`: the constructor runs the real check in JS, and the type
   carries the proof. A refinement (`inRange(a, b).ensure(x)`) tightens a value downstream,
-  additively. (`m` itself takes no construction bounds; it acquires a bound by ingesting a hardened
-  scalar or through its refinement quartet, per the sections above.)
+  additively. (`m` now ALSO takes a direct construction bound via `m(v, { min, max })`; a measurement's
+  bound comes from ONE source — direct, an ingested hardened scalar, or the refinement quartet.)
 - **A bound is set ONCE, at construction, then it is immutable.** A value takes its bound from a
   single source (a factory config OR per-value options, never both — passing both throws); there is
   no merging of two specs. To get a different bound you MINT A FRESH value from the number

@@ -81,12 +81,13 @@ own unit key  →  this level's global  →  the outer level's global  →  fact
 | `defaultUnit` | a CSS unit string | — (the codex `measurement` key only) | `m` | `'px'` |
 | colour config | `formats`, `output`, `strictness`, `transparent`, `omitOpaqueAlpha` | — (the codex `color` key only) | `color` | `defaultColorConfig` |
 | `format` | `'object' \| 'string'` | — (per-book key today) | books | `'object'` |
-| constraint bound (`min`, `max`) | a `number` | — (the unit's own key `integer` / `float` / `ratio`, or per value) | `i`, `f`, `r`: a bounded builder brands the value `InRange<min,max>` (System A) and stores the bound (System B). Set once at construction, then immutable; mint a fresh value to change it | unbounded |
+| constraint bound (`min`, `max`) | a `number` | — (the unit's own key `integer` / `float` / `ratio`, per value, or a `m()` / unit-helper option for `m`) | `i`, `f`, `r`: a bounded builder brands the value `InRange<min,max>` (System A) and stores the bound (System B). `m` takes a DIRECT bound via `m(v, {min,max})` or a per-helper config, checked at construction. Set once from ONE source (a direct bound + an ingested-scalar bound throws), then immutable; mint a fresh value to change it | unbounded |
+| input `modifier` | `(n: number) => number` | — (a `m()` option or per-unit-helper config; m-only) | `m`: transforms the raw value at intake, before validate/store (modify-then-validate). Generic mechanism; specific normalization (e.g. cyclic-angle modulo) lives on a purpose-built helper | none |
 
 `hardening` and `errorConfig` are the two CROSS-CUTTING options: they live in every level's
-`global` and reach every error-producing unit. `defaultUnit`, `formats`, `format`, and the constraint
-bound (`min` / `max`) are unit-local or per-value (set through a unit's own key or on
-the value itself, never a shared global).
+`global` and reach every error-producing unit. `defaultUnit`, `formats`, `format`, the constraint
+bound (`min` / `max`), and the `m` input `modifier` are unit-local or per-value (set through a unit's
+own key, a per-value / `m()` option, or a per-helper config, never a shared global).
 
 ## Worked example, top to bottom
 
