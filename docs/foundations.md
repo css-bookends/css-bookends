@@ -46,6 +46,21 @@ Two consequences worth stating up front:
 
 ---
 
+## Calipers is the assembly language for CSS
+
+You could write ALL of your CSS in calipers. It is verbose and not the most pleasant, but it covers
+all of CSS. Calipers is the **assembly language for CSS**: the complete, low-level foundation. The
+books (Layer 2) and Squire (Layer 3) are built on top to make authoring pleasant, but they are
+ergonomics over a complete lower layer, never the only way in.
+
+The layers are additive convenience, not gatekeepers. So you can always drop DOWN to calipers
+directly: when a book isn't finished yet, when a CSS feature isn't covered by a higher layer, or when
+you simply need finer control. Reach for the lowest layer that does the job; the higher layers are
+optional sugar over a foundation that is always complete and reachable. A missing helper is never a
+blocker.
+
+---
+
 ## The map: units, bundles, and foundations
 
 Two layers. Within each, a **unit** (the atom) and a **bundle** (every unit of the layer, carrying

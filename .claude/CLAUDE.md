@@ -16,6 +16,10 @@ repeated instruction. Report packaging observations if asked, but do not change 
 
 A typed-CSS stack in three layers. Each has one job. Keep them strictly separated.
 For the units/bundles/foundations map at a glance, see `docs/foundations.md` ("The map").
+Calipers is the **assembly language for CSS**: verbose but it covers all of CSS. The upper layers are
+additive ergonomics, never gatekeepers, so you can always drop DOWN to calipers directly for finer
+control, a CSS feature no book covers yet, or an unfinished book. A missing helper is never a blocker.
+(Full principle in `docs/foundations.md`.)
 (Terminology: a Layer-1 unit is a **lexicon**; "primitive" is the older synonym, retired in
 favour of "lexicon".)
 

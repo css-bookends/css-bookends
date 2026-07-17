@@ -31,6 +31,11 @@ job (a Layer-1 unit is a **lexicon**; "primitive" is the retired synonym):
    calipers + bookends foundation, adaptable per project (you could in theory rebuild
    Tailwind or Bootstrap on top of it). Not built yet; nothing depends on it.
 
+Calipers is the **assembly language for CSS**: verbose but it covers all of CSS. The upper layers are
+additive ergonomics, never gatekeepers, so you can always drop DOWN to calipers directly for finer
+control, a CSS feature no book covers yet, or an unfinished book. A missing helper is never a blocker.
+(Full principle in `docs/foundations.md`.)
+
 **THE THESIS (why a lexicon exists, absolute).** TypeScript cannot validate a numeric bound at the
 type level (no `50 > 10` type operation; tuple-arithmetic tricks die on floats, negatives, large
 ranges, and computed values). A lexicon RUNS JS to do that check, then BRANDS the result so TS
