@@ -21,6 +21,7 @@ export const {
   isMeasurement,
   m,
   makeMeasurementRefinement,
+  makeUnitHelperFromDefinition,
   mDeg,
   nonNegative,
   nonPositive,
