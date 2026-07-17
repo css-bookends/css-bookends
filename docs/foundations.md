@@ -11,6 +11,41 @@ precedent to copy. When in doubt, open `m()` or `borders` and match it.
 
 ---
 
+## Why the lexicon exists: JS validates what TypeScript can't, then TS enforces it
+
+This is the point of calipers, and every design choice below serves it.
+
+TypeScript cannot validate numeric bounds at the type level. There is no `50 > 10` type operation,
+and the usual tuple-length arithmetic trick collapses on the values CSS actually uses: it fails on
+floats, on negatives, and on any range past roughly a thousand (verified with `tsc`: `TS2344` on a
+generic multiply signature, `TS2589` "type instantiation is excessively deep" at `IntRange<0, 2000>`
+and on any fractional value). So "is this value within `[min, max]`?" is simply not answerable by
+the type system for real CSS input.
+
+The lexicon fills exactly that gap. It runs the real `min <= v <= max` check in JavaScript at the
+point a value is proven (a bounded builder, a refinement's `ensure`, a `clone`, or an arithmetic
+result), and on success it stamps a proof, a phantom brand such as `InRange<0, 10>`, into the
+value's type. From then on TypeScript refuses to admit an unproven value into a bounded slot, so a
+consumer is forced through the lexicon's check, and an out-of-range value can never silently reach a
+boundary.
+
+**JS patches the gap; TS enforces the outcome.** That division is not a compromise, it is the
+design: the runtime check is the one thing the type system genuinely cannot do, and the brand is how
+the proof it produces becomes build-time enforcement. This is the whole "typed input,
+build-time-validated" promise, and it is why a lexicon exists at all.
+
+Two consequences worth stating up front:
+
+- **The editor flags assignability, never magnitude.** A bare `i(50)` has no bound, so nothing is
+  flagged; the feedback appears when an unproven or wrong-branded value meets an API that requires
+  the bound. The magnitude comparison itself always happens in JS.
+- **Author-time magnitude feedback for literals is an opt-in EDGE tool, not the core.** An ESLint
+  rule (shipped in the package) can AST-trace a literal chain and run the real JS math at lint time,
+  surfacing overflow as an editor squiggle. That is bookends: the typed core stays flexible, and a
+  team brackets on stricter enforcement at the edge when it wants it.
+
+---
+
 ## The map: units, bundles, and foundations
 
 Two layers. Within each, a **unit** (the atom) and a **bundle** (every unit of the layer, carrying
@@ -181,6 +216,53 @@ So `fail` gives the `i`/`f`-style enforce-through-math, `ignore` a loose drop, `
 in-bounds operation keeps the constraint; ingesting an UNHARDENED scalar carries nothing. The config
 lives on `CalipersFactoryConfig` (today `{ errorConfig? }`) and is reachable from
 `createCalipersBundle` under the `measurement` key + the `global` cascade (default `fail`).
+
+### The two constraint systems, and restrictions / clone / seal (locked 2026-07-16)
+
+Constraints on a numeric value are really TWO orthogonal systems. Keep them apart:
+
+- **System A, brands (compile-time proof).** The refinement quartet (point 3 above) stamps a phantom
+  brand (`InRange<0, 50>`, `NonNegative`, ...) into the type on success. It stores nothing at
+  runtime, is ADDITIVE (brands stack), and is DROPPED by arithmetic. This is the editor feedback.
+- **System B, the runtime bound (stored min/max).** A per-instance `.constraints()` bound, carried
+  through arithmetic and enforced by the `hardening` reaction. This is real data on the value, the
+  thing you clone and seal.
+
+Today measurements have both; `i` / `f` have System B only; ratio has neither. The conformance
+target is that every numeric lexicon (`i`, `f`, `m`, `r`) has BOTH, so a bounded value carries its
+proof in the type (A) and its bound at runtime (B). The surface that follows:
+
+- **Bounded builders mint branded values.** `createInteger({ min, max })` produces an `i` whose
+  values are typed `InRange<min, max>`: the constructor runs the real check in JS, and the type
+  carries the proof. A refinement (`inRange(a, b).ensure(x)`) tightens a value downstream,
+  additively. (`m` itself takes no construction bounds; it acquires a bound by ingesting a hardened
+  scalar or through its refinement quartet, per the sections above.)
+- **`clone(patch?)`** returns an independent copy. `patch` is a partial constraint patch merged over
+  the source, so `token.clone({ min: 0 })` changes only `min` and keeps everything else. Clones
+  respect seals.
+- **`sealed`, per boundary edge.** Config `sealedMin` / `sealedMax` / `sealedRange`; methods
+  `sealMin()` / `sealMax()` / `sealRange()`. A sealed edge cannot be changed through `clone`.
+  Sealing is additive and reseal-friendly; you never unseal a value.
+- **Sealing is CONTROL, not prevention.** A sealed value's bound is fixed against `clone`, but
+  anyone can mint a fresh value from its number with different bounds (`i(v.value(), { min, max })`),
+  and that escape is intended and documented. A team that wants "sealed means sealed" adds the
+  in-package ESLint rule at its edge. That is the bookends split: a typed, flexible core, with opt-in
+  enforcement bracketed on at the edge.
+- **Arithmetic re-checks at runtime and re-proves in the editor.** A derived value re-validates its
+  bound in JS (the `hardening` reaction fires on breach) and DROPS its brand (the type system cannot
+  know the result's magnitude), so the result is unproven and must be re-checked before it re-enters
+  a bounded slot.
+
+Terminology guardrails: the bound-lock is **`sealed`**, never `immutable` (the value is already
+immutable, every operation returns a new instance) and never `hardening` (which stays the name of the
+`'ignore' | 'warn' | 'fail'` reaction). The bound itself is **`constraints`**.
+
+Optional and opt-in: a **type-level strict-literal** range check, for the narrow slice it fits
+(small non-negative integer literals in small ranges, e.g. font-weight `100`-`900`), is config-gated
+and OFF by default because it is compile-heavy. Outside its feasible slice it resolves to a plain
+brand plus a friendly pointer, never a leaked `TS2589`. The general author-time magnitude feedback is
+the in-package ESLint rule (real JS math, no tuple limits); the runtime check plus brand is the
+baseline for every value.
 
 ### Colour is a Layer-1 calipers lexicon (locked 2026-06-27)
 

@@ -39,6 +39,11 @@ implement; copy it, never reinvent a per-feature scheme.
 - **Reachability is mandatory.** No unit config the bundle factory cannot reach. If you add a
   unit option, you ALSO add it to the bundle config + cascade in the SAME change. An option
   that only works standalone is a bug.
+- **Cross-cutting vs unit-local.** `hardening` / `errorConfig` are CROSS-CUTTING: they live in every
+  `global` and reach every unit. The constraint bound (`min` / `max`) and `sealed` (`sealedMin` /
+  `sealedMax` / `sealedRange`) are UNIT-LOCAL, like `defaultUnit` / the colour config: set through a
+  unit's own key (or on the value itself), never a shared `global`. Do NOT add a `global` tier for a
+  unit-local option. See `docs/foundations.md` ("The two constraint systems") and `docs/config-flow.md`.
 - **The publishBook engine has no global tier.** `self-publish/src/publishBook.ts` merges only
   `defaults <- config`. So per-book global resolution happens INSIDE `publishCompendium` (merge
   the global-applicable fields under each book's own config before calling the factory), and a

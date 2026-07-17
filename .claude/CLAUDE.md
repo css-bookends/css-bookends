@@ -30,6 +30,14 @@ favour of "lexicon".)
 - Mission: fill the gap where `csstype` is lacking, typed, build-time-validated CSS
   input VALUES. It MUST be usable STANDALONE, by someone who wants only typed CSS
   inputs and no helpers at all.
+- THE THESIS (why a lexicon exists, absolute): TypeScript cannot validate a numeric bound at the
+  type level (there is no `50 > 10` type operation; tuple-arithmetic tricks die on floats, negatives,
+  large ranges, and computed values). A lexicon RUNS JS to do that check, then BRANDS the result so
+  TS enforces the proof at every boundary: an unproven value cannot enter a bounded slot. JS
+  validates what TS can't; TS enforces the outcome. This is the whole "typed input,
+  build-time-validated" promise and the reason calipers exists. Author-time magnitude feedback for
+  literals is an OPT-IN edge tool (an in-package ESLint rule), never the core. See
+  `docs/foundations.md` ("Why the lexicon exists").
 - Contains: the lexicons and the machinery they need, and nothing else. `m()`
   measurements, `r()` ratios, `i()` integers, `f()` floats, `color()` (the colour
   VALUE lexicon; its factory `createColor` carries the FULL colour config — formats, output,
@@ -198,6 +206,29 @@ design forces a "should it do X or Y?" choice, it is a config, not a baked-in br
   instance. This decouples books from calipers' config surface and shrinks the config a consumer
   supplies. (The compendium `calipers` slot configures the calipers LAYER used directly through
   the bundle; it is not a back-channel for a book's internal calipers needs.)
+
+### Constraints, brands, and seal (the two systems)
+
+A numeric lexicon's restrictions are TWO orthogonal systems, and every numeric lexicon (`i`, `f`,
+`m`, `r`) gets BOTH:
+
+- **System A, brands** (compile-time proof): the refinement quartet stamps a phantom brand
+  (`InRange<0,50>`, `NonNegative`) into the type on success. Additive, dropped by arithmetic. This
+  is the editor feedback (see THE THESIS above).
+- **System B, the runtime bound** (stored `min`/`max`, `.constraints()`): carried through arithmetic,
+  enforced by the `hardening` reaction. The data you clone and seal.
+
+Surface: **bounded builders mint branded values** (`createInteger({ min, max })` -> `InRange<min,max>`);
+**`clone(patch?)`** is a partial-patch copy that respects seals; **`sealed` is per boundary edge**
+(config `sealedMin` / `sealedMax` / `sealedRange`, methods `sealMin()` / `sealMax()` / `sealRange()`).
+
+- **`sealed` is CONTROL, not prevention.** A sealed edge is fixed against `clone`, but minting a
+  fresh value from the number (`i(v.value(), { min, max })`) is always allowed and DOCUMENTED. A team
+  that wants "sealed means sealed" adds the in-package ESLint rule at its edge (bookends: typed core,
+  opt-in edge enforcement).
+- **Terminology (absolute)**: the bound-lock is `sealed`, NEVER `immutable` (the value already is)
+  and NEVER `hardening` (which stays the `'ignore' | 'warn' | 'fail'` reaction). The bound is
+  `constraints`. Full model + the two-systems table in `docs/foundations.md`.
 
 ### Lazy / bound defaults (the zero-config path)
 

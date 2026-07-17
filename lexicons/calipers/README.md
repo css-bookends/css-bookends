@@ -33,6 +33,8 @@ CSS input values are untyped. A measurement is a string (`'8px'`), an opacity is
 
 That is by design: CSS is meant to fail silently in the browser. The missing half is failing loudly in the *build*, which matters more now that so much CSS is AI-written (an LLM will confidently ship an invalid `width: fit-parent` and never know). [The case for compiled, typed CSS](https://dev.to/slafleche/the-case-for-compiled-typed-css-blame-ai-8m8) makes the fuller argument.
 
+There is a deeper reason the compiler stays quiet: TypeScript cannot check a numeric bound at the type level (there is no `50 > 10` in the type system). calipers does the check where it *can* run, in JavaScript, and brands the result, so a value that passes carries a proof the compiler enforces from then on: a function that demands a bounded value rejects an unproven one. The real check runs in JS; the type system enforces the proof. That is what build-time-validated means here.
+
 ## Highlights
 
 `.css()` on a colour emits the simplest format that holds it without losing information:

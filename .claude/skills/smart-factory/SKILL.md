@@ -44,6 +44,12 @@ This is the how-to for the "consume from a factory" rule in `AGENTS.md`.
 - **Everything is config-driven (first principle).** A behaviour that could reasonably vary is a
   config OPTION (explicit enumerated value + sensible default), never a hardcoded decision. When a
   design forces "should it do X or Y?", make it a config. See `docs/foundations.md` + `doc-test-code`.
+- **Bounded builders + seal (numeric lexicons).** A numeric lexicon factory carries a constraint
+  bound (`createInteger({ min, max })`), and the bounded builder MINTS a branded value
+  (`InRange<min,max>`, System A) plus stores the bound (System B). `sealed` (`sealedMin` /
+  `sealedMax` / `sealedRange`) locks a bound edge against `clone`; it is CONTROL, not prevention
+  (mint-fresh from the number always escapes; enforcement is an opt-in in-package ESLint edge rule).
+  Never call the lock `immutable` or `hardening`. See `docs/foundations.md` ("The two constraint systems").
 - **Output shape via `format: 'object' | 'string'`.** Every book's config carries this
   (object = property-keyed style object, string = bare value; default `'object'`). The output
   step switches on it. See `output-shape`.
