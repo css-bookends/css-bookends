@@ -183,7 +183,7 @@ form (every book bound at defaults). That aggregate does not change the per-book
   each of these via `import * as X` under its namespace. This list is closed; a new
   per-property / per-value book is a `publishBook<Name>` factory, never a namespace.
 
-### Constraints, brands, and seal (the two systems, absolute)
+### Constraints and brands (the two systems, absolute)
 
 A numeric lexicon's restrictions are TWO orthogonal systems, and every numeric lexicon (`i`, `f`,
 `m`, `r`) gets BOTH:
@@ -192,19 +192,19 @@ A numeric lexicon's restrictions are TWO orthogonal systems, and every numeric l
   (`InRange<0,50>`, `NonNegative`) into the type on success. Additive, dropped by arithmetic. The
   editor feedback (see THE THESIS above).
 - **System B, the runtime bound** (stored `min`/`max`, `.constraints()`): carried through arithmetic,
-  enforced by the `hardening` reaction. The data you clone and seal.
+  enforced by the `hardening` reaction. Real data on the value.
 
-Surface: **bounded builders mint branded values** (`createInteger({ min, max })` -> `InRange<min,max>`);
-**`clone(patch?)`** is a partial-patch copy that respects seals; **`sealed` is per boundary edge**
-(config `sealedMin` / `sealedMax` / `sealedRange`, methods `sealMin()` / `sealMax()` / `sealRange()`).
+Surface: **bounded builders mint branded values** (`createInteger({ min, max })` -> `InRange<min,max>`).
+A bound is set ONCE at construction (a factory config OR per-value options, never both -> throws), then
+it is immutable; to change a bound you MINT A FRESH value (`i(v.value(), { min, max })`), the
+always-available escape. There is NO bound merging and NO in-place bound mutation.
 
-- **`sealed` is CONTROL, not prevention.** A sealed edge is fixed against `clone`, but minting a
-  fresh value from the number (`i(v.value(), { min, max })`) is always allowed and DOCUMENTED. A team
-  that wants "sealed means sealed" adds the in-package ESLint rule at its edge (bookends: typed core,
-  opt-in edge enforcement).
-- **Terminology (absolute):** the bound-lock is `sealed`, NEVER `immutable` (the value already is)
-  and NEVER `hardening` (the `'warn' | 'fail'` reaction). The bound is `constraints`. Full
-  model + the two-systems table in `docs/foundations.md`.
+- **`clone()`** is a zero-arg, config-preserving copy (same value, bound, hardening, error config, a
+  fresh instance); to change anything, mint fresh. There is no `sealed` and no clone patch: with no
+  bound mutation, nothing needs locking.
+- **Terminology (absolute):** the bound is `constraints`, NEVER `hardening` (the `'warn' | 'fail'`
+  reaction). The value and its bound are both immutable. Full model + the two-systems table in
+  `docs/foundations.md`.
 
 ### The two lazy-defaults exports (the zero-config path, absolute)
 

@@ -23,7 +23,7 @@ and on any fractional value). So "is this value within `[min, max]`?" is simply 
 the type system for real CSS input.
 
 The lexicon fills exactly that gap. It runs the real `min <= v <= max` check in JavaScript at the
-point a value is proven (a bounded builder, a refinement's `ensure`, a `clone`, or an arithmetic
+point a value is proven (a bounded builder, a refinement's `ensure`, or an arithmetic
 result), and on success it stamps a proof, a phantom brand such as `InRange<0, 10>`, into the
 value's type. From then on TypeScript refuses to admit an unproven value into a bounded slot, so a
 consumer is forced through the lexicon's check, and an out-of-range value can never silently reach a
@@ -232,7 +232,7 @@ in-bounds operation keeps the constraint; ingesting an UNHARDENED scalar carries
 lives on `CalipersFactoryConfig` (today `{ errorConfig? }`) and is reachable from
 `createCalipersBundle` under the `measurement` key + the `global` cascade (default `fail`).
 
-### The two constraint systems, and restrictions / clone / seal (locked 2026-07-16)
+### The two constraint systems (brands and the runtime bound) (locked 2026-07-16)
 
 Constraints on a numeric value are really TWO orthogonal systems. Keep them apart:
 
@@ -240,8 +240,7 @@ Constraints on a numeric value are really TWO orthogonal systems. Keep them apar
   brand (`InRange<0, 50>`, `NonNegative`, ...) into the type on success. It stores nothing at
   runtime, is ADDITIVE (brands stack), and is DROPPED by arithmetic. This is the editor feedback.
 - **System B, the runtime bound (stored min/max).** A per-instance `.constraints()` bound, carried
-  through arithmetic and enforced by the `hardening` reaction. This is real data on the value, the
-  thing you clone and seal.
+  through arithmetic and enforced by the `hardening` reaction. This is real data on the value.
 
 Today measurements have both; `i` / `f` have System B only; ratio has neither. The conformance
 target is that every numeric lexicon (`i`, `f`, `m`, `r`) has BOTH, so a bounded value carries its
@@ -252,26 +251,23 @@ proof in the type (A) and its bound at runtime (B). The surface that follows:
   carries the proof. A refinement (`inRange(a, b).ensure(x)`) tightens a value downstream,
   additively. (`m` itself takes no construction bounds; it acquires a bound by ingesting a hardened
   scalar or through its refinement quartet, per the sections above.)
-- **`clone(patch?)`** returns an independent copy. `patch` is a partial constraint patch merged over
-  the source, so `token.clone({ min: 0 })` changes only `min` and keeps everything else. Clones
-  respect seals.
-- **`sealed`, per boundary edge.** Config `sealedMin` / `sealedMax` / `sealedRange`; methods
-  `sealMin()` / `sealMax()` / `sealRange()`. **Bounds are SEALED by default** (safety by default);
-  opt into editability per edge with `sealedMin: false` (etc.). A sealed edge cannot be changed
-  through `clone`. Sealing is additive and reseal-friendly; you never unseal a value in place.
-- **Sealing is CONTROL, not prevention.** A sealed value's bound is fixed against `clone`, but
-  anyone can mint a fresh value from its number with different bounds (`i(v.value(), { min, max })`),
-  and that escape is intended and documented. A team that wants "sealed means sealed" adds the
-  in-package ESLint rule at its edge. That is the bookends split: a typed, flexible core, with opt-in
-  enforcement bracketed on at the edge.
+- **A bound is set ONCE, at construction, then it is immutable.** A value takes its bound from a
+  single source (a factory config OR per-value options, never both — passing both throws); there is
+  no merging of two specs. To get a different bound you MINT A FRESH value from the number
+  (`i(v.value(), { min, max })`), the always-available escape (see "Calipers is the assembly language
+  for CSS"). There is no in-place way to widen, narrow, or re-restrict a bound.
+- **`clone()`** returns an independent, config-preserving copy: the same value, the same bound, the
+  same hardening / error config, as a fresh instance. It takes NO arguments; to change anything, mint
+  a fresh value.
 - **Arithmetic re-checks at runtime and re-proves in the editor.** A derived value re-validates its
   bound in JS (the `hardening` reaction fires on breach) and DROPS its brand (the type system cannot
   know the result's magnitude), so the result is unproven and must be re-checked before it re-enters
   a bounded slot.
 
-Terminology guardrails: the bound-lock is **`sealed`**, never `immutable` (the value is already
-immutable, every operation returns a new instance) and never `hardening` (which stays the name of the
-`'warn' | 'fail'` reaction). The bound itself is **`constraints`**.
+Terminology guardrails: the bound is **`constraints`**, never `hardening` (which stays the name of
+the `'warn' | 'fail'` reaction). The value is already immutable (every operation returns a new
+instance), and its bound is immutable too: there is no mutation API, so no separate lock concept is
+needed.
 
 Optional and opt-in: a **type-level strict-literal** range check, for the narrow slice it fits
 (small non-negative integer literals in small ranges, e.g. font-weight `100`-`900`), is config-gated
