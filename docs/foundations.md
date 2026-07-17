@@ -109,7 +109,7 @@ A behaviour that could reasonably vary is a CONFIG OPTION, not a hardcoded decis
 design forces a "should it do X or Y?" question, the answer is almost always "neither — it's a
 config" with a sensible default. Examples in play: output shape (`format: 'object' | 'string'`),
 out-of-range handling (`outOfRange: 'throw' | 'clamp'`), and how `m` reacts to a lost/broken
-hardening (`'ignore' | 'warn' | 'fail'`).
+hardening (`'warn' | 'fail'`).
 
 - Expose the behaviour as an explicit, enumerated, named config value; never bake one branch in.
 - Ship a sensible DEFAULT (the most useful real behaviour), fully overridable.
@@ -206,13 +206,13 @@ a measurement you either harden the scalar first and pass it in, or use `m`'s qu
 `m()` accepts `number | i | f`. When it ingests a HARDENED `i`/`f`, `m` CARRIES the bound (exposed
 as a runtime `.constraints()`); ingestion itself is silent (nothing is lost, it is kept). What
 happens when later ARITHMETIC on that hardened `m` crosses (breaks) the carried bound is
-**config-driven** (per the first principle), one knob with three values:
+**config-driven** (per the first principle), one knob with two values:
 
-- `'ignore'` → proceed, drop the (now-violated) constraint silently;
-- `'warn'` → proceed, but warn that the guarantee was broken;
+- `'warn'` → proceed, but warn that the guarantee was broken (drops the now-violated constraint);
 - `'fail'` → throw (disallow the breaking operation).
 
-So `fail` gives the `i`/`f`-style enforce-through-math, `ignore` a loose drop, `warn` the middle. An
+So `fail` gives the `i`/`f`-style enforce-through-math and `warn` a loose drop with a warning. (There
+is no silent "ignore": dropping a bound silently is the same as never bounding the value.) An
 in-bounds operation keeps the constraint; ingesting an UNHARDENED scalar carries nothing. The config
 lives on `CalipersFactoryConfig` (today `{ errorConfig? }`) and is reachable from
 `createCalipersBundle` under the `measurement` key + the `global` cascade (default `fail`).
@@ -256,7 +256,7 @@ proof in the type (A) and its bound at runtime (B). The surface that follows:
 
 Terminology guardrails: the bound-lock is **`sealed`**, never `immutable` (the value is already
 immutable, every operation returns a new instance) and never `hardening` (which stays the name of the
-`'ignore' | 'warn' | 'fail'` reaction). The bound itself is **`constraints`**.
+`'warn' | 'fail'` reaction). The bound itself is **`constraints`**.
 
 Optional and opt-in: a **type-level strict-literal** range check, for the narrow slice it fits
 (small non-negative integer literals in small ranges, e.g. font-weight `100`-`900`), is config-gated

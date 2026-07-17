@@ -134,7 +134,7 @@ form (every book bound at defaults). That aggregate does not change the per-book
   decision. When the design forces a "should it do X or Y?" choice, the answer is "neither — it's a
   config." Do not bake one branch in. Every such option then follows the cascade +
   bundle-reachability rules below. (Examples: `format: 'object' | 'string'`,
-  `outOfRange: 'throw' | 'clamp'`, the hardening reaction `'ignore' | 'warn' | 'fail'`.)
+  `outOfRange: 'throw' | 'clamp'`, the hardening reaction `'warn' | 'fail'`.)
 - **Three-tier config cascade (absolute).** A bundle (`publishCompendium`, `createCalipersBundle`)
   resolves every setting per unit as: the unit's OWN keyed config -> the bundle's `global` slot
   (where that option applies) -> the unit's built-in default. Set a value once in `global` and
@@ -198,7 +198,7 @@ Surface: **bounded builders mint branded values** (`createInteger({ min, max })`
   that wants "sealed means sealed" adds the in-package ESLint rule at its edge (bookends: typed core,
   opt-in edge enforcement).
 - **Terminology (absolute):** the bound-lock is `sealed`, NEVER `immutable` (the value already is)
-  and NEVER `hardening` (the `'ignore' | 'warn' | 'fail'` reaction). The bound is `constraints`. Full
+  and NEVER `hardening` (the `'warn' | 'fail'` reaction). The bound is `constraints`. Full
   model + the two-systems table in `docs/foundations.md`.
 
 ### The two lazy-defaults exports (the zero-config path, absolute)

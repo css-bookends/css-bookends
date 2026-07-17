@@ -76,7 +76,7 @@ own unit key  →  this level's global  →  the outer level's global  →  fact
 
 | Option | Values | Which globals carry it | Reaches | Built-in default |
 | --- | --- | --- | --- | --- |
-| `hardening` | `'ignore' \| 'warn' \| 'fail'` | compendium, codex, scalar | `m`, `i`, `f`, unit groups (the range-breach reaction) | `'fail'` |
+| `hardening` | `'warn' \| 'fail'` | compendium, codex, scalar | `m`, `i`, `f`, unit groups (the range-breach reaction) | `'fail'` |
 | `errorConfig.stackHints` | `'auto' \| 'on' \| 'off'` | compendium, codex, scalar | every error-producing factory: `m`, `i`, `f`, `r`, unit groups | `'auto'` |
 | `defaultUnit` | a CSS unit string | — (the codex `measurement` key only) | `m` | `'px'` |
 | colour config | `formats`, `output`, `strictness`, `transparent`, `omitOpaqueAlpha` | — (the codex `color` key only) | `color` | `defaultColorConfig` |

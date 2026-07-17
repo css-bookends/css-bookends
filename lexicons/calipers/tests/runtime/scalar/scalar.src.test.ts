@@ -26,7 +26,7 @@ describe('createScalarBundle (scalar family bundle)', () => {
   describe('hardening cascade -> integer and float', () => {
     it('the global applies when there is no unit key', () => {
       const loose = createScalarBundle({
-        global: { hardening: 'ignore' },
+        global: { hardening: 'warn' },
       });
       expect(
         loose.i(8, { min: 0, max: 10 }).multiply(2).value(),
@@ -38,7 +38,7 @@ describe('createScalarBundle (scalar family bundle)', () => {
 
     it('a unit key overrides the global (per unit)', () => {
       const mixed = createScalarBundle({
-        global: { hardening: 'ignore' },
+        global: { hardening: 'warn' },
         integer: { hardening: 'fail' },
       });
       // integer key wins -> throws
@@ -63,7 +63,7 @@ describe('createScalarBundle (scalar family bundle)', () => {
 
     it('propagates the reaction to the hardenInteger / hardenFloat builders', () => {
       const loose = createScalarBundle({
-        global: { hardening: 'ignore' },
+        global: { hardening: 'warn' },
       });
       const fontWeight = loose.hardenInteger({ min: 0, max: 10 });
       expect(fontWeight(8).multiply(2).value()).toBe(16);

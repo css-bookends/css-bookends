@@ -53,15 +53,15 @@ export const breakThrows = (): string => {
   }
 };
 
-// 'ignore' / 'warn' instances drop the broken bound and proceed.
+// 'warn' instances warn, drop the broken bound, and proceed.
 const lenient = createCalipersBundle({
-  measurement: { hardening: 'ignore' },
+  measurement: { hardening: 'warn' },
 });
 export const lenientResult = lenient.m(bounded(8)).multiply(2).css(); // '16px'
 
 // --- the integer / float factories bake the same reaction ----------------------
 
-const ints = createInteger({ hardening: 'ignore' });
+const ints = createInteger({ hardening: 'warn' });
 export const relaxedInt = ints
   .i(8, { min: 0, max: 10 })
   .multiply(2)

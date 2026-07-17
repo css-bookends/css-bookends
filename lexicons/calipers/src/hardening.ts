@@ -7,19 +7,21 @@
 
 /**
  * The reaction when an operation breaks a hardened bound:
- * - `ignore` — drop the broken bound and proceed
- * - `warn`   — warn, drop the broken bound, and proceed
- * - `fail`   — throw (disallow the breaking operation)
+ * - `warn` — warn, drop the broken bound, and proceed
+ * - `fail` — throw (disallow the breaking operation)
+ *
+ * There is no silent "ignore" mode: dropping a bound silently is the same as never bounding the
+ * value, so use an unbounded value instead.
  *
  * This is the single config the whole stack shares: `m` / `i` / `f` factory
  * configs, the codex (`createCalipersBundle`) and the compendium
  * (`publishCompendium`) all reference THIS type, never a local copy.
  */
-export type Hardening = 'ignore' | 'warn' | 'fail';
+export type Hardening = 'warn' | 'fail';
 
 /**
  * Built-in default. `fail` preserves `i` / `f`'s existing throw-on-breach
- * behaviour; opt into `warn` / `ignore` per instance or via a bundle `global`.
+ * behaviour; opt into `warn` per instance or via a bundle `global`.
  */
 export const DEFAULT_HARDENING: Hardening = 'fail';
 
@@ -111,7 +113,7 @@ export const describeBound = (c: Constraints): string => {
 
 /**
  * React to a broken bound per the mode. The `i` / `f`-side helper: `fail`
- * throws a plain `Error`, `warn` logs, `ignore` is a no-op. (`m` uses its own
+ * throws a plain `Error` and `warn` logs. (`m` uses its own
  * coded-error infra for `fail` but the same `Hardening` type.)
  *
  * `onFail` lets the caller route the `fail` throw through its own per-instance

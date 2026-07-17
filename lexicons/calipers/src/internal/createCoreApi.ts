@@ -371,7 +371,7 @@ export const createCoreApi = (
             `css-calipers: operation result ${result} breaks the hardened bound ${bound}; dropping the constraint`,
           );
         }
-        // 'ignore' + 'warn': drop the broken bound and proceed.
+        // 'warn': drop the broken bound and proceed.
         return new Measurement(value, this.#unit);
       }
       // In bounds (or unhardened): carry the bound onto the derived value.

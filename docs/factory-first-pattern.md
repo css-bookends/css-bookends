@@ -29,7 +29,7 @@ bind once, so the blast radius of a change is one place.
 ### Independent instances, no global state to fight
 
 Two factories give you two independent surfaces: a strict `hardening: 'fail'`
-instance next to a lenient `hardening: 'ignore'` one, or a `defaultUnit: 'rem'`
+instance next to a lenient `hardening: 'warn'` one, or a `defaultUnit: 'rem'`
 `m` next to a `defaultUnit: '%'` one. Neither leaks into the other, because there
 is no shared mutable singleton.
 

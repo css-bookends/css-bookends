@@ -35,7 +35,7 @@ export type IntegerOptions = IntegerConstraints & {
   context?: string;
   /**
    * Reaction when a bound is breached (at construction or through arithmetic):
-   * the shared `'ignore' | 'warn' | 'fail'` config (default `'fail'` = throw,
+   * the shared `'warn' | 'fail'` config (default `'fail'` = throw,
    * the historical behaviour). A bundle `global` can relax it.
    */
   hardening?: Hardening;
@@ -140,7 +140,7 @@ class IntegerImpl implements IInteger {
     }
     // Range breaches go through the shared hardening reaction; the finite /
     // integer invariants above always throw (type invariants, not a bound).
-    // On a 'warn' / 'ignore' breach the reaction returns here and the now-violated edge
+    // On a 'warn' breach the reaction returns here and the now-violated edge
     // is DROPPED (its guarantee is broken); 'fail' has already thrown above.
     let effectiveMin = min;
     let effectiveMax = max;

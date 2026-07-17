@@ -182,7 +182,7 @@ terminal; universal, not per-helper. (Distinct from Pattern 2's output SHAPE.)
 OPTION (an explicit, enumerated value with a sensible default), never a hardcoded decision. When the
 design forces a "should it do X or Y?" choice, it is a config, not a baked-in branch. Examples:
 `format: 'object' | 'string'`, `outOfRange: 'throw' | 'clamp'`, the hardening reaction
-`'ignore' | 'warn' | 'fail'`. Every such option resolves by the three-tier cascade:
+`'warn' | 'fail'`. Every such option resolves by the three-tier cascade:
 
 - A bundle factory takes ONE config object shaped `{ global?: <shared options>, <unitKey>?:
   <that unit's own config>, … }`: a `global` slot of shared options, plus one optional key per
@@ -227,7 +227,7 @@ Surface: **bounded builders mint branded values** (`createInteger({ min, max })`
   that wants "sealed means sealed" adds the in-package ESLint rule at its edge (bookends: typed core,
   opt-in edge enforcement).
 - **Terminology (absolute)**: the bound-lock is `sealed`, NEVER `immutable` (the value already is)
-  and NEVER `hardening` (which stays the `'ignore' | 'warn' | 'fail'` reaction). The bound is
+  and NEVER `hardening` (which stays the `'warn' | 'fail'` reaction). The bound is
   `constraints`. Full model + the two-systems table in `docs/foundations.md`.
 
 ### Lazy / bound defaults (the zero-config path)

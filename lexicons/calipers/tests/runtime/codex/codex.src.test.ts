@@ -21,7 +21,7 @@ describe('codex config cascade (own key -> global -> factory default)', () => {
     it('unit key wins over global', () => {
       const c = createCalipersBundle({
         global: { hardening: 'fail' },
-        measurement: { hardening: 'ignore' },
+        measurement: { hardening: 'warn' },
       });
       expect(c.m(hardenedI()).multiply(2).css()).toBe('16px');
     });
@@ -44,9 +44,9 @@ describe('codex config cascade (own key -> global -> factory default)', () => {
   });
 
   describe('i (integer)', () => {
-    it('global relaxes the breach (ignore)', () => {
+    it('global relaxes the breach (warn)', () => {
       const c = createCalipersBundle({
-        global: { hardening: 'ignore' },
+        global: { hardening: 'warn' },
       });
       expect(c.i(8, { min: 0, max: 10 }).multiply(2).value()).toBe(
         16,
@@ -55,7 +55,7 @@ describe('codex config cascade (own key -> global -> factory default)', () => {
 
     it('unit key wins over global', () => {
       const c = createCalipersBundle({
-        global: { hardening: 'ignore' },
+        global: { hardening: 'warn' },
         integer: { hardening: 'fail' },
       });
       expect(() => c.i(8, { min: 0, max: 10 }).multiply(2)).toThrow(
@@ -72,7 +72,7 @@ describe('codex config cascade (own key -> global -> factory default)', () => {
 
     it('the bundle hardenInteger is configured too', () => {
       const c = createCalipersBundle({
-        global: { hardening: 'ignore' },
+        global: { hardening: 'warn' },
       });
       const fontWeight = c.hardenInteger({ min: 0, max: 10 });
       expect(fontWeight(8).multiply(2).value()).toBe(16);
@@ -80,9 +80,9 @@ describe('codex config cascade (own key -> global -> factory default)', () => {
   });
 
   describe('f (float)', () => {
-    it('global relaxes the breach (ignore)', () => {
+    it('global relaxes the breach (warn)', () => {
       const c = createCalipersBundle({
-        global: { hardening: 'ignore' },
+        global: { hardening: 'warn' },
       });
       expect(c.f(0.6, { min: 0, max: 1 }).multiply(2).value()).toBe(
         1.2,
@@ -91,7 +91,7 @@ describe('codex config cascade (own key -> global -> factory default)', () => {
 
     it('unit key wins over global', () => {
       const c = createCalipersBundle({
-        global: { hardening: 'ignore' },
+        global: { hardening: 'warn' },
         float: { hardening: 'fail' },
       });
       expect(() => c.f(0.6, { min: 0, max: 1 }).multiply(2)).toThrow(
@@ -108,7 +108,7 @@ describe('codex config cascade (own key -> global -> factory default)', () => {
 
     it('the bundle hardenFloat is configured too', () => {
       const c = createCalipersBundle({
-        global: { hardening: 'ignore' },
+        global: { hardening: 'warn' },
       });
       const alpha = c.hardenFloat({ min: 0, max: 1 });
       expect(alpha(0.6).multiply(2).value()).toBe(1.2);

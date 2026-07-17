@@ -13,7 +13,7 @@ const bounded = { min: 0, max: 10 };
 describe('independent factory instances (no global state)', () => {
   it('two createInteger instances with different hardening never interfere', () => {
     const strict = createInteger({ hardening: 'fail' });
-    const lenient = createInteger({ hardening: 'ignore' });
+    const lenient = createInteger({ hardening: 'warn' });
     expect(() => strict.i(8, bounded).multiply(2)).toThrow(); // 16 > 10
     expect(lenient.i(8, bounded).multiply(2).value()).toBe(16); // ignored
     // strict is unaffected after the lenient instance was used
@@ -22,11 +22,11 @@ describe('independent factory instances (no global state)', () => {
 
   it('a per-value hardening overrides the instance config, both directions', () => {
     const strict = createInteger({ hardening: 'fail' });
-    const lenient = createInteger({ hardening: 'ignore' });
-    // strict instance, one value opts into ignore
+    const lenient = createInteger({ hardening: 'warn' });
+    // strict instance, one value opts into warn (loose)
     expect(
       strict
-        .i(8, { ...bounded, hardening: 'ignore' })
+        .i(8, { ...bounded, hardening: 'warn' })
         .multiply(2)
         .value(),
     ).toBe(16);
@@ -52,7 +52,7 @@ describe('independent factory instances (no global state)', () => {
 
   it('two bundles forward their integer config independently (hardening + sealed)', () => {
     const loose = createCalipersBundle({
-      integer: { hardening: 'ignore', sealedMax: false },
+      integer: { hardening: 'warn', sealedMax: false },
     });
     const strict = createCalipersBundle();
     // loose bundle: arithmetic breach ignored, max editable

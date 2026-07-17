@@ -18,14 +18,14 @@ describe('createInteger (direct factory behavior)', () => {
       strict.i(8, { min: 0, max: 10 }).multiply(2),
     ).toThrow(/maximum/);
 
-    const loose = createInteger({ hardening: 'ignore' });
+    const loose = createInteger({ hardening: 'warn' });
     expect(loose.i(8, { min: 0, max: 10 }).multiply(2).value()).toBe(
       16,
     );
   });
 
   it('propagates the reaction to its hardenInteger builder', () => {
-    const loose = createInteger({ hardening: 'ignore' });
+    const loose = createInteger({ hardening: 'warn' });
     const fontWeight = loose.hardenInteger({ min: 0, max: 10 });
     expect(fontWeight(8).multiply(2).value()).toBe(16);
   });
@@ -45,14 +45,14 @@ describe('createFloat (direct factory behavior)', () => {
       strict.f(0.6, { min: 0, max: 1 }).multiply(2),
     ).toThrow(/maximum/);
 
-    const loose = createFloat({ hardening: 'ignore' });
+    const loose = createFloat({ hardening: 'warn' });
     expect(loose.f(0.6, { min: 0, max: 1 }).multiply(2).value()).toBe(
       1.2,
     );
   });
 
   it('propagates the reaction to its hardenFloat builder', () => {
-    const loose = createFloat({ hardening: 'ignore' });
+    const loose = createFloat({ hardening: 'warn' });
     const alpha = loose.hardenFloat({ min: 0, max: 1 });
     expect(alpha(0.6).multiply(2).value()).toBe(1.2);
   });

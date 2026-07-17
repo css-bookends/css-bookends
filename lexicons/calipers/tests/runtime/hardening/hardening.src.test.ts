@@ -1,9 +1,9 @@
 // The full hardening spectrum: i/f imperative hardening (existing), m's quartet
 // (existing), m CARRYING an ingested hardened scalar (new), and the config-driven
-// reaction (`ignore` / `warn` / `fail`) when arithmetic breaks a carried bound (new).
+// reaction (`warn` / `fail`) when arithmetic breaks a carried bound (new).
 //
 // Per docs/foundations.md: the hardening reaction is config-driven via the shared
-// `Hardening = 'ignore' | 'warn' | 'fail'` type, set on the m() factory (and the
+// `Hardening = 'warn' | 'fail'` type, set on the m() factory (and the
 // codex / compendium bundle `global`). Default is `fail` (preserves i/f's throw).
 // The i/f + quartet blocks are regression coverage; the carry + config blocks
 // exercise the new m behaviour.
@@ -85,11 +85,6 @@ describe('hardening spectrum', () => {
   describe('hardening config when arithmetic breaks a carried bound', () => {
     const hardened = () => hardenInteger({ min: 0, max: 10 })(8);
 
-    it("'ignore' drops the broken bound and proceeds", () => {
-      const cal = createCalipers({ hardening: 'ignore' });
-      expect(cal.m(hardened()).multiply(2).css()).toBe('16px');
-    });
-
     it("'warn' warns but proceeds", () => {
       const spy = vi
         .spyOn(console, 'warn')
@@ -118,14 +113,7 @@ describe('hardening spectrum', () => {
 });
 
 describe('construction-time hardening reaction (i / f)', () => {
-  it("'ignore' drops the violated edge, keeps the valid one", () => {
-    const v = i(50, { min: 0, max: 10, hardening: 'ignore' });
-    expect(v.value()).toBe(50);
-    // max (violated) is dropped; the still-valid min is kept
-    expect(v.constraints()).toEqual({ min: 0 });
-  });
-
-  it("'warn' warns and drops the violated edge", () => {
+  it("'warn' drops the violated edge, keeps the valid one", () => {
     const spy = vi
       .spyOn(console, 'warn')
       .mockImplementation(() => {});
@@ -141,9 +129,13 @@ describe('construction-time hardening reaction (i / f)', () => {
     ).toThrow(/above the maximum/);
   });
 
-  it('float mirrors: ignore drops the violated edge', () => {
+  it('float mirrors: warn drops the violated edge', () => {
+    const spy = vi
+      .spyOn(console, 'warn')
+      .mockImplementation(() => {});
     expect(
-      f(1.5, { min: 0, max: 1, hardening: 'ignore' }).constraints(),
+      f(1.5, { min: 0, max: 1, hardening: 'warn' }).constraints(),
     ).toEqual({ min: 0 });
+    spy.mockRestore();
   });
 });
