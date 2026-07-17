@@ -35,13 +35,23 @@ export type {
   ColorFormatPlugin,
   ColorObject,
   ColorString,
+  InRangeInteger,
   InRangeMeasurement,
+  NonNegativeInteger,
   NonNegativeMeasurement,
 } from '@css-bookends/css-calipers';
 
 // Module-level statics with no factory home (ratio math), re-exported so consumers
 // import them from the binder too, same path-safety reason as the bound helpers.
 export {
+  inRangeFloat,
+  inRangeInteger,
+  makeFloatRefinement,
+  makeIntegerRefinement,
+  nonNegativeFloat,
+  nonNegativeInteger,
+  nonPositiveFloat,
+  nonPositiveInteger,
   normalizeRatio,
   parseRatio,
   ratioToFloat,
@@ -49,4 +59,3 @@ export {
   simplifyRatio,
   toFloat,
 } from '@css-bookends/css-calipers';
-
