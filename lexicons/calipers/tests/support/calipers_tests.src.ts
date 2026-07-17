@@ -81,3 +81,16 @@ export const {
 export const assertPercentMeasurement: UnitAssertion<
   typeof mPercent
 > = bundle.assertPercentMeasurement;
+
+// Scalar refinements are bare exports (not on the bundle), so re-export them straight from the
+// source surface for the type + runtime tests.
+export {
+  inRangeFloat,
+  inRangeInteger,
+  makeFloatRefinement,
+  makeIntegerRefinement,
+  nonNegativeFloat,
+  nonNegativeInteger,
+  nonPositiveFloat,
+  nonPositiveInteger,
+} from '../../src/codex';

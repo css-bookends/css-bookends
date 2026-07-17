@@ -4,7 +4,6 @@ import type {
   InRangeBrand,
   InscribedMeasurement,
   MeasurementRefinement,
-  MeasurementRefinementResult,
   NonNegativeMeasurement,
   SmallerOrEqualToZeroBrand,
   UnitAssertion,
@@ -31,6 +30,7 @@ import {
 } from '../unitDefinitions';
 import { buildMeasurementCreationError } from './buildMeasurementCreationError';
 import { createErrorHelpers, type ErrorConfigStore } from './errors';
+import { makeRefinement } from './refinement';
 import { toPlainDecimal } from './toPlainDecimal';
 
 type DeltaInput = number | IMeasurement<string>;
@@ -603,72 +603,33 @@ export const createCoreApi = (
   // additive over `IMeasurement` and is dropped by arithmetic (which can cross a bound),
   // so a derived result must be re-checked. `nonNegative` / `nonPositive` / `inRange(...)`
   // are the built-ins.
+  // Measurements bind the shared `makeRefinement` factory (`internal/refinement.ts`) with
+  // measurement adapters: read `.value()`, throw the coded helper error, and rebuild a
+  // fallback via `createMeasurement`. The scalar lexicons (`makeIntegerRefinement` /
+  // `makeFloatRefinement`) wrap the same factory with their own adapters.
   const makeMeasurementRefinement = <B>(spec: {
     predicate: (value: number) => boolean;
     message: (measurement: IMeasurement) => string;
     defaultFallback?: number;
-  }): MeasurementRefinement<B> => {
-    const is = <M extends IMeasurement>(
-      measurement: M,
-    ): measurement is M & B => spec.predicate(measurement.value());
-
-    const ensure = <M extends IMeasurement>(
-      measurement: M,
-      context?: string,
-    ): M & B => {
-      if (!is(measurement)) {
-        throwHelperError({
-          operation: 'css-calipers.refinement.ensure',
-          params: [
-            measurement,
-          ],
-          message: spec.message(measurement),
-          context,
-          details: { code: 'CALIPERS_E_CONSTRAINT' },
-        });
-      }
-      // A negated generic type-guard does not narrow the fall-through to `M & B`, so the
-      // brand cast is necessary here (the runtime check above guarantees it holds).
-      return measurement as M & B;
-    };
-
-    const check = <M extends IMeasurement>(
-      measurement: M,
-    ): MeasurementRefinementResult<M, B> =>
-      is(measurement)
-        ? { ok: true, value: measurement }
-        : {
-            ok: false,
-            value: measurement,
-            error: spec.message(measurement),
-          };
-
-    const hardenWith = <M extends IMeasurement>(
-      measurement: M,
-      fallback?: M & B,
-    ): M & B => {
-      if (is(measurement)) return measurement;
-      if (fallback !== undefined) return fallback;
-      const { defaultFallback } = spec;
-      if (defaultFallback !== undefined) {
-        return createMeasurement(
-          defaultFallback,
-          measurement.unit(),
-        ) as unknown as M & B;
-      }
-      return throwHelperError({
-        operation: 'css-calipers.refinement.hardenWith',
-        params: [
-          measurement,
-        ],
-        message:
-          'no fallback provided and this refinement has no default fallback',
-        details: { code: 'CALIPERS_E_CONSTRAINT' },
-      });
-    };
-
-    return { is, ensure, check, hardenWith };
-  };
+  }): MeasurementRefinement<B> =>
+    makeRefinement<IMeasurement, B>(
+      {
+        readValue: (measurement) => measurement.value(),
+        throwConstraint: (message, measurement, context) =>
+          throwHelperError({
+            operation: 'css-calipers.refinement.ensure',
+            params: [
+              measurement,
+            ],
+            message,
+            context,
+            details: { code: 'CALIPERS_E_CONSTRAINT' },
+          }),
+        rebuild: (fallbackValue, measurement) =>
+          createMeasurement(fallbackValue, measurement.unit()),
+      },
+      spec,
+    );
 
   const nonNegative =
     makeMeasurementRefinement<GreaterOrEqualToZeroBrand>({

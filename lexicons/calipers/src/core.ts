@@ -21,6 +21,11 @@ import {
   type IntegerOptions,
   isInteger,
 } from './integer';
+import type {
+  GreaterOrEqualToZeroBrand,
+  InRangeBrand,
+  SmallerOrEqualToZeroBrand,
+} from './internal/brands';
 import { type ErrorCode, type ErrorConfig } from './internal/errors';
 import {
   createRatio,
@@ -57,27 +62,10 @@ export type MeasurementString<Unit extends string = UnitSymbol> =
 declare const unitBrand: unique symbol;
 type UnitBrand<Unit extends string> = { readonly [unitBrand]: Unit };
 
-// Value-constraint brands. Like the unit brand, each is keyed by a module-private
-// unique symbol, so the tag cannot be forged from outside this module - the only way to
-// obtain it is by passing a measurement through a refinement (see
-// `makeMeasurementRefinement`), which performs the runtime check first. The brands are
-// additive over `IMeasurement` and are dropped by arithmetic (which can cross a bound),
-// so a derived result must be re-checked.
-declare const greaterOrEqualToZeroBrand: unique symbol;
-declare const smallerOrEqualToZeroBrand: unique symbol;
-declare const inRangeBrand: unique symbol;
-export type GreaterOrEqualToZeroBrand = {
-  readonly [greaterOrEqualToZeroBrand]: true;
-};
-export type SmallerOrEqualToZeroBrand = {
-  readonly [smallerOrEqualToZeroBrand]: true;
-};
-export type InRangeBrand<
-  Min extends number = number,
-  Max extends number = number,
-> = {
-  readonly [inRangeBrand]: { readonly min: Min; readonly max: Max };
-};
+// Value-constraint brands live in the lexicon-neutral `./internal/brands` module (so the scalar
+// lexicons can apply them without depending on this measurement file). They are imported above and
+// re-exported below for the public API; the measurement branded types below combine them with
+// `IMeasurement`.
 
 export interface IMeasurement<Unit extends string = string> {
   css: () => string;
@@ -244,6 +232,11 @@ export type UnitAssertion<T extends UnitHelper> = (
 export type MeasurementUnitDefinition = UnitDefinition;
 export type MeasurementUnitCategory = UnitCategory;
 export { type ErrorCode, type ErrorConfig };
+export type {
+  GreaterOrEqualToZeroBrand,
+  InRangeBrand,
+  SmallerOrEqualToZeroBrand,
+};
 export type { Constraints, Hardening } from './hardening';
 export {
   createRatio,
@@ -285,3 +278,35 @@ export type {
   IntegerFactoryConfig,
   IntegerOptions,
 };
+// Scalar refinements + brands (System A for i / f), mirroring the measurement quartet.
+export type {
+  GreaterOrEqualToZeroFloat,
+  InRangeFloat,
+  NonNegativeFloat,
+  NonPositiveFloat,
+  SmallerOrEqualToZeroFloat,
+} from './float';
+export {
+  inRangeFloat,
+  makeFloatRefinement,
+  nonNegativeFloat,
+  nonPositiveFloat,
+} from './float';
+export type {
+  GreaterOrEqualToZeroInteger,
+  InRangeInteger,
+  NonNegativeInteger,
+  NonPositiveInteger,
+  SmallerOrEqualToZeroInteger,
+} from './integer';
+export {
+  inRangeInteger,
+  makeIntegerRefinement,
+  nonNegativeInteger,
+  nonPositiveInteger,
+} from './integer';
+// The shared refinement quartet type (the return type of every make*Refinement).
+export type {
+  Refinement,
+  RefinementResult,
+} from './internal/refinement';

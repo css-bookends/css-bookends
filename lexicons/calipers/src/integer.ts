@@ -4,12 +4,23 @@ import {
   type HardeningConfig,
   reactToBreach,
 } from './hardening';
+import type {
+  GreaterOrEqualToZeroBrand,
+  InRangeBrand,
+  SmallerOrEqualToZeroBrand,
+} from './internal/brands';
 import {
   createErrorConfigStore,
   createErrorHelpers,
   type ErrorConfig,
   type ErrorConfigStore,
 } from './internal/errors';
+import {
+  makeRefinement,
+  type Refinement,
+  type RefinementAdapters,
+  type RefinementSpec,
+} from './internal/refinement';
 import { toPlainDecimal } from './internal/toPlainDecimal';
 import { type Scalar, toNumber } from './scalar';
 
@@ -52,6 +63,30 @@ export interface IInteger {
   divide: (divisor: Scalar) => IInteger;
   clamp: (min: number, max: number) => IInteger;
 }
+
+/**
+ * An integer proven `>= 0` by `nonNegativeInteger`; `NonNegativeInteger` is the conventional
+ * alias. The brand REUSES the measurement `GreaterOrEqualToZeroBrand` symbol (a pure phantom),
+ * is additive over `IInteger`, and is dropped by arithmetic, so a derived value must be re-checked.
+ */
+export type GreaterOrEqualToZeroInteger = IInteger &
+  GreaterOrEqualToZeroBrand;
+export type NonNegativeInteger = GreaterOrEqualToZeroInteger;
+
+/** An integer proven `<= 0` by `nonPositiveInteger`; `NonPositiveInteger` is the alias. */
+export type SmallerOrEqualToZeroInteger = IInteger &
+  SmallerOrEqualToZeroBrand;
+export type NonPositiveInteger = SmallerOrEqualToZeroInteger;
+
+/**
+ * An integer proven within an inclusive range by `inRangeInteger(min, max)`. The brand carries
+ * the literal bounds (exact-bound, not containment), so `InRangeInteger<0, 10>` is distinct from
+ * `InRangeInteger<0, 5>`.
+ */
+export type InRangeInteger<
+  Min extends number = number,
+  Max extends number = number,
+> = IInteger & InRangeBrand<Min, Max>;
 
 const suffix = (context?: string): string =>
   context ? ` [${context}]` : '';
@@ -229,6 +264,64 @@ export const hardenInteger =
 
 export const isInteger = (value: unknown): value is IInteger =>
   value instanceof IntegerImpl;
+
+// Integer refinements bind the shared `makeRefinement` factory with integer adapters: read
+// `.value()`, throw a scalar error (a fresh default store, like the free `i()` path), and
+// rebuild a fallback via `i()`. The brands reuse the measurement brand symbols (pure phantoms).
+const integerRefinementAdapters: RefinementAdapters<IInteger> = {
+  readValue: (value) => value.value(),
+  throwConstraint: (message) =>
+    createErrorHelpers(createErrorConfigStore()).throwScalarError(
+      message,
+    ),
+  rebuild: (fallbackValue) => i(fallbackValue),
+};
+
+/**
+ * Build a custom integer refinement (the quartet is / ensure / check / hardenWith over an
+ * arbitrary brand), the scalar analogue of `makeMeasurementRefinement`. `nonNegativeInteger` /
+ * `nonPositiveInteger` / `inRangeInteger(...)` are the built-ins.
+ */
+export const makeIntegerRefinement = <B>(
+  spec: RefinementSpec<IInteger>,
+): Refinement<IInteger, B> =>
+  makeRefinement<IInteger, B>(integerRefinementAdapters, spec);
+
+export const nonNegativeInteger =
+  makeIntegerRefinement<GreaterOrEqualToZeroBrand>({
+    predicate: (value) => value >= 0,
+    message: (value) =>
+      `expected an integer >= 0 (got ${value.css()})`,
+    defaultFallback: 0,
+  });
+
+export const nonPositiveInteger =
+  makeIntegerRefinement<SmallerOrEqualToZeroBrand>({
+    predicate: (value) => value <= 0,
+    message: (value) =>
+      `expected an integer <= 0 (got ${value.css()})`,
+    defaultFallback: 0,
+  });
+
+export const inRangeInteger = <
+  Min extends number,
+  Max extends number,
+>(
+  min: Min,
+  max: Max,
+): Refinement<IInteger, InRangeBrand<Min, Max>> => {
+  if (min > max) {
+    createErrorHelpers(createErrorConfigStore()).throwScalarError(
+      `inRangeInteger: min (${min}) must be <= max (${max})`,
+    );
+  }
+  return makeIntegerRefinement<InRangeBrand<Min, Max>>({
+    predicate: (value) => value >= min && value <= max,
+    message: (value) =>
+      `expected an integer in [${min}, ${max}] (got ${value.css()})`,
+    defaultFallback: min,
+  });
+};
 
 /**
  * The integer factory config: the shared hardening slice (identical to m / f)

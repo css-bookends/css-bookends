@@ -5,12 +5,23 @@ import {
   reactToBreach,
 } from './hardening';
 import { i, type IInteger } from './integer';
+import type {
+  GreaterOrEqualToZeroBrand,
+  InRangeBrand,
+  SmallerOrEqualToZeroBrand,
+} from './internal/brands';
 import {
   createErrorConfigStore,
   createErrorHelpers,
   type ErrorConfig,
   type ErrorConfigStore,
 } from './internal/errors';
+import {
+  makeRefinement,
+  type Refinement,
+  type RefinementAdapters,
+  type RefinementSpec,
+} from './internal/refinement';
 import { toPlainDecimal } from './internal/toPlainDecimal';
 import { type Scalar, toNumber } from './scalar';
 
@@ -53,6 +64,30 @@ export interface IFloat {
   divide: (divisor: Scalar) => IFloat;
   clamp: (min: number, max: number) => IFloat;
 }
+
+/**
+ * A float proven `>= 0` by `nonNegativeFloat`; `NonNegativeFloat` is the conventional alias. The
+ * brand REUSES the measurement `GreaterOrEqualToZeroBrand` symbol (a pure phantom), is additive
+ * over `IFloat`, and is dropped by arithmetic, so a derived value must be re-checked.
+ */
+export type GreaterOrEqualToZeroFloat = IFloat &
+  GreaterOrEqualToZeroBrand;
+export type NonNegativeFloat = GreaterOrEqualToZeroFloat;
+
+/** A float proven `<= 0` by `nonPositiveFloat`; `NonPositiveFloat` is the alias. */
+export type SmallerOrEqualToZeroFloat = IFloat &
+  SmallerOrEqualToZeroBrand;
+export type NonPositiveFloat = SmallerOrEqualToZeroFloat;
+
+/**
+ * A float proven within an inclusive range by `inRangeFloat(min, max)`. The brand carries the
+ * literal bounds (exact-bound, not containment), so `InRangeFloat<0, 1>` is distinct from
+ * `InRangeFloat<0, 2>`.
+ */
+export type InRangeFloat<
+  Min extends number = number,
+  Max extends number = number,
+> = IFloat & InRangeBrand<Min, Max>;
 
 const suffix = (context?: string): string =>
   context ? ` [${context}]` : '';
@@ -223,6 +258,58 @@ export const hardenFloat =
 
 export const isFloat = (value: unknown): value is IFloat =>
   value instanceof FloatImpl;
+
+// Float refinements bind the shared `makeRefinement` factory with float adapters, mirroring the
+// integer refinements: read `.value()`, throw a scalar error, rebuild a fallback via `f()`.
+const floatRefinementAdapters: RefinementAdapters<IFloat> = {
+  readValue: (value) => value.value(),
+  throwConstraint: (message) =>
+    createErrorHelpers(createErrorConfigStore()).throwScalarError(
+      message,
+    ),
+  rebuild: (fallbackValue) => f(fallbackValue),
+};
+
+/**
+ * Build a custom float refinement (the quartet is / ensure / check / hardenWith over an arbitrary
+ * brand), the scalar analogue of `makeMeasurementRefinement`. `nonNegativeFloat` /
+ * `nonPositiveFloat` / `inRangeFloat(...)` are the built-ins.
+ */
+export const makeFloatRefinement = <B>(
+  spec: RefinementSpec<IFloat>,
+): Refinement<IFloat, B> =>
+  makeRefinement<IFloat, B>(floatRefinementAdapters, spec);
+
+export const nonNegativeFloat =
+  makeFloatRefinement<GreaterOrEqualToZeroBrand>({
+    predicate: (value) => value >= 0,
+    message: (value) => `expected a float >= 0 (got ${value.css()})`,
+    defaultFallback: 0,
+  });
+
+export const nonPositiveFloat =
+  makeFloatRefinement<SmallerOrEqualToZeroBrand>({
+    predicate: (value) => value <= 0,
+    message: (value) => `expected a float <= 0 (got ${value.css()})`,
+    defaultFallback: 0,
+  });
+
+export const inRangeFloat = <Min extends number, Max extends number>(
+  min: Min,
+  max: Max,
+): Refinement<IFloat, InRangeBrand<Min, Max>> => {
+  if (min > max) {
+    createErrorHelpers(createErrorConfigStore()).throwScalarError(
+      `inRangeFloat: min (${min}) must be <= max (${max})`,
+    );
+  }
+  return makeFloatRefinement<InRangeBrand<Min, Max>>({
+    predicate: (value) => value >= min && value <= max,
+    message: (value) =>
+      `expected a float in [${min}, ${max}] (got ${value.css()})`,
+    defaultFallback: min,
+  });
+};
 
 /**
  * The float factory config: the shared hardening slice (identical to m / i)
