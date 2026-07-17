@@ -174,7 +174,7 @@
     "test:float": "vitest run tests/runtime/float/float.src.test.ts",
     "test:hardening": "vitest run tests/runtime/hardening/hardening.src.test.ts",
     "test:scalar-refinement": "vitest run tests/runtime/hardening/scalar-refinement.src.test.ts",
-    "test:seal-clone": "vitest run tests/runtime/hardening/seal-clone.src.test.ts",
+    "test:clone": "vitest run tests/runtime/hardening/clone.src.test.ts",
     "test:codex": "vitest run tests/runtime/codex/codex.src.test.ts",
     "test:value-surface": "vitest run tests/runtime/value-surface",
     "test:color": "vitest run tests/runtime/color",

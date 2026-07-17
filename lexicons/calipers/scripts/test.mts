@@ -15,7 +15,7 @@ const SEQUENCE: readonly string[] = [
   'test:float',
   'test:hardening',
   'test:scalar-refinement',
-  'test:seal-clone',
+  'test:clone',
   'test:codex',
   'test:value-surface',
   'test:factory',
