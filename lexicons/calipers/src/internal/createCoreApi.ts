@@ -34,10 +34,20 @@ import { makeRefinement } from './refinement';
 import { toPlainDecimal } from './toPlainDecimal';
 
 type DeltaInput = number | IMeasurement<string>;
-type MeasurementCreateOptions<Unit extends string> = {
-  unit?: Unit;
-  context?: string;
+type UnitHelperConfig = {
+  /** A direct bound baked at construction, checked like i/f. Set once: a direct bound and an
+   *  ingested-scalar bound cannot both be given. */
+  min?: number;
+  max?: number;
+  /** A generic input transform applied to the raw value at intake, before validation and storage
+   *  (modify-then-validate). The core ships no built-in normalization; a domain helper supplies one. */
+  modifier?: (value: number) => number;
 };
+type MeasurementCreateOptions<Unit extends string> =
+  UnitHelperConfig & {
+    unit?: Unit;
+    context?: string;
+  };
 
 export const createCoreApi = (
   errorStore: ErrorConfigStore,
@@ -392,6 +402,56 @@ export const createCoreApi = (
       constraints,
     ) as unknown as InscribedMeasurement<Unit>;
 
+  // Shared construction tail for an already-modified value + resolved bound: finite
+  // check, then the construction-time bound check ('fail' throws, 'warn' drops the
+  // constraint), then createMeasurement. Used by both `m()` and every unit helper.
+  const finalizeMeasurement = <Unit extends string>(
+    value: number,
+    normalizedUnit: Unit,
+    constraints: Constraints,
+    contextLabel: string | undefined,
+    operation: string,
+  ): InscribedMeasurement<Unit> => {
+    if (!Number.isFinite(value)) {
+      const errorPayload = buildMeasurementCreationError(
+        value,
+        normalizedUnit,
+        operation,
+        contextLabel,
+      );
+      throwHelperError({
+        operation: `css-calipers.${operation}`,
+        params: [],
+        message: errorPayload.message,
+        context: errorPayload.context,
+        details: errorPayload.details,
+        includeStackHint: true,
+      });
+    }
+    let effective = constraints;
+    if (violatesConstraints(value, constraints)) {
+      const result = `${toPlainDecimal(value)}${normalizedUnit}`;
+      const bound = describeBound(constraints);
+      if (hardening === 'fail') {
+        throwHelperError({
+          operation: `css-calipers.${operation}`,
+          params: [],
+          message: `value ${result} is outside the bound ${bound}`,
+          context: contextLabel,
+          details: { code: 'CALIPERS_E_HARDENING_BREACH' },
+          includeStackHint: true,
+        });
+      }
+      if (hardening === 'warn') {
+        console.warn(
+          `css-calipers: value ${result} is outside the bound ${bound}; dropping the constraint`,
+        );
+      }
+      effective = {};
+    }
+    return createMeasurement(value, normalizedUnit, effective);
+  };
+
   const isMeasurement = (x: unknown): x is IMeasurement<string> =>
     x instanceof Measurement;
 
@@ -438,33 +498,50 @@ export const createCoreApi = (
             ).constraints(),
           )
         : {};
-    const options =
+    const options: MeasurementCreateOptions<Unit> =
       unitOrOptions && typeof unitOrOptions === 'object'
         ? unitOrOptions
         : { unit: unitOrOptions, context };
     const unit = (options.unit ?? defaultUnit) as Unit;
     const contextLabel = options.context;
     const normalizedUnit = unit.toLowerCase() as Lowercase<Unit>;
-    if (!Number.isFinite(numericValue)) {
-      const errorPayload = buildMeasurementCreationError(
-        numericValue,
-        normalizedUnit,
-        'm',
-        contextLabel,
-      );
+    // Generic input modifier: transform the raw value at intake, BEFORE validation
+    // and storage (modify-then-validate). The core ships no built-in normalization.
+    const finalValue = options.modifier
+      ? options.modifier(numericValue)
+      : numericValue;
+    // A bound is set ONCE, from one source: a DIRECT bound (m's min/max) and an
+    // ingested-scalar bound cannot both be given.
+    const directConstraints = normalizeConstraints({
+      min: options.min,
+      max: options.max,
+    });
+    const hasDirect =
+      directConstraints.min !== undefined ||
+      directConstraints.max !== undefined;
+    const hasIngested =
+      ingestedConstraints.min !== undefined ||
+      ingestedConstraints.max !== undefined;
+    if (hasDirect && hasIngested) {
       throwHelperError({
         operation: 'css-calipers.m',
         params: [],
-        message: errorPayload.message,
-        context: errorPayload.context,
-        details: errorPayload.details,
+        message:
+          'a bound is set once, from one source: a direct min/max and an ingested scalar bound cannot both be given. Mint a fresh value instead.',
+        context: contextLabel,
+        details: { code: 'CALIPERS_E_CONSTRAINT' },
         includeStackHint: true,
       });
     }
-    return createMeasurement(
-      numericValue,
+    const constraints = hasDirect
+      ? directConstraints
+      : ingestedConstraints;
+    return finalizeMeasurement(
+      finalValue,
       normalizedUnit,
-      ingestedConstraints,
+      constraints,
+      contextLabel,
+      'm',
     );
   }
 
@@ -478,28 +555,26 @@ export const createCoreApi = (
   const createUnitHelper = <Unit extends string>(
     unit: Unit,
     helperName?: string,
+    config: UnitHelperConfig = {},
   ): UnitHelperFactory<Unit> => {
     const normalizedUnit = unit.toLowerCase() as Unit;
     const helperLabel =
       helperName ?? `makeUnitHelper(${normalizedUnit})`;
+    const constraints = normalizeConstraints({
+      min: config.min,
+      max: config.max,
+    });
     const factory = (value: number, context?: string) => {
-      if (!Number.isFinite(value)) {
-        const errorPayload = buildMeasurementCreationError(
-          value,
-          normalizedUnit,
-          helperLabel,
-          context,
-        );
-        throwHelperError({
-          operation: `css-calipers.${helperLabel}`,
-          params: [],
-          message: errorPayload.message,
-          context: errorPayload.context,
-          details: errorPayload.details,
-          includeStackHint: true,
-        });
-      }
-      return createMeasurement(value, normalizedUnit);
+      const finalValue = config.modifier
+        ? config.modifier(value)
+        : value;
+      return finalizeMeasurement(
+        finalValue,
+        normalizedUnit,
+        constraints,
+        context,
+        helperLabel,
+      );
     };
     return Object.assign(factory, {
       unit: normalizedUnit,
@@ -508,14 +583,16 @@ export const createCoreApi = (
 
   const makeUnitHelper = <Unit extends string>(
     unit: Unit,
+    config?: UnitHelperConfig,
   ): UnitHelper<Unit> => {
-    return createUnitHelper(unit);
+    return createUnitHelper(unit, undefined, config);
   };
 
   const makeUnitHelperFromDefinition = <Name extends UnitHelperName>(
     name: Name,
+    config?: UnitHelperConfig,
   ): UnitHelper<UnitDefinitionRecord[Name]['unit']> =>
-    createUnitHelper(UNIT_DEFINITIONS[name].unit, name);
+    createUnitHelper(UNIT_DEFINITIONS[name].unit, name, config);
 
   const measurementUnitMetadata = UNIT_DEFINITIONS;
   type MeasurementOfHelper<T extends UnitHelper> = ReturnType<T>;

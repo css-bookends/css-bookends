@@ -4,7 +4,14 @@
 // source for the harness.
 import { describe, expect, it } from 'vitest';
 
-import { bundle, f, i, m } from '../../support/calipers_tests.src';
+import {
+  bundle,
+  f,
+  hardenInteger,
+  i,
+  m,
+  makeUnitHelperFromDefinition,
+} from '../../support/calipers_tests.src';
 import type { CoreApi } from './core.shared';
 import { runCoreTests } from './core.shared';
 
@@ -51,5 +58,60 @@ describe('m() accepts typed scalar (i / f) inputs', () => {
   it('plain numbers still work unchanged', () => {
     expect(m(8).css()).toBe('8px');
     expect(m(8, 'rem').css()).toBe('8rem');
+  });
+});
+
+describe('m() options: direct bound + input modifier', () => {
+  it('m(v, { min, max }) stores a direct bound, checked at construction', () => {
+    expect(
+      m(8, { unit: 'px', min: 0, max: 10 }).constraints(),
+    ).toEqual({ min: 0, max: 10 });
+    expect(() => m(50, { unit: 'px', min: 0, max: 10 })).toThrow(
+      /outside the bound/,
+    );
+  });
+
+  it('the input modifier transforms the value at intake, before validation', () => {
+    const wrap = (n: number) => ((n % 360) + 360) % 360;
+    expect(m(400, { unit: 'deg', modifier: wrap }).value()).toBe(40);
+    // modify THEN bound: 450 -> 90, within [0, 360]
+    expect(
+      m(450, {
+        unit: 'deg',
+        min: 0,
+        max: 360,
+        modifier: wrap,
+      }).value(),
+    ).toBe(90);
+  });
+
+  it('a direct bound + an ingested-scalar bound together throw (set once)', () => {
+    expect(() =>
+      m(hardenInteger({ min: 0, max: 10 })(8), {
+        unit: 'px',
+        min: 0,
+        max: 5,
+      }),
+    ).toThrow(/one source/);
+  });
+});
+
+describe('unit helper config: modifier + bound on a purpose-built helper', () => {
+  it('a helper built with a modifier normalizes its input (wrapping angle)', () => {
+    const wrap = (n: number) => ((n % 360) + 360) % 360;
+    const hue = makeUnitHelperFromDefinition('mDeg', {
+      modifier: wrap,
+    });
+    expect(hue(450).css()).toBe('90deg');
+    expect(hue(45).css()).toBe('45deg');
+  });
+
+  it('a helper built with a bound checks it at construction', () => {
+    const level = makeUnitHelperFromDefinition('mPercent', {
+      min: 0,
+      max: 100,
+    });
+    expect(level(50).constraints()).toEqual({ min: 0, max: 100 });
+    expect(() => level(150)).toThrow(/outside the bound/);
   });
 });
