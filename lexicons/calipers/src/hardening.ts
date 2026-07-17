@@ -55,55 +55,6 @@ export const violatesConstraints = (
   (c.min !== undefined && value < c.min) ||
   (c.max !== undefined && value > c.max);
 
-/** Per-edge seal state: whether the min / max bound is locked against `clone`. */
-export type SealFlags = { min: boolean; max: boolean };
-
-/**
- * Resolve the per-edge seal state at construction. Default SEALED for any edge that HAS a bound
- * (safety by default); opt out per edge with `sealedMin` / `sealedMax` = false. An absent edge is
- * never sealed (nothing to lock).
- */
-export const resolveSealFlags = (
-  c: Constraints,
-  options: { sealedMin?: boolean; sealedMax?: boolean } = {},
-): SealFlags => ({
-  min: c.min !== undefined && (options.sealedMin ?? true),
-  max: c.max !== undefined && (options.sealedMax ?? true),
-});
-
-/**
- * Merge a `clone` patch over the current bound. A patch that CHANGES a sealed edge throws through
- * `onSealed` (mint a fresh value instead); an unchanged or unsealed edge merges normally. Returns
- * the new bound; the value itself is re-validated by the value's own constructor.
- */
-export const mergeCloneConstraints = (
-  current: Constraints,
-  seal: SealFlags,
-  patch: Constraints,
-  onSealed: (message: string) => never,
-): Constraints => {
-  const escape =
-    'mint a fresh value instead (e.g. i(v.value(), { min, max }))';
-  if (
-    seal.min &&
-    patch.min !== undefined &&
-    patch.min !== current.min
-  ) {
-    onSealed(`min is sealed; ${escape}`);
-  }
-  if (
-    seal.max &&
-    patch.max !== undefined &&
-    patch.max !== current.max
-  ) {
-    onSealed(`max is sealed; ${escape}`);
-  }
-  return {
-    min: patch.min ?? current.min,
-    max: patch.max ?? current.max,
-  };
-};
-
 /** Human-readable bound, e.g. `[0, 10]`, `[0, ∞)`, `(-∞, 1]`. */
 export const describeBound = (c: Constraints): string => {
   const lo = c.min === undefined ? '(-∞' : `[${c.min}`;

@@ -1,75 +1,35 @@
-// seal + clone (System B). Bounds are SEALED by default (safety by default); cloning a sealed
-// edge throws, an unsealed edge clones + re-validates, sealMin/sealMax lock additively, and
-// mint-fresh from the raw value is always the escape. Integer here; float mirrors.
+// clone (System B). clone() is a zero-arg, config-preserving copy: same value, same bound, same
+// config, a fresh instance. A bound is set once at construction and is then immutable; to change a
+// bound you mint a fresh value. Integer here; float mirrors.
 import { describe, expect, it } from 'vitest';
 
-import { createInteger, f, i } from '../../../src';
+import { f, i } from '../../../src';
 
-describe('seal + clone (integer)', () => {
-  it('bounds are SEALED by default; cloning a sealed edge throws', () => {
-    const gap = i(5, { min: 0, max: 10 });
-    expect(() => gap.clone({ max: 8 })).toThrow(/sealed/);
-    expect(() => gap.clone({ min: 2 })).toThrow(/sealed/);
-  });
-
-  it('a faithful clone (no patch) copies the value + bound', () => {
+describe('clone (integer)', () => {
+  it('clone() copies the value and the bound into a fresh instance', () => {
     const gap = i(5, { min: 0, max: 10 });
     const copy = gap.clone();
+    expect(copy).not.toBe(gap);
     expect(copy.value()).toBe(5);
     expect(copy.constraints()).toEqual({ min: 0, max: 10 });
   });
 
-  it('an unsealed edge clones + re-validates', () => {
-    const gap = i(5, { min: 0, max: 10, sealedMax: false });
-    expect(gap.clone({ max: 8 }).constraints()).toEqual({
-      min: 0,
-      max: 8,
-    });
-    // re-validation: a tighter max the current value violates throws
-    expect(() => gap.clone({ max: 3 })).toThrow();
+  it('clone() preserves an unbounded value', () => {
+    const copy = i(7).clone();
+    expect(copy.value()).toBe(7);
+    expect(copy.constraints().min).toBeUndefined();
+    expect(copy.constraints().max).toBeUndefined();
   });
 
-  it('sealMax() locks an unsealed edge additively', () => {
-    const gap = i(5, { min: 0, max: 10, sealedMax: false });
-    expect(() => gap.sealMax().clone({ max: 8 })).toThrow(/sealed/);
-  });
-
-  it('mint-fresh always escapes a sealed value', () => {
+  it('mint-fresh is the way to a different bound', () => {
     const gap = i(5, { min: 0, max: 10 });
     const rebased = i(gap.value(), { min: 0, max: 50 });
     expect(rebased.constraints()).toEqual({ min: 0, max: 50 });
   });
 
-  it('float mirrors: default-sealed clone throws, unsealed clones', () => {
-    expect(() =>
-      f(0.5, { min: 0, max: 1 }).clone({ max: 0.8 }),
-    ).toThrow(/sealed/);
-    expect(
-      f(0.5, { min: 0, max: 1, sealedMax: false })
-        .clone({ max: 0.8 })
-        .constraints(),
-    ).toEqual({ min: 0, max: 0.8 });
-  });
-});
-
-describe('seal cascade: factory config -> per-value -> default', () => {
-  it('createInteger({ sealedMax: false }) makes max editable on its values', () => {
-    const { i: loose } = createInteger({ sealedMax: false });
-    expect(
-      loose(5, { min: 0, max: 10 }).clone({ max: 8 }).constraints(),
-    ).toEqual({ min: 0, max: 8 });
-    // min was not loosened by the factory, so it stays sealed
-    expect(() =>
-      loose(5, { min: 0, max: 10 }).clone({ min: 2 }),
-    ).toThrow(/sealed/);
-  });
-
-  it('a per-value option overrides the factory seal default', () => {
-    const { i: loose } = createInteger({ sealedMax: false });
-    expect(() =>
-      loose(5, { min: 0, max: 10, sealedMax: true }).clone({
-        max: 8,
-      }),
-    ).toThrow(/sealed/);
+  it('float mirrors: clone() copies value + bound', () => {
+    const copy = f(0.5, { min: 0, max: 1 }).clone();
+    expect(copy.value()).toBe(0.5);
+    expect(copy.constraints()).toEqual({ min: 0, max: 1 });
   });
 });
