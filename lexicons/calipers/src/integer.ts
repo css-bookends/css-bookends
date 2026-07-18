@@ -43,7 +43,10 @@ export interface IInteger {
   subtract: (delta: Scalar) => IInteger;
   multiply: (factor: Scalar) => IInteger;
   divide: (divisor: Scalar) => IInteger;
-  clamp: (min: number, max: number) => IInteger;
+  clamp: <Min extends number, Max extends number>(
+    min: Min,
+    max: Max,
+  ) => InRangeInteger<Min, Max>;
   /** An independent, config-preserving copy (same value, bound, and config). To change a bound,
    *  mint a fresh value. */
   clone: () => IInteger;

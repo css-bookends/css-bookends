@@ -43,7 +43,10 @@ export interface IFloat {
   subtract: (delta: Scalar) => IFloat;
   multiply: (factor: Scalar) => IFloat;
   divide: (divisor: Scalar) => IFloat;
-  clamp: (min: number, max: number) => IFloat;
+  clamp: <Min extends number, Max extends number>(
+    min: Min,
+    max: Max,
+  ) => InRangeFloat<Min, Max>;
   /** An independent, config-preserving copy (same value, bound, and config). To change a bound,
    *  mint a fresh value. */
   clone: () => IFloat;

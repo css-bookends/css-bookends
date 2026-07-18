@@ -1,6 +1,6 @@
-import { expectAssignable, expectError } from 'tsd';
+import { expectAssignable, expectError, expectType } from 'tsd';
 
-import { type IFloat } from '../../dist/index';
+import { type IFloat, type InRangeFloat } from '../../dist/index';
 import { f, isFloat } from '../support/calipers_tests.dist';
 
 const n = f(0.5);
@@ -11,6 +11,8 @@ expectAssignable<IFloat>(n.add(0.1));
 expectAssignable<IFloat>(n.add(f(0.1)));
 expectAssignable<IFloat>(n.withValue(0.25));
 expectAssignable<IFloat>(n.clamp(0, 1));
+// clamp brands the result with its exact literal bound (System A).
+expectType<InRangeFloat<0, 1>>(n.clamp(0, 1));
 expectAssignable<IFloat>(f(0.5, { min: 0, max: 1 }));
 
 const opacity = f(0.25, { min: 0, max: 1 });

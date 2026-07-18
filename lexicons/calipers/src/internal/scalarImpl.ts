@@ -4,6 +4,7 @@ import {
   reactToBreach,
 } from '../hardening';
 import { type Scalar, toNumber } from '../scalar';
+import { type InRangeBrand } from './brands';
 import {
   createErrorConfigStore,
   createErrorHelpers,
@@ -192,15 +193,20 @@ export abstract class ScalarImpl {
     return this.rebuildWith(result);
   }
 
-  clamp(min: number, max: number): this {
+  clamp<Min extends number, Max extends number>(
+    min: Min,
+    max: Max,
+  ): this & InRangeBrand<Min, Max> {
     if (min > max) {
       this.throwScalar(
         `${this.label()}.clamp: min (${min}) must be <= max (${max})`,
       );
     }
+    // clamp forces the value in-range, so the InRange brand is always honest
+    // regardless of the hardening reaction (System A follows System B here).
     return this.rebuildWith(
       Math.min(max, Math.max(min, this.#value)),
-    );
+    ) as this & InRangeBrand<Min, Max>;
   }
 
   clone(): this {
