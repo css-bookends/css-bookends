@@ -1,6 +1,10 @@
 import { expectAssignable, expectError, expectType } from 'tsd';
 
-import { type IInteger, type InRangeInteger } from '../../dist/index';
+import {
+  createInteger,
+  type IInteger,
+  type InRangeInteger,
+} from '../../dist/index';
 import { i, isInteger } from '../support/calipers_tests.dist';
 
 const n = i(5);
@@ -17,6 +21,35 @@ expectAssignable<IInteger>(i(5, { min: 0, max: 10 }));
 
 const bounded = i(700, { min: 1, max: 1000 });
 expectAssignable<IInteger>(bounded);
+
+// createInteger bakes a bound; under the default (fail) hardening its `i` brands
+// every value with the factory's exact range (System B surfaced as System A).
+const { i: fontWeight } = createInteger({ min: 100, max: 900 });
+expectType<InRangeInteger<100, 900>>(fontWeight(400));
+
+// under `warn` a breach is dropped rather than thrown, so the range cannot be
+// promised: the brand honestly falls back to a plain integer.
+const { i: fontWeightLoose } = createInteger({
+  min: 100,
+  max: 900,
+  hardening: 'warn',
+});
+expectType<IInteger>(fontWeightLoose(400));
+
+// a per-value bound brands the same way, and a per-call `warn` still drops it.
+expectType<InRangeInteger<0, 10>>(i(5, { min: 0, max: 10 }));
+expectType<IInteger>(i(5, { min: 0, max: 10, hardening: 'warn' }));
+
+// an unbounded integer is never branded.
+expectType<IInteger>(i(5));
+
+// a call's contextual type must NOT be able to back-infer a foreign brand: a plain
+// integer, or one bounded to a different range, cannot satisfy a demand for [0, 10].
+declare function needsInRange0to10(
+  value: InRangeInteger<0, 10>,
+): void;
+expectError(needsInRange0to10(i(4)));
+expectError(needsInRange0to10(fontWeight(400)));
 
 const u: unknown = i(5);
 if (isInteger(u)) {

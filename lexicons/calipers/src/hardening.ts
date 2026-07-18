@@ -28,9 +28,13 @@ export const DEFAULT_HARDENING: Hardening = 'fail';
 /**
  * The shared per-unit factory config slice. The `m` / `i` / `f` factories each
  * include it, so the three configs are identical for the hardening field.
+ *
+ * `H` captures the concrete reaction so a bounded factory can brand its output
+ * (only `'fail'` guarantees the bound holds). It defaults to the full union, so
+ * a bare `HardeningConfig` is unchanged.
  */
-export type HardeningConfig = {
-  hardening?: Hardening;
+export type HardeningConfig<H extends Hardening = Hardening> = {
+  hardening?: H;
 };
 
 /** A carried range bound. Empty (`{}`) when the value is unhardened. */

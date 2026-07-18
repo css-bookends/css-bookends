@@ -12,19 +12,35 @@ import {
 } from './errors';
 import { toPlainDecimal } from './toPlainDecimal';
 
-export type ScalarConstraints = {
-  min?: number;
-  max?: number;
+// The `Min extends number = number` idiom does two distinct jobs, one per `number`:
+//   - `extends number` (the CONSTRAINT) is what makes TS capture the LITERAL: a param
+//     constrained to `number` is inferred as narrowly as possible (`100`) instead of
+//     widening to `number`, and that literal is what lets a builder brand `InRange<100, 900>`.
+//     Drop the constraint and the brand collapses to the useless `InRange<number, number>`.
+//   - `= number` (the DEFAULT) is the fallback when nothing is supplied or inferred (a bare
+//     `ScalarConstraints` used as a plain holder type), where an ordinary `min?: number` is right.
+// So: capture the exact literal if given, else fall back to plain `number`. (The factory
+// FUNCTIONS below default to `never` instead, a "no bound, don't brand" sentinel; see there.)
+export type ScalarConstraints<
+  Min extends number = number,
+  Max extends number = number,
+> = {
+  min?: Min;
+  max?: Max;
 };
 
-export type ScalarOptions = ScalarConstraints & {
+export type ScalarOptions<
+  Min extends number = number,
+  Max extends number = number,
+  H extends Hardening = Hardening,
+> = ScalarConstraints<Min, Max> & {
   context?: string;
   /**
    * Reaction when a bound is breached (at construction or through arithmetic):
    * the shared `'warn' | 'fail'` config (default `'fail'` = throw). A bundle
    * `global` can relax it.
    */
-  hardening?: Hardening;
+  hardening?: H;
   /**
    * The per-instance error store this value throws through (carries the resolved
    * `stackHints` config). Threaded by the factory; the free builder leaves it

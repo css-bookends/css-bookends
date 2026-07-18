@@ -1,4 +1,8 @@
-import { DEFAULT_HARDENING, type HardeningConfig } from './hardening';
+import {
+  DEFAULT_HARDENING,
+  type Hardening,
+  type HardeningConfig,
+} from './hardening';
 import type {
   GreaterOrEqualToZeroBrand,
   InRangeBrand,
@@ -25,7 +29,11 @@ import type { Scalar } from './scalar';
 
 export type IntegerConstraints = ScalarConstraints;
 
-export type IntegerOptions = ScalarOptions;
+export type IntegerOptions<
+  Min extends number = number,
+  Max extends number = number,
+  H extends Hardening = Hardening,
+> = ScalarOptions<Min, Max, H>;
 
 export interface IInteger {
   css: () => string;
@@ -76,6 +84,37 @@ export type InRangeInteger<
   Max extends number = number,
 > = IInteger & InRangeBrand<Min, Max>;
 
+/**
+ * The integer type a bounded builder returns, resolved from the captured bound and
+ * hardening. A range brand is emitted ONLY when BOTH bounds are known literals AND the
+ * reaction is `'fail'` (the only reaction that guarantees the value stays in range; `'warn'`
+ * drops a breached edge, so the brand would be a lie). `never` bounds (unbounded) and any
+ * non-`'fail'` reaction fall back to a plain `IInteger`.
+ */
+export type ResolveIntegerBrand<
+  Min extends number,
+  Max extends number,
+  H extends Hardening,
+> = [
+  Min,
+] extends [
+  never,
+]
+  ? IInteger
+  : [
+        Max,
+      ] extends [
+        never,
+      ]
+    ? IInteger
+    : [
+          H,
+        ] extends [
+          'fail',
+        ]
+      ? InRangeInteger<Min, Max>
+      : IInteger;
+
 class IntegerImpl extends ScalarImpl implements IInteger {
   protected label(): string {
     return 'i';
@@ -104,11 +143,30 @@ class IntegerImpl extends ScalarImpl implements IInteger {
  * result that is no longer an integer (or falls out of range) throws. That is
  * how integer-ness survives arithmetic.
  */
-export function i(
+export function i(value: number): IInteger;
+// `= never` (not `= number`, cf. `ScalarConstraints`): here the default is the "no bound
+// supplied, so DON'T brand" sentinel that `ResolveIntegerBrand` detects with `[Min] extends
+// [never]`. A real literal still gets captured from `options` via `extends number`.
+export function i<
+  Min extends number = never,
+  Max extends number = never,
+  H extends Hardening = 'fail',
+>(
   value: number,
-  options: IntegerOptions = {},
-): IInteger {
-  return new IntegerImpl(value, options);
+  options: IntegerOptions<Min, Max, H>,
+): ResolveIntegerBrand<Min, Max, H>;
+export function i<
+  Min extends number = never,
+  Max extends number = never,
+  H extends Hardening = 'fail',
+>(
+  value: number,
+  options: IntegerOptions<Min, Max, H> = {},
+): ResolveIntegerBrand<Min, Max, H> {
+  return new IntegerImpl(
+    value,
+    options,
+  ) as unknown as ResolveIntegerBrand<Min, Max, H>;
 }
 
 export const isInteger = (value: unknown): value is IInteger =>
@@ -177,32 +235,82 @@ export const inRangeInteger = <
  * plus the shared `errorConfig` (stack-hint rendering), so a `createInteger`
  * instance builds its own per-instance error store like `createCalipers`.
  */
-export type IntegerFactoryConfig = HardeningConfig & {
+export type IntegerFactoryConfig<
+  Min extends number = number,
+  Max extends number = number,
+  H extends Hardening = Hardening,
+> = HardeningConfig<H> & {
   errorConfig?: ErrorConfig;
   /**
    * A bound baked into every value this factory builds (the named-domain pattern,
    * e.g. `createInteger({ min: 100, max: 900 })` for font-weight). Set once here; a
-   * per-value bound on top throws. Unit-local (no bundle `global`).
+   * per-value bound on top throws. Unit-local (no bundle `global`). The literal
+   * `Min`/`Max` (and `H`) are captured so `i` can brand its output.
    */
-  min?: number;
-  max?: number;
+  min?: Min;
+  max?: Max;
 };
 
-/** The bound integer surface a `createInteger` instance exposes. */
-export interface IntegerApi {
-  i: (value: number, options?: IntegerOptions) => IInteger;
+/**
+ * The bound integer surface a `createInteger` instance exposes. `FactoryMin`/`FactoryMax`/
+ * `FactoryH` are the factory's captured bound and reaction; `i` brands its output with the
+ * RESOLVED bound (a per-call bound, else the factory's) under the resolved hardening (a per-call
+ * `hardening` overrides the factory's). Set-once makes the per-call and factory bounds mutually
+ * exclusive, so the resolved bound is simply whichever one is present.
+ */
+export interface IntegerApi<
+  FactoryMin extends number = never,
+  FactoryMax extends number = never,
+  FactoryH extends Hardening = 'fail',
+> {
+  // Two call signatures: with no options the return is fixed to the factory's own resolved
+  // brand (no free type params, so a call site's contextual type cannot back-infer a foreign
+  // brand); with options the per-call bound / hardening drive the brand.
+  i: {
+    (
+      value: number,
+    ): ResolveIntegerBrand<FactoryMin, FactoryMax, FactoryH>;
+    <
+      CallMin extends number = never,
+      CallMax extends number = never,
+      CallH extends Hardening = FactoryH,
+    >(
+      value: number,
+      options: IntegerOptions<CallMin, CallMax, CallH>,
+    ): ResolveIntegerBrand<
+      [
+        CallMin,
+      ] extends [
+        never,
+      ]
+        ? FactoryMin
+        : CallMin,
+      [
+        CallMax,
+      ] extends [
+        never,
+      ]
+        ? FactoryMax
+        : CallMax,
+      CallH
+    >;
+  };
   isInteger: (value: unknown) => value is IInteger;
 }
 
 /**
- * The integer FACTORY: bind a config once (today the `hardening` reaction) and
- * get the integer surface with that config baked in. Mirrors `createCalipers`
- * (measurements) and `createFloat` (floats) so `m` / `i` / `f` are identical.
- * A per-call `options.hardening` still overrides the baked default.
+ * The integer FACTORY: bind a config once (the `hardening` reaction and an optional bound) and
+ * get the integer surface with that config baked in. Mirrors `createCalipers` (measurements) and
+ * `createFloat` (floats) so `m` / `i` / `f` are identical. A per-call `options.hardening` still
+ * overrides the baked default.
  */
-export const createInteger = (
-  config: IntegerFactoryConfig = {},
-): IntegerApi => {
+export const createInteger = <
+  Min extends number = never,
+  Max extends number = never,
+  H extends Hardening = 'fail',
+>(
+  config: IntegerFactoryConfig<Min, Max, H> = {},
+): IntegerApi<Min, Max, H> => {
   const hardening = config.hardening ?? DEFAULT_HARDENING;
   const { min, max } = config;
   const factoryBounded = min !== undefined || max !== undefined;
@@ -221,17 +329,58 @@ export const createInteger = (
       );
     }
   };
+  const boundI = <
+    CallMin extends number = never,
+    CallMax extends number = never,
+    CallH extends Hardening = H,
+  >(
+    value: number,
+    options: IntegerOptions<CallMin, CallMax, CallH> = {},
+  ): ResolveIntegerBrand<
+    [
+      CallMin,
+    ] extends [
+      never,
+    ]
+      ? Min
+      : CallMin,
+    [
+      CallMax,
+    ] extends [
+      never,
+    ]
+      ? Max
+      : CallMax,
+    CallH
+  > => {
+    guardBound(options);
+    return i(value, {
+      hardening,
+      errorStore,
+      min,
+      max,
+      ...options,
+    }) as unknown as ResolveIntegerBrand<
+      [
+        CallMin,
+      ] extends [
+        never,
+      ]
+        ? Min
+        : CallMin,
+      [
+        CallMax,
+      ] extends [
+        never,
+      ]
+        ? Max
+        : CallMax,
+      CallH
+    >;
+  };
   return {
-    i: (value, options = {}) => {
-      guardBound(options);
-      return i(value, {
-        hardening,
-        errorStore,
-        min,
-        max,
-        ...options,
-      });
-    },
+    // `boundI` is one generic arrow that satisfies both public call signatures.
+    i: boundI,
     isInteger,
   };
 };

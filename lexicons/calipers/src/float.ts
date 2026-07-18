@@ -1,4 +1,8 @@
-import { DEFAULT_HARDENING, type HardeningConfig } from './hardening';
+import {
+  DEFAULT_HARDENING,
+  type Hardening,
+  type HardeningConfig,
+} from './hardening';
 import { i, type IInteger } from './integer';
 import type {
   GreaterOrEqualToZeroBrand,
@@ -25,7 +29,11 @@ import type { Scalar } from './scalar';
 
 export type FloatConstraints = ScalarConstraints;
 
-export type FloatOptions = ScalarOptions;
+export type FloatOptions<
+  Min extends number = number,
+  Max extends number = number,
+  H extends Hardening = Hardening,
+> = ScalarOptions<Min, Max, H>;
 
 export interface IFloat {
   css: () => string;
@@ -76,6 +84,37 @@ export type InRangeFloat<
   Max extends number = number,
 > = IFloat & InRangeBrand<Min, Max>;
 
+/**
+ * The float type a bounded builder returns, resolved from the captured bound and hardening.
+ * A range brand is emitted ONLY when BOTH bounds are known literals AND the reaction is
+ * `'fail'` (the only reaction that keeps the value in range; `'warn'` drops a breached edge, so
+ * the brand would be a lie). `never` bounds (unbounded) and any non-`'fail'` reaction fall back
+ * to a plain `IFloat`. Mirrors `ResolveIntegerBrand`.
+ */
+export type ResolveFloatBrand<
+  Min extends number,
+  Max extends number,
+  H extends Hardening,
+> = [
+  Min,
+] extends [
+  never,
+]
+  ? IFloat
+  : [
+        Max,
+      ] extends [
+        never,
+      ]
+    ? IFloat
+    : [
+          H,
+        ] extends [
+          'fail',
+        ]
+      ? InRangeFloat<Min, Max>
+      : IFloat;
+
 class FloatImpl extends ScalarImpl implements IFloat {
   protected label(): string {
     return 'f';
@@ -101,8 +140,30 @@ class FloatImpl extends ScalarImpl implements IFloat {
  * constraints. Operations re-validate against the same constraints, so a
  * hardened float stays hardened (or throws) through arithmetic.
  */
-export function f(value: number, options: FloatOptions = {}): IFloat {
-  return new FloatImpl(value, options);
+export function f(value: number): IFloat;
+// `= never` (not `= number`, cf. `ScalarConstraints`): here the default is the "no bound
+// supplied, so DON'T brand" sentinel that `ResolveFloatBrand` detects with `[Min] extends
+// [never]`. A real literal still gets captured from `options` via `extends number`.
+export function f<
+  Min extends number = never,
+  Max extends number = never,
+  H extends Hardening = 'fail',
+>(
+  value: number,
+  options: FloatOptions<Min, Max, H>,
+): ResolveFloatBrand<Min, Max, H>;
+export function f<
+  Min extends number = never,
+  Max extends number = never,
+  H extends Hardening = 'fail',
+>(
+  value: number,
+  options: FloatOptions<Min, Max, H> = {},
+): ResolveFloatBrand<Min, Max, H> {
+  return new FloatImpl(
+    value,
+    options,
+  ) as unknown as ResolveFloatBrand<Min, Max, H>;
 }
 
 export const isFloat = (value: unknown): value is IFloat =>
@@ -165,32 +226,82 @@ export const inRangeFloat = <Min extends number, Max extends number>(
  * plus the shared `errorConfig` (stack-hint rendering), so a `createFloat`
  * instance builds its own per-instance error store like `createCalipers`.
  */
-export type FloatFactoryConfig = HardeningConfig & {
+export type FloatFactoryConfig<
+  Min extends number = number,
+  Max extends number = number,
+  H extends Hardening = Hardening,
+> = HardeningConfig<H> & {
   errorConfig?: ErrorConfig;
   /**
    * A bound baked into every value this factory builds (the named-domain pattern,
    * e.g. `createFloat({ min: 0, max: 1 })` for opacity). Set once here; a per-value
-   * bound on top throws. Unit-local (no bundle `global`).
+   * bound on top throws. Unit-local (no bundle `global`). The literal `Min`/`Max`
+   * (and `H`) are captured so `f` can brand its output.
    */
-  min?: number;
-  max?: number;
+  min?: Min;
+  max?: Max;
 };
 
-/** The bound float surface a `createFloat` instance exposes. */
-export interface FloatApi {
-  f: (value: number, options?: FloatOptions) => IFloat;
+/**
+ * The bound float surface a `createFloat` instance exposes. `FactoryMin`/`FactoryMax`/`FactoryH`
+ * are the factory's captured bound and reaction; `f` brands its output with the RESOLVED bound
+ * (a per-call bound, else the factory's) under the resolved hardening (a per-call `hardening`
+ * overrides the factory's). Set-once makes the per-call and factory bounds mutually exclusive, so
+ * the resolved bound is simply whichever one is present. Mirrors `IntegerApi`.
+ */
+export interface FloatApi<
+  FactoryMin extends number = never,
+  FactoryMax extends number = never,
+  FactoryH extends Hardening = 'fail',
+> {
+  // Two call signatures: with no options the return is fixed to the factory's own resolved
+  // brand (no free type params, so a call site's contextual type cannot back-infer a foreign
+  // brand); with options the per-call bound / hardening drive the brand.
+  f: {
+    (
+      value: number,
+    ): ResolveFloatBrand<FactoryMin, FactoryMax, FactoryH>;
+    <
+      CallMin extends number = never,
+      CallMax extends number = never,
+      CallH extends Hardening = FactoryH,
+    >(
+      value: number,
+      options: FloatOptions<CallMin, CallMax, CallH>,
+    ): ResolveFloatBrand<
+      [
+        CallMin,
+      ] extends [
+        never,
+      ]
+        ? FactoryMin
+        : CallMin,
+      [
+        CallMax,
+      ] extends [
+        never,
+      ]
+        ? FactoryMax
+        : CallMax,
+      CallH
+    >;
+  };
   isFloat: (value: unknown) => value is IFloat;
 }
 
 /**
- * The float FACTORY: bind a config once (today the `hardening` reaction) and
- * get the float surface with that config baked in. Mirrors `createCalipers`
- * (measurements) and `createInteger` (integers) so `m` / `i` / `f` are
- * identical. A per-call `options.hardening` still overrides the baked default.
+ * The float FACTORY: bind a config once (the `hardening` reaction and an optional bound) and get
+ * the float surface with that config baked in. Mirrors `createCalipers` (measurements) and
+ * `createInteger` (integers) so `m` / `i` / `f` are identical. A per-call `options.hardening`
+ * still overrides the baked default.
  */
-export const createFloat = (
-  config: FloatFactoryConfig = {},
-): FloatApi => {
+export const createFloat = <
+  Min extends number = never,
+  Max extends number = never,
+  H extends Hardening = 'fail',
+>(
+  config: FloatFactoryConfig<Min, Max, H> = {},
+): FloatApi<Min, Max, H> => {
   const hardening = config.hardening ?? DEFAULT_HARDENING;
   const { min, max } = config;
   const factoryBounded = min !== undefined || max !== undefined;
@@ -209,17 +320,58 @@ export const createFloat = (
       );
     }
   };
+  const boundF = <
+    CallMin extends number = never,
+    CallMax extends number = never,
+    CallH extends Hardening = H,
+  >(
+    value: number,
+    options: FloatOptions<CallMin, CallMax, CallH> = {},
+  ): ResolveFloatBrand<
+    [
+      CallMin,
+    ] extends [
+      never,
+    ]
+      ? Min
+      : CallMin,
+    [
+      CallMax,
+    ] extends [
+      never,
+    ]
+      ? Max
+      : CallMax,
+    CallH
+  > => {
+    guardBound(options);
+    return f(value, {
+      hardening,
+      errorStore,
+      min,
+      max,
+      ...options,
+    }) as unknown as ResolveFloatBrand<
+      [
+        CallMin,
+      ] extends [
+        never,
+      ]
+        ? Min
+        : CallMin,
+      [
+        CallMax,
+      ] extends [
+        never,
+      ]
+        ? Max
+        : CallMax,
+      CallH
+    >;
+  };
   return {
-    f: (value, options = {}) => {
-      guardBound(options);
-      return f(value, {
-        hardening,
-        errorStore,
-        min,
-        max,
-        ...options,
-      });
-    },
+    // `boundF` is one generic arrow that satisfies both public call signatures.
+    f: boundF,
     isFloat,
   };
 };
