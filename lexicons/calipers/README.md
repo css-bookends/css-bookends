@@ -179,18 +179,22 @@ m(2.5).toTypedValue();  // f(2.5)             (integral -> i, fractional -> f)
 
 Refinements run a runtime check and return the same value branded with the constraint, so a function can demand "a non-negative measurement" and the compiler rejects anything unchecked (brands are keyed by a private symbol). The built-ins are `nonNegative`, `nonPositive`, and `inRange(min, max)`, each exposing `.is` / `.ensure` / `.check` / `.hardenWith`. `inRange` carries its literal bounds in the type. Build your own with `makeMeasurementRefinement`. The full model is in `docs/hardening.md`, with runnable examples in `examples/refinements.example.ts`.
 
-**Hardening through `m()` (config-driven).** When `m()` ingests a hardened `i` / `f`, it CARRIES the bound, readable via `.constraints()`. What happens when later arithmetic BREAKS that bound is one config knob, `hardening: 'warn' | 'fail'` (default `'fail'`): `fail` throws, `warn` warns and drops the bound. (There is no silent "ignore": dropping a bound silently is the same as never bounding the value.) The same knob governs `i` / `f`'s own re-validation. Set it per instance via `createCalipers({ hardening })` / `createInteger({ hardening })` / `createFloat({ hardening })`, or across the whole bundle via the cascade (see Factories).
+**A measurement's bound (config-driven).** `m` takes its bound from ONE source: a DIRECT `m(v, { min, max })` checked at construction, an ingested hardened `i` / `f` (m carries its `.constraints()`), or `m`'s refinement quartet — a direct bound AND an ingested-scalar bound together throws (a bound is set once). `m` also takes a generic input `modifier: (n) => n` applied at intake, before validation and storage (modify-then-validate), and every unit helper can carry the same `{ min, max, modifier }` config. What happens when later arithmetic BREAKS the bound is one config knob, `hardening: 'warn' | 'fail'` (default `'fail'`): `fail` throws, `warn` warns and drops the bound. (There is no silent "ignore": dropping a bound silently is the same as never bounding the value.) The same knob governs `i` / `f`'s own re-validation. Set it per instance via `createCalipers({ hardening })` / `createInteger({ hardening })` / `createFloat({ hardening })`, or across the whole bundle via the cascade (see Factories).
 
 ```ts
 import { m, i, createCalipersBundle } from '@css-bookends/css-calipers';
 
+// a DIRECT bound on m, checked at construction
+m(8, { min: 0, max: 10 }).constraints(); // { min: 0, max: 10 }
+m(50, { min: 0, max: 10 });              // throws (out of range; default 'fail')
+
+// or INGEST a hardened scalar's bound
 const bounded = i(8, { min: 0, max: 10 });
-m(bounded).constraints();         // { min: 0, max: 10 }   (m carries the ingested bound)
-m(bounded).multiply(2);           // throws                (16 breaks [0, 10]; default 'fail')
+m(bounded).multiply(2);                  // throws (16 breaks [0, 10]; default 'fail')
 
 // configure the reaction via the bundle (createCalipers is on the /factory + /codex entries)
 const lenient = createCalipersBundle({ measurement: { hardening: 'warn' } });
-lenient.m(bounded(8)).multiply(2).css(); // '16px'         (bound dropped, proceeds)
+lenient.m(bounded).multiply(2).css();    // '16px' (bound dropped, proceeds)
 ```
 
 ## Per-property value helpers live in the books layer

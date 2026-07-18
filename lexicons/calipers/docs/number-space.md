@@ -49,7 +49,7 @@ two primitives plus a range:
 | column-count / tab-size     | `i`, `>= 1` / `>= 0`          |
 
 `aspect-ratio` is already covered by the ratio primitive (`r()`), which now composes
-from these scalars (a ratio of two hardened integers is itself hardened).
+from these scalars (a ratio of two bounded integers is itself bounded).
 
 ## The design
 

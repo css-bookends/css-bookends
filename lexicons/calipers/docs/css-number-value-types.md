@@ -92,7 +92,7 @@ Two boundary cases are listed but flagged:
   `<number [0,∞]> [ / <number [0,∞]> ]?`. This is a validity constraint, not a
   clamp.
 - Status: already handled by the ratio primitive `r()`, which now composes from
-  these scalars (a ratio of two hardened integers is itself hardened). Listed
+  these scalars (a ratio of two bounded integers is itself bounded). Listed
   here for completeness only.
 
 ### `<zero>` (spec-level type, no MDN page)

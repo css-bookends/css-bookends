@@ -81,7 +81,7 @@ export const floatClamped = f(1.5).clamp(0, 1).value(); // 1
 // --- reusable bound builders (a per-value i(v, { min, max }) / f) ----------------
 
 // A font-weight value is an integer in [1, 1000]; bind it once, reuse it.
-const fontWeight = (v: number) => i(v, { min: 1, max: 1000 });
+const fontWeight = (v: number) => i(v, { min: 100, max: 900 });
 export const validWeight = fontWeight(700).css(); // '700'
 export const weightThrows = (): string => {
   try {
