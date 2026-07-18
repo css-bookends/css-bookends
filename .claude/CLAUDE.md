@@ -67,7 +67,12 @@ favour of "lexicon".)
   something useful. CSS-Bookends is the helper layer.
 - EVERY helper is a book. Per-property helpers (opacity, zIndex, fontWeight, ...) and
   composed helpers (borders, shadows, margin, padding, ...) are ALL Layer-2 books
-  here. A helper NEVER lives in calipers.
+  here. A helper NEVER lives in calipers. (Careful: the VALUE such a helper works with,
+  a bounded LEXICON value like a font-weight `createInteger({ min: 100, max: 900 })`
+  integer or an opacity 0–1 float, is a Layer-1 LEXICON per THE RULE above; the book is the
+  property-WRITING helper on top that renders it to `{ fontWeight: '400' }` and types its
+  `.css()` against csstype. Value = lexicon; property-writing helper = book. This applies to
+  opacity / zIndex / fontWeight alike.)
 - The compendium (`packages/compendium`) is the full bundle: it always re-exports every
   active book (the full "bookends"). Gilding is the output-edge finisher (browser-compat
   post-processing). (The platemaker is NOT part of Layer 2, see below: it is a

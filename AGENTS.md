@@ -23,7 +23,10 @@ job (a Layer-1 unit is a **lexicon**; "primitive" is the retired synonym):
    helpers at all. NO helpers, NO books, no `publishBook` engine, ever.
 2. **css-bookends (Layer 2), the helpers (books) that consume the lexicons.** EVERY
    helper is a book (per-property: opacity, zIndex, ...; composed: borders, shadows,
-   margin, ...). The compendium is the full bundle of every active book; gilding is the
+   margin, ...). A per-property book is the property-WRITING helper; the VALUE it works
+   with (a bounded LEXICON value, e.g. font-weight `createInteger({ min: 100, max: 900 })`)
+   is a Layer-1 lexicon per THE RULE, not the book. Value = lexicon, writing-helper = book.
+   The compendium is the full bundle of every active book; gilding is the
    output-edge finisher. Books consume calipers; calipers never depends on a book. (The
    **platemaker** is NOT a book: it is a calipers-adjacent input adapter in the
    `css-calipers` org that feeds Layer 1; see its rule below.)

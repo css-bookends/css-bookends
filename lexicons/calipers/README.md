@@ -197,9 +197,9 @@ const lenient = createCalipersBundle({ measurement: { hardening: 'warn' } });
 lenient.m(bounded).multiply(2).css();    // '16px' (bound dropped, proceeds)
 ```
 
-## Per-property value helpers live in the books layer
+## Per-property WRITING helpers live in the books layer
 
-calipers is the value-type primitives only (colour, measurements, integers, floats, ratios). The per-property value helpers (`opacity`, `zIndex`, `fontWeight`, ...) are NOT a calipers feature: they live one layer up, in the books layer. Each is a book that binds a calipers primitive to one CSS property, applies that property's bound and keyword companions, and types its `.css()` output against the matching csstype `Property.X`. The shared engine behind them is `@css-bookends/css-value-core`. For the full picture, the value-type side is mapped in `lexicons/calipers/surface.md` and the per-property side in `packages/css-value-core/surface.md`.
+calipers owns the value-type primitives (colour, measurements, integers, floats, ratios) AND their bounded values — a font-weight token is a `createInteger({ min: 100, max: 900 })` value right here. What is NOT a calipers feature is the per-property WRITING helper (`opacity`, `zIndex`, `fontWeight`, ...) that turns such a value into a typed CSS property: those live one layer up, in the books layer. Each is a book that binds a calipers value to one CSS property, adds that property's keyword companions, and types its `.css()` output against the matching csstype `Property.X`. So the VALUE is a lexicon; the property-writing helper is a book. The shared engine behind the books is `@css-bookends/css-value-core`. For the full picture, the value-type side is mapped in `lexicons/calipers/surface.md` and the per-property side in `packages/css-value-core/surface.md`.
 
 ## Factories
 
