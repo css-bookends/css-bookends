@@ -1,0 +1,31 @@
+import { describe, expect, it } from 'vitest';
+
+import { f, i, m } from '../../support/calipers_tests.src';
+
+// SPEC for the "m embeds a scalar" work (todo item 1). Currently RED and DELIBERATELY so: today `m`
+// does not embed the scalar nor name the subtype in its errors. When `m` embeds u / i / f, a failing
+// operation must report the FULL chain: the measurement `m`, then the embedded subtype, then the
+// specific error, e.g. `m(i): 5 is above the maximum 10`. More info, not less. The exact `m(...)`
+// punctuation is adjustable at build time; what these pin is m -> subtype -> the specific error, all
+// present. This file is NOT wired into the main `test` run yet; it is the driver for the embed phase.
+describe('measurement errors report m, the subtype, and the specific error (PENDING embed work)', () => {
+  it('a plain-number measurement: m(u) + the specific error', () => {
+    // 5 is above the max of 3, so it throws at construction.
+    expect(() => m(5, { max: 3 })).toThrow(
+      /m\(u\).*above the maximum/,
+    );
+  });
+
+  it('an integer-backed measurement: m(i) + the specific error', () => {
+    // in-range at construction, then arithmetic breaks the ingested bound.
+    expect(() => m(i(5, { max: 10 })).add(10)).toThrow(
+      /m\(i\).*above the maximum/,
+    );
+  });
+
+  it('a float-backed measurement: m(f) + the specific error', () => {
+    expect(() => m(f(5), { max: 10 }).add(10)).toThrow(
+      /m\(f\).*above the maximum/,
+    );
+  });
+});
