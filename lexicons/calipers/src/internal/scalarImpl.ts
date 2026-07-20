@@ -90,6 +90,13 @@ export type ScalarOptions<
    * surface messy inputs that a `modifier` would otherwise clean up silently.
    */
   warnOnNonIntegerInput?: boolean;
+  /**
+   * Internal plumbing: an outer context that PREFIXES this scalar's error label. When set, a throw
+   * reads `<wrapperLabel>(<kind>): ...` instead of `<kind>: ...`. A measurement passes `'m'` when it
+   * embeds a scalar, so the error names both the measurement and the embedded subtype (e.g.
+   * `m(i): ...`). Not a public knob.
+   */
+  wrapperLabel?: string;
 };
 
 /**
@@ -150,11 +157,13 @@ export abstract class ScalarImpl {
   constructor(value: number, options: ScalarOptions = {}) {
     const { min, max, context } = options;
     const hardening = options.hardening ?? DEFAULT_HARDENING;
-    const label = this.label();
     // Preliminary config so every throw below renders through the right error store (the only
     // config the construction-time throws need). The frozen, normalized config is assembled at
     // the end once the warn-drop is known.
     this.#config = { ...options, hardening };
+    // The error prefix (this kind's label, wrapped by `wrapperLabel` when a measurement embeds this
+    // scalar). Computed AFTER `#config` so `errorPrefix` can read the wrapper.
+    const label = this.errorPrefix();
     if (min !== undefined && max !== undefined && min > max) {
       this.throwScalar(
         `${label}: min (${min}) must be <= max (${max})${suffix(context)}`,
@@ -221,6 +230,14 @@ export abstract class ScalarImpl {
     return createErrorHelpers(store).throwScalarError(message);
   }
 
+  // The error-message prefix: this kind's label, wrapped by the outer context when one is set
+  // (`wrapperLabel` -> `<wrapper>(<kind>)`, e.g. `m(i)`), so an embedded scalar names the measurement
+  // AND the subtype. Used by every scalar throw.
+  protected errorPrefix(): string {
+    const wrapper = this.#config.wrapperLabel;
+    return wrapper ? `${wrapper}(${this.label()})` : this.label();
+  }
+
   protected options(): ScalarOptions {
     return this.#config;
   }
@@ -281,7 +298,7 @@ export abstract class ScalarImpl {
 
   divide(divisor: Scalar): this {
     const numeric = coerce(divisor);
-    const label = this.label();
+    const label = this.errorPrefix();
     if (numeric === 0) {
       this.throwScalar(
         `${label}: cannot divide ${this.#value} by zero${suffix(this.#config.context)}`,
@@ -304,7 +321,7 @@ export abstract class ScalarImpl {
   protected clampToRange(min: number, max: number): this {
     if (min > max) {
       this.throwScalar(
-        `${this.label()}.clamp: min (${min}) must be <= max (${max})`,
+        `${this.errorPrefix()}.clamp: min (${min}) must be <= max (${max})`,
       );
     }
     return this.rebuildWith(

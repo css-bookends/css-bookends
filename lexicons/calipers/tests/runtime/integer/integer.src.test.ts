@@ -133,6 +133,16 @@ describe('Integer primitive (src)', () => {
     expect(i(5).kind()).toBe('i');
   });
 
+  it('prefixes errors with a wrapper label when embedded (m(i): ...)', () => {
+    // both the bound-breach and the integer-check errors carry the wrapper.
+    expect(() => i(15, { wrapperLabel: 'm', max: 10 })).toThrow(
+      /^m\(i\):/,
+    );
+    expect(() => i(2.5, { wrapperLabel: 'm' })).toThrow(
+      /^m\(i\): expected an integer/,
+    );
+  });
+
   it('clone() copies the value and the bound', () => {
     const orig = i(700, { min: 100, max: 900 });
     const copy = orig.clone();

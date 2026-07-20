@@ -129,7 +129,7 @@ class IntegerImpl extends ScalarImpl implements IInteger {
     // no modifier a non-integer fails loudly here.
     if (!Number.isInteger(value)) {
       this.throwScalar(
-        `i: expected an integer (got ${value})${suffix(context)}`,
+        `${this.errorPrefix()}: expected an integer (got ${value})${suffix(context)}`,
       );
     }
   }

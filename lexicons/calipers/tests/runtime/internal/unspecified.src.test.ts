@@ -39,6 +39,15 @@ describe('u (internal unspecified number)', () => {
     expect(() => u(5, { max: 3 })).toThrow(/^u:/);
   });
 
+  it('prefixes errors with a wrapper label when embedded (m(u): ...)', () => {
+    // A measurement passes wrapperLabel: 'm' when it embeds a scalar, so the throw names BOTH the
+    // wrapper and the kind. Without a wrapper it stays "u: ...".
+    expect(() => u(5, { wrapperLabel: 'm', max: 3 })).toThrow(
+      /^m\(u\):/,
+    );
+    expect(() => u(5, { max: 3 })).toThrow(/^u:/);
+  });
+
   it('reports whether its CURRENT value is whole or fractional (value-based)', () => {
     // `u` is unspecified, but you can still ask what the value currently is.
     expect(u(5).isInt()).toBe(true);

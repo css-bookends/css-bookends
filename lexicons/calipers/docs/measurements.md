@@ -22,9 +22,10 @@ spec is `tests/runtime/core/measurement-embed.src.test.ts` (6 red delegation/err
 - [x] **1. Expose the scalar's subtype.** A public `kind()` on `ScalarImpl` (returns `'i'`/`'f'`/`'u'`
   from `label()`), declared on `IInteger`/`IFloat`/`IUnspecified`, so a measurement can read it for the
   `m(<subtype>)` error and for `isInt`. *(done 2026-07-20)*
-- [ ] **2. Error wrapper label.** Let a scalar's throw carry a caller-supplied wrapper, so a scalar
-  embedded in `m` renders `m(<subtype>): <specific>` instead of `<subtype>: <specific>`. Drives the
-  measurement-embed ERROR specs.
+- [x] **2. Error wrapper label.** Let a scalar's throw carry a caller-supplied wrapper (`wrapperLabel`),
+  so a scalar embedded in `m` renders `m(<subtype>): <specific>` instead of `<subtype>: <specific>`. The
+  prefix is centralized in `errorPrefix()` and routed through every scalar throw. Drives the
+  measurement-embed ERROR specs. *(done 2026-07-20)*
 - [ ] **3. `Measurement` holds `#scalar` + `#unit` and delegates.** Embed the scalar; delegate the
   numeric methods (value/valueOf/constraints/isInt/add/subtract/multiply/divide/clamp/round/floor/
   ceil/clone/…); keep the unit methods (unit/category/css/unit-safe add-subtract-clamp-equals-compare);
