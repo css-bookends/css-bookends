@@ -35,6 +35,20 @@ describe('u (internal unspecified number)', () => {
     );
   });
 
+  it('clamps within bounds via a public clamp() (unbranded, u stays unspecified)', () => {
+    // A measurement delegates clamp() to whatever scalar it embeds, so `u` exposes a public clamp().
+    // Unlike i/f it carries no InRange brand: `u` is the deliberately unspecified scalar.
+    // integer values and bounds
+    expect(u(15).clamp(0, 10).value()).toBe(10);
+    expect(u(-3).clamp(0, 10).value()).toBe(0);
+    expect(u(5).clamp(0, 10).value()).toBe(5);
+    // `u` accepts any finite number, so clamp works on fractional values AND fractional bounds
+    expect(u(15.7).clamp(0, 10.5).value()).toBe(10.5);
+    expect(u(-3.2).clamp(0.5, 10).value()).toBe(0.5);
+    expect(u(5.25).clamp(0.5, 10.5).value()).toBe(5.25);
+    expect(() => u(5).clamp(10, 0)).toThrow(/min .* must be <= max/);
+  });
+
   it('labels its own errors "u"', () => {
     expect(() => u(5, { max: 3 })).toThrow(/^u:/);
   });

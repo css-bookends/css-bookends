@@ -26,7 +26,12 @@ spec is `tests/runtime/core/measurement-embed.src.test.ts` (6 red delegation/err
   so a scalar embedded in `m` renders `m(<subtype>): <specific>` instead of `<subtype>: <specific>`. The
   prefix is centralized in `errorPrefix()` and routed through every scalar throw. Drives the
   measurement-embed ERROR specs. *(done 2026-07-20)*
-- [ ] **3. `Measurement` holds `#scalar` + `#unit` and delegates.** Embed the scalar; delegate the
+- [x] **3a. Give `u` a public `clamp()` (embed prep).** Today `i`/`f` expose a public `clamp()`; `u`
+  only had the protected `clampToRange`. A measurement delegates `clamp` to WHATEVER scalar it embeds,
+  so `u` needs a public `clamp()` to be a full peer. Returns a plain `IUnspecified` (no `InRange`
+  brand); tested on integer AND fractional values / bounds. (Also unblocks the future per-edge `clamp`
+  reaction, whose surface is locked in the pad todo, built AFTER this refactor.) *(done 2026-07-20)*
+- [ ] **3b. `Measurement` holds `#scalar` + `#unit` and delegates.** Embed the scalar; delegate the
   numeric methods (value/valueOf/constraints/isInt/add/subtract/multiply/divide/clamp/round/floor/
   ceil/clone/…); keep the unit methods (unit/category/css/unit-safe add-subtract-clamp-equals-compare);
   delete the bespoke `#clone` bound logic. The core step, split if it grows.

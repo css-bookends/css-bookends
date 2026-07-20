@@ -30,6 +30,9 @@ export interface IUnspecified {
   subtract: (delta: Scalar) => IUnspecified;
   multiply: (factor: Scalar) => IUnspecified;
   divide: (divisor: Scalar) => IUnspecified;
+  /** Clamp into `[min, max]`. Returns a plain `IUnspecified` with NO `InRange` brand (unlike `i`/`f`):
+   *  `u` is the deliberately unspecified scalar. A measurement delegates its `clamp` to this. */
+  clamp: (min: number, max: number) => IUnspecified;
   clone: () => IUnspecified;
 }
 
@@ -56,6 +59,12 @@ export class UnspecifiedImpl
 
   protected rebuildWith(value: number): this {
     return new UnspecifiedImpl(value, this.options()) as this;
+  }
+
+  // Public clamp so a measurement can delegate clamp() to an embedded `u`. Unlike i/f it carries no
+  // `InRange` brand (`u` is unspecified); the clamp MATH is shared in `ScalarImpl.clampToRange`.
+  clamp(min: number, max: number): IUnspecified {
+    return this.clampToRange(min, max);
   }
 }
 
