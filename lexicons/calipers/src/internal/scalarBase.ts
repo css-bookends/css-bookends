@@ -1,8 +1,4 @@
-import {
-  DEFAULT_HARDENING,
-  type Hardening,
-  reactToBreach,
-} from '../hardening';
+import { DEFAULT_HARDENING, type Hardening } from '../hardening';
 import { type Scalar, toNumber } from '../scalar';
 import {
   createErrorConfigStore,
@@ -115,13 +111,21 @@ export const suffix = (context?: string): string =>
 const coerce = (value: Scalar): number => toNumber(value);
 
 /**
- * The shared integer / float implementation. `IntegerImpl` and `FloatImpl` extend it and supply
- * ONLY what differs: the message label (`i` / `f`), the extra input invariant (integers reject
- * non-integers; floats accept any finite value), how a derived value is rebuilt, and
- * `toTypedValue`. Every value-producing method returns `this`, so each subclass keeps its own
- * concrete type (`IInteger` / `IFloat`) through arithmetic and `clone`.
+ * The BARE scalar base: everything a scalar needs that does NOT depend on a bound. It owns the
+ * value and config fields, the finiteness check, one-shot arithmetic, introspection, and the error
+ * plumbing. The construction pipeline lives here too, but the steps that only a BOUNDED scalar
+ * needs (the `min > max` check, the modifier, the bound-breach + hardening reaction) are delegated
+ * to protected HOOKS that this class defines as no-ops / passthroughs and `ScalarRestricted`
+ * overrides. The hooks take their inputs as PARAMETERS and never read instance fields, so subclass
+ * field-init order is irrelevant and no subclass ever touches the private `#config`.
+ *
+ * `IntegerImpl` / `FloatImpl` / `UnspecifiedImpl` supply ONLY what differs per kind: the message
+ * label (`i` / `f` / `u`), the extra input invariant (integers reject non-integers; floats and
+ * unspecified accept any finite value), how a derived value is rebuilt, and `toTypedValue`. Every
+ * value-producing method returns `this`, so each subclass keeps its own concrete type through
+ * arithmetic and `clone`.
  */
-export abstract class ScalarImpl {
+export abstract class ScalarBase {
   #value: number;
   // The SINGLE source of truth for everything about this value EXCEPT the value itself: bound,
   // context, hardening, error store, and any config prop added later. `clone` / `rebuildWith`
@@ -131,7 +135,7 @@ export abstract class ScalarImpl {
   // enters config, since `Object.freeze` is shallow).
   #config: ScalarConfig;
 
-  /** The message prefix for this kind (`i` / `f`). */
+  /** The message prefix for this kind (`i` / `f` / `u`). */
   protected abstract label(): string;
   /**
    * The kind-specific input invariant, run AFTER the optional modifier (integers reject a
@@ -158,73 +162,82 @@ export abstract class ScalarImpl {
     _context?: string,
   ): void {}
 
+  // --- Construction hooks (bare defaults here; `ScalarRestricted` overrides them) ---------------
+  // Each takes the raw `options` (and computed values) as PARAMETERS, so it never reads instance
+  // fields and subclass field-init order cannot matter.
+
+  /** The `min > max` sanity check. Bare base: no-op (a bare scalar has no bound). */
+  protected checkBounds(
+    _options: ScalarOptions,
+    _label: string,
+  ): void {}
+
+  /** Apply the optional value modifier at intake. Bare base: passthrough (no modifier). */
+  protected applyModifier(
+    value: number,
+    _options: ScalarOptions,
+    _label: string,
+  ): number {
+    return value;
+  }
+
+  /** React to a bound breach and return the warn-dropped effective bound. Bare base: no bound, so
+   *  nothing to enforce and nothing to carry. */
+  protected enforceBound(
+    _value: number,
+    _options: ScalarOptions,
+    _label: string,
+  ): ScalarConstraints {
+    return {};
+  }
+
+  /** Assemble the frozen, normalized config. Bare base: spread the options and default hardening,
+   *  with no bound normalization (a bare scalar carries whatever bound the options held, if any). */
+  protected finalizeConfig(
+    options: ScalarOptions,
+    _effective: ScalarConstraints,
+  ): ScalarConfig {
+    return {
+      ...options,
+      hardening: options.hardening ?? DEFAULT_HARDENING,
+    };
+  }
+
   constructor(value: number, options: ScalarOptions = {}) {
-    const { min, max, context } = options;
-    const hardening = options.hardening ?? DEFAULT_HARDENING;
     // Preliminary config so every throw below renders through the right error store (the only
     // config the construction-time throws need). The frozen, normalized config is assembled at
     // the end once the warn-drop is known.
-    this.#config = { ...options, hardening };
+    this.#config = {
+      ...options,
+      hardening: options.hardening ?? DEFAULT_HARDENING,
+    };
     // The error prefix (this kind's label, wrapped by `wrapperLabel` when a measurement embeds this
     // scalar). Computed AFTER `#config` so `errorPrefix` can read the wrapper.
     const label = this.errorPrefix();
-    if (min !== undefined && max !== undefined && min > max) {
-      this.throwScalar(
-        `${label}: min (${min}) must be <= max (${max})${suffix(context)}`,
-      );
-    }
+    // The `min > max` sanity check (a bound concern; no-op on the bare base).
+    this.checkBounds(options, label);
     if (!Number.isFinite(value)) {
       this.throwScalar(
-        `${label}: expected a finite number (got ${value})${suffix(context)}`,
+        `${label}: expected a finite number (got ${value})${suffix(options.context)}`,
       );
     }
     // Diagnostic on the RAW value, BEFORE the modifier (e.g. `i` warns on a non-integer input).
-    this.warnOnRawInput(value, options, context);
+    this.warnOnRawInput(value, options, options.context);
     // The optional modifier is ALWAYS applied at intake, before the kind check and the bound, so a
-    // bounded/typed domain stays normalized (e.g. an `i` rounded, or snapped to a grid).
-    const finalValue =
-      options.modifier !== undefined
-        ? resolveModifier(options.modifier)(value)
-        : value;
-    if (!Number.isFinite(finalValue)) {
-      this.throwScalar(
-        `${label}: modifier produced a non-finite value (${finalValue})${suffix(context)}`,
-      );
-    }
+    // bounded/typed domain stays normalized (a bound concern; passthrough on the bare base).
+    const finalValue = this.applyModifier(value, options, label);
     // The kind-specific input invariant, on the MODIFIED value (integers reject a non-integer;
     // floats accept). Always throws on violation; it is a type invariant, not a bound.
-    this.validateInput(finalValue, context);
-    // Range breaches go through the shared hardening reaction. On a 'warn' breach the reaction
-    // returns here and the now-violated edge is DROPPED (its guarantee is broken); 'fail' has
-    // already thrown.
-    let effectiveMin = min;
-    let effectiveMax = max;
-    if (min !== undefined && finalValue < min) {
-      reactToBreach(
-        hardening,
-        `${label}: ${finalValue} is below the minimum ${min}${suffix(context)}`,
-        (message) => this.throwScalar(message),
-      );
-      effectiveMin = undefined;
-    }
-    if (max !== undefined && finalValue > max) {
-      reactToBreach(
-        hardening,
-        `${label}: ${finalValue} is above the maximum ${max}${suffix(context)}`,
-        (message) => this.throwScalar(message),
-      );
-      effectiveMax = undefined;
-    }
+    this.validateInput(finalValue, options.context);
+    // Range breaches go through the shared hardening reaction, which drops a warn-breached edge and
+    // returns the effective bound (a bound concern; returns `{}` on the bare base).
+    const effective = this.enforceBound(finalValue, options, label);
     this.#value = finalValue;
-    // Assemble the frozen, normalized config with a SPREAD, not a hand-listed set: a future field
-    // added to `ScalarOptions` flows in via `...options`; only the fields that need normalization
-    // (the warn-dropped bounds, the defaulted hardening) are overridden by name.
-    this.#config = Object.freeze({
-      ...options,
-      min: effectiveMin,
-      max: effectiveMax,
-      hardening,
-    });
+    // Assemble the frozen, normalized config. The hook spreads the options (so a future field flows
+    // in) and bakes the warn-dropped bounds + defaulted hardening.
+    this.#config = Object.freeze(
+      this.finalizeConfig(options, effective),
+    );
   }
 
   // Throw a scalar error through this instance's error store (or a default one for the storeless

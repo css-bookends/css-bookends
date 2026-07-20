@@ -27,7 +27,7 @@ import {
 } from '../unitDefinitions';
 import { createErrorHelpers, type ErrorConfigStore } from './errors';
 import { makeRefinement } from './refinement';
-import { ScalarImpl } from './scalarImpl';
+import { ScalarBase } from './scalarBase';
 import { type IUnspecified, u } from './unspecified';
 
 type DeltaInput = number | IMeasurement<string>;
@@ -442,10 +442,10 @@ export const createCoreApi = (
         });
       }
       // Embed the ingested scalar under the `m` wrapper so its errors name the measurement AND the
-      // subtype (`m(i): ...`), preserving its full config. Every scalar is a `ScalarImpl`; the guard
-      // is a defensive narrow.
+      // subtype (`m(i): ...`), preserving its full config. Every scalar is a `ScalarBase` (that is
+      // where `embedUnder` lives); the guard is a defensive narrow.
       const embedded =
-        value instanceof ScalarImpl
+        value instanceof ScalarBase
           ? value.embedUnder('m')
           : (value as unknown as IUnspecified);
       return createMeasurement(embedded, normalizedUnit);

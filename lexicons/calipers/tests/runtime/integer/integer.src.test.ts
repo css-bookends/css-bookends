@@ -237,6 +237,19 @@ describe('Integer modifier (value transform at intake)', () => {
     expect(grid.multiply(1.25).value()).toBe(13); // 12.5 -> 13
     expect(grid.clone().multiply(0.14).value()).toBe(1); // 1.4 -> 1
   });
+
+  it('applies the modifier BEFORE the integer check AND the bound (intake order lock)', () => {
+    // Raw 10.7 is non-integer AND over the max, but floored 10 passes both. If the modifier ran
+    // after the integer check it would throw "expected an integer"; if it ran after the bound it
+    // would throw "above the maximum". So this pins the pipeline order: modifier -> validate -> bound.
+    expect(
+      i(10.7, { modifier: 'floor', min: 0, max: 10 }).value(),
+    ).toBe(10);
+    // Min-side mirror: raw 0.3 is non-integer AND under the min, but ceiled 1 clears both.
+    expect(
+      i(0.3, { modifier: 'ceil', min: 1, max: 10 }).value(),
+    ).toBe(1);
+  });
 });
 
 describe('Integer warnOnNonIntegerInput (dirty-input diagnostic)', () => {

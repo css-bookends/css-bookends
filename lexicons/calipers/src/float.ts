@@ -23,9 +23,9 @@ import {
 import {
   type Modifier,
   type ScalarConstraints,
-  ScalarImpl,
   type ScalarOptions,
-} from './internal/scalarImpl';
+} from './internal/scalarBase';
+import { ScalarRestricted } from './internal/scalarRestricted';
 import type { Scalar } from './scalar';
 
 export type FloatConstraints = ScalarConstraints;
@@ -119,7 +119,7 @@ export type ResolveFloatBrand<
       ? InRangeFloat<Min, Max>
       : IFloat;
 
-class FloatImpl extends ScalarImpl implements IFloat {
+class FloatImpl extends ScalarRestricted implements IFloat {
   protected label(): string {
     return 'f';
   }
@@ -137,7 +137,7 @@ class FloatImpl extends ScalarImpl implements IFloat {
 
   // clamp forces the value in-range, so the InRange brand is always honest regardless of the
   // hardening reaction (System A follows System B here). Defined per-subclass, returning the
-  // concrete `InRangeFloat`, so `clone` can preserve the brand (see `ScalarImpl.clampToRange`).
+  // concrete `InRangeFloat`, so `clone` can preserve the brand (see `ScalarBase.clampToRange`).
   clamp<Min extends number, Max extends number>(
     min: Min,
     max: Max,

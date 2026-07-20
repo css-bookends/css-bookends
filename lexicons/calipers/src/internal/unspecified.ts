@@ -1,9 +1,9 @@
 import { type Scalar } from '../scalar';
 import {
   type ScalarConstraints,
-  ScalarImpl,
   type ScalarOptions,
-} from './scalarImpl';
+} from './scalarBase';
+import { ScalarRestricted } from './scalarRestricted';
 
 /**
  * `IUnspecified` — the PUBLIC type of an "unspecified number": a value that could be whole or
@@ -38,14 +38,15 @@ export interface IUnspecified {
 
 /**
  * `u` — the internal "unspecified number" implementation. A sibling of `i` / `f` on the shared
- * `ScalarImpl` base. The TYPE (`IUnspecified`) is public, but this CLASS and the `u` builder stay
+ * `ScalarRestricted` base (for now; a later step moves `u` down to the bare `ScalarBase`). The TYPE
+ * (`IUnspecified`) is public, but this CLASS and the `u` builder stay
  * INTERNAL (absent from the package's value exports and its `exports` map): `u` is `m`'s neutral wrap
  * for a plain number and `ratio`'s wrap for a bare operand, never something a consumer constructs. It
  * accepts any finite value (no integer rule, like `f`) and is config-NEUTRAL: it carries ONLY the
  * options it is handed, never an `i` / `f` lexicon config or any ambient default.
  */
 export class UnspecifiedImpl
-  extends ScalarImpl
+  extends ScalarRestricted
   implements IUnspecified
 {
   protected label(): string {
@@ -65,7 +66,7 @@ export class UnspecifiedImpl
   }
 
   // Public clamp so a measurement can delegate clamp() to an embedded `u`. Unlike i/f it carries no
-  // `InRange` brand (`u` is unspecified); the clamp MATH is shared in `ScalarImpl.clampToRange`.
+  // `InRange` brand (`u` is unspecified); the clamp MATH is shared in `ScalarBase.clampToRange`.
   clamp(min: number, max: number): IUnspecified {
     return this.clampToRange(min, max);
   }
