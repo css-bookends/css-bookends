@@ -4,41 +4,48 @@
 // own keyed config -> bundle `global` -> factory default. Worked example: the
 // shared `hardening` reaction. The bundle must expose the CONFIGURED i / f / m,
 // so a bundle-level `global` or per-unit key actually reaches them.
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import {
   type CalipersBundle,
   type ColorFormatPlugin,
   type ColorString,
-  i,
 } from '../../../src';
 import createCalipersBundle from '../../../src/codex';
 
 describe('codex config cascade (own key -> global -> factory default)', () => {
-  const hardenedI = () => i(8, { min: 0, max: 10 });
-
+  // A PLAIN-number measurement takes the measurement hardening resolved by the
+  // cascade (an ingested scalar would own its own reaction), so these exercise the
+  // bundle cascade for m.
   describe('m (measurement)', () => {
     it('unit key wins over global', () => {
+      const spy = vi
+        .spyOn(console, 'warn')
+        .mockImplementation(() => {});
       const c = createCalipersBundle({
         global: { hardening: 'fail' },
         measurement: { hardening: 'warn' },
       });
-      expect(c.m(hardenedI()).multiply(2).css()).toBe('16px');
+      expect(c.m(8, { min: 0, max: 10 }).multiply(2).css()).toBe(
+        '16px',
+      );
+      expect(spy).toHaveBeenCalled();
+      spy.mockRestore();
     });
 
     it('falls back to global when no unit key', () => {
       const c = createCalipersBundle({
         global: { hardening: 'fail' },
       });
-      expect(() => c.m(hardenedI()).multiply(2)).toThrow(
-        /hardened bound/,
+      expect(() => c.m(8, { min: 0, max: 10 }).multiply(2)).toThrow(
+        /above the maximum/,
       );
     });
 
     it('factory default (fail) when neither is set', () => {
       const c = createCalipersBundle();
-      expect(() => c.m(hardenedI()).multiply(2)).toThrow(
-        /hardened bound/,
+      expect(() => c.m(8, { min: 0, max: 10 }).multiply(2)).toThrow(
+        /above the maximum/,
       );
     });
   });

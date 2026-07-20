@@ -15,24 +15,26 @@ import { f, i, m, r } from '../../support/calipers_tests.src';
 describe('measurement arithmetic re-validates finiteness', () => {
   it('m().add(Infinity) throws with the non-finite code', () => {
     expect(() => m(1, 'px').add(Number.POSITIVE_INFINITY)).toThrow(
-      /CALIPERS_E_NONFINITE/,
+      /expected a finite number/,
     );
   });
 
   it('m().subtract(Infinity) throws', () => {
     expect(() =>
       m(1, 'px').subtract(Number.POSITIVE_INFINITY),
-    ).toThrow(/Non-finite/);
+    ).toThrow(/expected a finite number/);
   });
 
   it('m().multiply(Infinity) throws', () => {
     expect(() =>
       m(2, 'px').multiply(Number.POSITIVE_INFINITY),
-    ).toThrow(/Non-finite/);
+    ).toThrow(/expected a finite number/);
   });
 
   it('m().add(NaN) throws', () => {
-    expect(() => m(1, 'px').add(Number.NaN)).toThrow(/Non-finite/);
+    expect(() => m(1, 'px').add(Number.NaN)).toThrow(
+      /expected a finite number/,
+    );
   });
 
   it('divide by a non-finite-producing path throws with the result code', () => {
@@ -40,19 +42,19 @@ describe('measurement arithmetic re-validates finiteness', () => {
     // operand chain instead. value * Infinity is caught by the constructor.
     expect(() =>
       m(1, 'px').multiply(Number.POSITIVE_INFINITY),
-    ).toThrow(/CALIPERS_E_NONFINITE/);
+    ).toThrow(/expected a finite number/);
   });
 
   it('divide by zero throws the divide-by-zero code (not the finite code)', () => {
     expect(() => m(10, 'px').divide(0)).toThrow(
-      /CALIPERS_E_DIVIDE_BY_ZERO/,
+      /cannot divide .* by zero/,
     );
   });
 
   it('overflow to Infinity through a long multiply chain throws', () => {
     // 1e308 * 1e308 overflows to Infinity; the constructor rejects it.
     expect(() => m(1e308, 'px').multiply(1e308)).toThrow(
-      /Non-finite/,
+      /expected a finite number/,
     );
   });
 

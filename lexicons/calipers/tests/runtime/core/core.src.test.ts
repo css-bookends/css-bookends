@@ -33,12 +33,12 @@ describe('Measurement arithmetic with typed scalar operands (i / f)', () => {
     expect(m(8).divide(2).css()).toBe('4px');
   });
 
-  it('throws CALIPERS_E_DIVIDE_BY_ZERO when the typed divisor is zero', () => {
+  it('throws when the typed divisor is zero (delegated to the embedded scalar)', () => {
     expect(() => m(8).divide(i(0))).toThrow(
-      /CALIPERS_E_DIVIDE_BY_ZERO/,
+      /cannot divide .* by zero/,
     );
     expect(() => m(8).divide(f(0))).toThrow(
-      /CALIPERS_E_DIVIDE_BY_ZERO/,
+      /cannot divide .* by zero/,
     );
   });
 });
@@ -66,7 +66,7 @@ describe('m() options: direct bound + input modifier', () => {
       m(8, { unit: 'px', min: 0, max: 10 }).constraints(),
     ).toEqual({ min: 0, max: 10 });
     expect(() => m(50, { unit: 'px', min: 0, max: 10 })).toThrow(
-      /outside the bound/,
+      /above the maximum/,
     );
   });
 
@@ -111,7 +111,7 @@ describe('unit helper config: modifier + bound on a purpose-built helper', () =>
       max: 100,
     });
     expect(level(50).constraints()).toEqual({ min: 0, max: 100 });
-    expect(() => level(150)).toThrow(/outside the bound/);
+    expect(() => level(150)).toThrow(/above the maximum/);
   });
 });
 

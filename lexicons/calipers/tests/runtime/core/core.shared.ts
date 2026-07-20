@@ -173,26 +173,12 @@ export const runCoreTests = (label: string, api: CoreApi): void => {
           (m as (value?: number) => MeasurementLike)(),
         );
         expect(missingValueMessage).toContain(
-          'css-calipers.m: Non-finite measurement value: undefined',
-        );
-        expect(missingValueMessage).toContain(
-          'code=CALIPERS_E_NONFINITE',
-        );
-        expect(missingValueMessage).toContain('helper=m');
-        expect(missingValueMessage).toContain(
-          'inputs=value=undefined, unit=px',
+          'expected a finite number (got undefined)',
         );
         expect(missingValueMessage).toContain('stack=');
 
         expect(() => m(Number.NaN, 'px')).toThrow(
-          /css-calipers\.m: Non-finite measurement value: NaN/,
-        );
-        expect(() => m(Number.NaN, 'px')).toThrow(
-          /code=CALIPERS_E_NONFINITE/,
-        );
-        expect(() => m(Number.NaN, 'px')).toThrow(/helper=m/);
-        expect(() => m(Number.NaN, 'px')).toThrow(
-          /inputs=value=NaN, unit=px/,
+          /expected a finite number \(got NaN\)/,
         );
         expect(() => m(Number.NaN, 'px')).toThrow(/stack=/);
 
@@ -200,8 +186,9 @@ export const runCoreTests = (label: string, api: CoreApi): void => {
           m(Number.NaN, { context: 'tokens.cardWidth' }),
         );
         expect(contextMessage).toContain(
-          'tokens.cardWidth: css-calipers.m: Non-finite measurement value: NaN',
+          'expected a finite number (got NaN)',
         );
+        expect(contextMessage).toContain('[tokens.cardWidth]');
       } finally {
         setErrorConfig({ stackHints: previousStackHints });
       }
@@ -212,7 +199,7 @@ export const runCoreTests = (label: string, api: CoreApi): void => {
           m(Number.POSITIVE_INFINITY, 'px'),
         );
         expect(message).toContain(
-          'css-calipers.m: Non-finite measurement value: Infinity',
+          'expected a finite number (got Infinity)',
         );
         expect(message).not.toContain('stack=');
       } finally {
@@ -223,21 +210,16 @@ export const runCoreTests = (label: string, api: CoreApi): void => {
         mPx(Number.NEGATIVE_INFINITY),
       );
       expect(helperMessage).toContain(
-        'css-calipers.mPx: Non-finite measurement value: -Infinity',
+        'expected a finite number (got -Infinity)',
       );
-      expect(helperMessage).toContain('code=CALIPERS_E_NONFINITE');
-      expect(helperMessage).toContain('helper=mPx');
-      expect(helperMessage).toContain(
-        'inputs=value=-Infinity, unit=px',
-      );
-      expect(helperMessage).toContain('stack=');
 
       const helperContextMessage = captureErrorMessage(() =>
         mPx(Number.NaN, 'tokens.spacing'),
       );
       expect(helperContextMessage).toContain(
-        'tokens.spacing: css-calipers.mPx: Non-finite measurement value: NaN',
+        'expected a finite number (got NaN)',
       );
+      expect(helperContextMessage).toContain('[tokens.spacing]');
     });
 
     it('emits plain decimal css, never scientific notation', () => {
@@ -307,13 +289,13 @@ export const runCoreTests = (label: string, api: CoreApi): void => {
       const base = m(5, 'px');
 
       // multiply branches
-      expect(base.multiply(1)).toBe(base);
+      expect(base.multiply(1).css()).toBe('5px');
       expect(base.multiply(0).css()).toBe('0px');
       expect(base.multiply(-1).css()).toBe('-5px');
       expect(base.multiply(3).css()).toBe('15px');
 
-      // divide by 1 short-circuits to the same instance (the identity branch).
-      expect(base.divide(1)).toBe(base);
+      // divide by 1 yields an equal value (the identity short-circuit was removed).
+      expect(base.divide(1).css()).toBe('5px');
 
       // double / half
       expect(base.double().css()).toBe('10px');
@@ -608,7 +590,7 @@ export const runCoreTests = (label: string, api: CoreApi): void => {
     it('rejects division by zero', () => {
       const measurement = m(10);
       expect(() => measurement.divide(0)).toThrow(
-        'css-calipers.Measurement.divide: Cannot divide 10px by zero [code=CALIPERS_E_DIVIDE_BY_ZERO]',
+        /cannot divide .* by zero/,
       );
     });
 

@@ -80,26 +80,32 @@ describe('hardening spectrum', () => {
 
   /* ---- NEW: config-driven reaction when math breaks a carried bound ---- */
   describe('hardening config when arithmetic breaks a carried bound', () => {
-    const hardened = () => i(8, { min: 0, max: 10 });
-
+    // A PLAIN-number measurement takes the bundle / measurement hardening (an ingested
+    // scalar would own its own reaction), so these exercise the measurement cascade.
     it("'warn' warns but proceeds", () => {
       const spy = vi
         .spyOn(console, 'warn')
         .mockImplementation(() => {});
       const cal = createCalipers({ hardening: 'warn' });
-      expect(cal.m(hardened()).multiply(2).css()).toBe('16px');
+      expect(cal.m(8, { min: 0, max: 10 }).multiply(2).css()).toBe(
+        '16px',
+      );
       expect(spy).toHaveBeenCalled();
       spy.mockRestore();
     });
 
     it("'fail' throws on the breaking operation", () => {
       const cal = createCalipers({ hardening: 'fail' });
-      expect(() => cal.m(hardened()).multiply(2)).toThrow();
+      expect(() => cal.m(8, { min: 0, max: 10 }).multiply(2)).toThrow(
+        /above the maximum/,
+      );
     });
 
     it('an in-bounds operation never reacts, regardless of config', () => {
       const cal = createCalipers({ hardening: 'fail' });
-      expect(cal.m(hardened()).multiply(1).css()).toBe('8px');
+      expect(cal.m(8, { min: 0, max: 10 }).multiply(1).css()).toBe(
+        '8px',
+      );
     });
 
     it('an unhardened scalar never reacts, regardless of config', () => {

@@ -85,7 +85,7 @@ describe('the factory instance integrates the same way as the bare defaults', ()
   it('an instance with error config still throws on bad arithmetic', () => {
     const c = createCalipers({ errorConfig: { stackHints: 'off' } });
     expect(() => c.m(1, 'px').divide(0)).toThrow(
-      /CALIPERS_E_DIVIDE_BY_ZERO/,
+      /cannot divide .* by zero/,
     );
     // stack hints disabled: the message must NOT carry a stack= segment.
     try {

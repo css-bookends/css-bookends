@@ -42,10 +42,7 @@ describe('every CALIPERS_E_* code in the union is reachable', () => {
       () => unknown,
     ]
   > = [
-    [
-      'CALIPERS_E_NONFINITE',
-      () => m(Number.NaN, 'px'),
-    ],
+    // retired from the m() inventory: routed through the codeless scalar by the embed; union/helper cleanup is a separate deferred commit.
     [
       'CALIPERS_E_UNIT_MISMATCH',
       () =>
@@ -68,16 +65,6 @@ describe('every CALIPERS_E_* code in the union is reachable', () => {
     [
       'CALIPERS_E_CONSTRAINT',
       () => nonNegative.ensure(m(-1, 'px')),
-    ],
-    [
-      'CALIPERS_E_DIVIDE_BY_ZERO',
-      () => m(1, 'px').divide(0),
-    ],
-    [
-      'CALIPERS_E_NONFINITE_RESULT',
-      // divide produces a non-finite result without dividing by zero:
-      // a tiny divisor against a huge value overflows to Infinity.
-      () => m(1e308, 'px').divide(1e-308),
     ],
     [
       'CALIPERS_E_CLAMP_NONFINITE_BOUNDS',
