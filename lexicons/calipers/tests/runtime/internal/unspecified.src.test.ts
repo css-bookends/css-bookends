@@ -47,6 +47,10 @@ describe('u (internal unspecified number)', () => {
     expect(u(5.5).isFloat()).toBe(true);
   });
 
+  it('reports its kind() as "u"', () => {
+    expect(u(5).kind()).toBe('u');
+  });
+
   it('is immutable: an operation returns a NEW value and never mutates the source (isInt cannot go stale)', () => {
     // Regression lock: green today because scalars are immutable, but it fails the moment any
     // operation writes to `this`, which would let value() / isInt() on the source go stale.

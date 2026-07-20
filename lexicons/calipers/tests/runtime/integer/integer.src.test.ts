@@ -129,6 +129,10 @@ describe('Integer primitive (src)', () => {
     expect(isInteger(null)).toBe(false);
   });
 
+  it('reports its kind() as "i"', () => {
+    expect(i(5).kind()).toBe('i');
+  });
+
   it('clone() copies the value and the bound', () => {
     const orig = i(700, { min: 100, max: 900 });
     const copy = orig.clone();

@@ -41,6 +41,8 @@ export interface IFloat {
   toString: () => string;
   valueOf: () => number;
   value: () => number;
+  /** The scalar's kind label (`'f'`). Distinct from the value-based `isFloat()`. */
+  kind: () => string;
   /** Always `''` (floats are unitless); present for value-surface uniformity. */
   unit: () => string;
   constraints: () => FloatConstraints;

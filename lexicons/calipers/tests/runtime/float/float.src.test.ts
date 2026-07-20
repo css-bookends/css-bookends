@@ -129,6 +129,10 @@ describe('Float primitive (src)', () => {
     expect(isFloat(null)).toBe(false);
   });
 
+  it('reports its kind() as "f"', () => {
+    expect(f(1.2).kind()).toBe('f');
+  });
+
   it('clone() copies the value and the bound', () => {
     const orig = f(0.25, { min: 0, max: 1 });
     const copy = orig.clone();

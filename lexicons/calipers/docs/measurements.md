@@ -19,8 +19,9 @@ spec is `tests/runtime/core/measurement-embed.src.test.ts` (6 red delegation/err
 
 ## Checklist (small steps, test-first)
 
-- [ ] **1. Expose the scalar's subtype.** A public `kind()` on `ScalarImpl` (returns `'i'`/`'f'`/`'u'`
-  from `label()`), so a measurement can read it for the `m(<subtype>)` error and for `isInt`.
+- [x] **1. Expose the scalar's subtype.** A public `kind()` on `ScalarImpl` (returns `'i'`/`'f'`/`'u'`
+  from `label()`), declared on `IInteger`/`IFloat`/`IUnspecified`, so a measurement can read it for the
+  `m(<subtype>)` error and for `isInt`. *(done 2026-07-20)*
 - [ ] **2. Error wrapper label.** Let a scalar's throw carry a caller-supplied wrapper, so a scalar
   embedded in `m` renders `m(<subtype>): <specific>` instead of `<subtype>: <specific>`. Drives the
   measurement-embed ERROR specs.

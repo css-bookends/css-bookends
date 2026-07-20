@@ -18,6 +18,8 @@ export interface IUnspecified {
   toString: () => string;
   valueOf: () => number;
   value: () => number;
+  /** The scalar's kind label (`'u'`). Distinct from the value-based `isInt()` / `isFloat()`. */
+  kind: () => string;
   unit: () => string;
   constraints: () => ScalarConstraints;
   /** Whether the CURRENT value is whole / fractional. Value-based, NOT a type guarantee. */

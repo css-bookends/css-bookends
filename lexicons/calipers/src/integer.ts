@@ -41,6 +41,8 @@ export interface IInteger {
   toString: () => string;
   valueOf: () => number;
   value: () => number;
+  /** The scalar's kind label (`'i'`). Distinct from the value-based `isInt()`. */
+  kind: () => string;
   /** Always `''` (integers are unitless); present for value-surface uniformity. */
   unit: () => string;
   constraints: () => IntegerConstraints;

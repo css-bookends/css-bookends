@@ -229,6 +229,12 @@ export abstract class ScalarImpl {
     return this.#value;
   }
 
+  /** The scalar's kind label (`'i'` / `'f'` / `'u'`). A measurement reads this to name its embedded
+   *  subtype in errors (`m(<kind>): ...`); distinct from the value-based `isInt()` / `isFloat()`. */
+  kind(): string {
+    return this.label();
+  }
+
   unit(): string {
     return '';
   }
