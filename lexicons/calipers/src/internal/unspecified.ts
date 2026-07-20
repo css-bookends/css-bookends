@@ -1,14 +1,48 @@
-import { ScalarImpl, type ScalarOptions } from './scalarImpl';
+import { type Scalar } from '../scalar';
+import {
+  type ScalarConstraints,
+  ScalarImpl,
+  type ScalarOptions,
+} from './scalarImpl';
 
 /**
- * `u` — the internal "unspecified number" scalar. A sibling of `i` / `f` on the shared `ScalarImpl`
- * base, used ONLY by `m` to wrap a plain number. It accepts any finite value (no integer check, like
- * `f`), and it is config-NEUTRAL: it has no factory / lexicon config of its own, so it carries ONLY
- * the options `m` explicitly hands it, never an `i` / `f` lexicon config or any ambient default. It
- * is NOT exported from the package (absent from `index.ts` and the `exports` map), so it is as
- * non-public as `ScalarImpl` itself; it exists only to be `m`'s neutral wrap for a plain number.
+ * `IUnspecified` — the PUBLIC type of an "unspecified number": a value that could be whole or
+ * fractional but carries NO type security (unlike a proven `i` / `f`). It is exposed so `ratio` (and
+ * later `m`) can hand one back HONESTLY, without stamping a guessed integer / float type onto a bare
+ * number. There is NO public builder: you never construct a `u`, you only RECEIVE one, so there is no
+ * `u()`-vs-`f()` confusion. To commit an unspecified value to a secure type, MINT a fresh one from
+ * its value (`i(x.value())` / `f(x.value())`).
  */
-export class UnspecifiedImpl extends ScalarImpl {
+export interface IUnspecified {
+  css: () => string;
+  toString: () => string;
+  valueOf: () => number;
+  value: () => number;
+  unit: () => string;
+  constraints: () => ScalarConstraints;
+  /** Whether the CURRENT value is whole / fractional. Value-based, NOT a type guarantee. */
+  isInt: () => boolean;
+  isFloat: () => boolean;
+  withValue: (value: number) => IUnspecified;
+  add: (delta: Scalar) => IUnspecified;
+  subtract: (delta: Scalar) => IUnspecified;
+  multiply: (factor: Scalar) => IUnspecified;
+  divide: (divisor: Scalar) => IUnspecified;
+  clone: () => IUnspecified;
+}
+
+/**
+ * `u` — the internal "unspecified number" implementation. A sibling of `i` / `f` on the shared
+ * `ScalarImpl` base. The TYPE (`IUnspecified`) is public, but this CLASS and the `u` builder stay
+ * INTERNAL (absent from the package's value exports and its `exports` map): `u` is `m`'s neutral wrap
+ * for a plain number and `ratio`'s wrap for a bare operand, never something a consumer constructs. It
+ * accepts any finite value (no integer rule, like `f`) and is config-NEUTRAL: it carries ONLY the
+ * options it is handed, never an `i` / `f` lexicon config or any ambient default.
+ */
+export class UnspecifiedImpl
+  extends ScalarImpl
+  implements IUnspecified
+{
   protected label(): string {
     return 'u';
   }
@@ -23,9 +57,14 @@ export class UnspecifiedImpl extends ScalarImpl {
   }
 }
 
+/** Runtime guard for an unspecified scalar. Internal (used by `ratio` to detect a stored `u`). */
+export const isUnspecified = (
+  value: unknown,
+): value is IUnspecified => value instanceof UnspecifiedImpl;
+
 /**
- * Build an internal unspecified number. NOT public; this is `m`'s neutral wrap for a plain number,
- * carrying only the options `m` hands it.
+ * Build an internal unspecified number. NOT public; `m`'s / `ratio`'s neutral wrap for a plain
+ * number, carrying only the options it is handed.
  */
 export const u = (
   value: number,

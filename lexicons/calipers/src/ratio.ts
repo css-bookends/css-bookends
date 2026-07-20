@@ -1,27 +1,42 @@
-import { f, type IFloat, isFloat } from './float';
-import { i, type IInteger, isInteger } from './integer';
+import { type IFloat, isFloat } from './float';
+import { type IInteger, isInteger } from './integer';
 import {
   createErrorConfigStore,
   createErrorHelpers,
   type ErrorConfig,
   type ErrorConfigStore,
 } from './internal/errors';
-import { type Scalar, toNumber } from './scalar';
+import {
+  isUnspecified,
+  type IUnspecified,
+  u,
+} from './internal/unspecified';
+import { type Scalar } from './scalar';
 
-/** A value `ratio` can consume: a raw number or a typed scalar primitive. */
+/** A value `ratio` can consume publicly: a raw number or a typed scalar primitive. */
 export type RatioValue = Scalar;
 
-const ratioValueToNumber = (value: RatioValue): number =>
-  toNumber(value);
+/** A recovered ratio scalar: an explicit `i` / `f` comes back intact; a BARE number comes back as an
+ *  unspecified `u` (no guessed integer / float type is stamped on a plain number). */
+export type RatioScalar = IInteger | IFloat | IUnspecified;
+
+// The internal operand type also allows an unspecified scalar, so a stored `u` can flow back through
+// the constructor (e.g. via `withNumerator`, which re-passes the untouched side).
+type RatioOperand = RatioValue | IUnspecified;
+
+const ratioValueToNumber = (value: RatioOperand): number =>
+  typeof value === 'number' ? value : value.valueOf();
 
 const isRatioValue = (value: unknown): value is RatioValue =>
   typeof value === 'number' || isInteger(value) || isFloat(value);
 
-/** Recover a typed scalar from a ratio operand: a typed operand comes back INTACT;
- * a raw number reconstructs by value (whole -> i(), fractional -> f()). */
-const toScalar = (value: RatioValue): IInteger | IFloat => {
-  if (isInteger(value) || isFloat(value)) return value;
-  return Number.isInteger(value) ? i(value) : f(value);
+/** Recover a typed scalar from a ratio operand: an explicit `i` / `f` / `u` comes back INTACT; a
+ *  bare number becomes an unspecified `u` (a plain number carries no integer / float commitment). */
+const toScalar = (value: RatioOperand): RatioScalar => {
+  if (isInteger(value) || isFloat(value) || isUnspecified(value)) {
+    return value;
+  }
+  return u(value);
 };
 
 export interface IRatio {
@@ -30,10 +45,10 @@ export interface IRatio {
   valueOf: () => number;
   numerator: () => number;
   denominator: () => number;
-  /** the numerator recovered as a typed scalar (intact if one went in). */
-  numeratorScalar: () => IInteger | IFloat;
-  /** the denominator recovered as a typed scalar (intact if one went in). */
-  denominatorScalar: () => IInteger | IFloat;
+  /** the numerator recovered as a scalar: an explicit `i` / `f` intact, a bare number as `u`. */
+  numeratorScalar: () => RatioScalar;
+  /** the denominator recovered as a scalar: an explicit `i` / `f` intact, a bare number as `u`. */
+  denominatorScalar: () => RatioScalar;
   withNumerator: (numerator: RatioValue) => IRatio;
   withDenominator: (denominator: RatioValue) => IRatio;
 }
@@ -46,14 +61,14 @@ export type RatioParts = {
 class RatioImpl implements IRatio {
   #numerator: number;
   #denominator: number;
-  #numeratorScalar: IInteger | IFloat;
-  #denominatorScalar: IInteger | IFloat;
+  #numeratorScalar: RatioScalar;
+  #denominatorScalar: RatioScalar;
   #omitDenominatorWhenOne: boolean;
   #errorStore?: ErrorConfigStore;
 
   constructor(
-    numerator: RatioValue,
-    denominator: RatioValue,
+    numerator: RatioOperand,
+    denominator: RatioOperand,
     options: {
       omitDenominatorWhenOne?: boolean;
       errorStore?: ErrorConfigStore;
@@ -95,11 +110,11 @@ class RatioImpl implements IRatio {
     return this.#denominator;
   }
 
-  numeratorScalar(): IInteger | IFloat {
+  numeratorScalar(): RatioScalar {
     return this.#numeratorScalar;
   }
 
-  denominatorScalar(): IInteger | IFloat {
+  denominatorScalar(): RatioScalar {
     return this.#denominatorScalar;
   }
 

@@ -19,6 +19,10 @@ export {
 // error-config accessors) come from the single construction path in `./default`,
 // which assembles them via `createCalipers()` at its defaults.
 export * from './default';
+// The "unspecified number" TYPE is public so `ratio` (and later `m`) can hand one back honestly for
+// a bare number, without stamping a guessed integer / float type on it. The `u` builder / class stay
+// INTERNAL: there is no public constructor, you only ever RECEIVE an `IUnspecified`.
+export type { IUnspecified } from './internal/unspecified';
 // The native colour input, alongside `m()` / `r()` / `i()` / `f()`. The full value
 // surface also lives at the `./color` subpath (for bundler/node16 consumers); the root
 // re-exports it too so classic-resolution consumers (e.g. downstream books) can reach
