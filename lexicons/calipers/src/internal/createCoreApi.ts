@@ -31,24 +31,20 @@ import { ScalarBase } from './scalarBase';
 import { type IUnspecified, u } from './unspecified';
 
 type DeltaInput = number | IMeasurement<string>;
-type UnitHelperConfig = {
-  /** A direct bound baked at construction, checked like i/f. Set once: a direct bound and an
-   *  ingested-scalar bound cannot both be given. */
-  min?: number;
-  max?: number;
-  /** A generic input transform applied to the raw value at intake, before validation and storage
-   *  (modify-then-validate). The core ships no built-in normalization; a domain helper supplies one. */
-  modifier?: (value: number) => number;
+// `m` is a PURE CONTAINER: it carries NO numeric config. A bound / modifier / hardening belong on the
+// `i` / `f` you hand it (`m(i(700, { min: 1, max: 900 }), 'px')`), never on `m` itself. So its options
+// are only the unit + an error context.
+type MeasurementCreateOptions<Unit extends string> = {
+  unit?: Unit;
+  context?: string;
 };
-type MeasurementCreateOptions<Unit extends string> =
-  UnitHelperConfig & {
-    unit?: Unit;
-    context?: string;
-  };
 
 export const createCoreApi = (
   errorStore: ErrorConfigStore,
-  hardening: Hardening = DEFAULT_HARDENING,
+  // Unused now that `m` carries no hardening (it is a pure container). The param and its whole bundle
+  // cascade are removed in the next step (hardening out of the factory); kept here for one step so the
+  // call sites do not churn twice.
+  _hardening: Hardening = DEFAULT_HARDENING,
   defaultUnit: string = 'px',
 ) => {
   const { throwHelperError, throwMeasurementMethodError } =
@@ -361,26 +357,17 @@ export const createCoreApi = (
       unit,
     ) as unknown as InscribedMeasurement<Unit>;
 
-  // Build a measurement from a PLAIN numeric value: embed a config-neutral `u` that carries the
-  // measurement's own hardening + error store (+ any direct bound / modifier). The `u` validates the
-  // value at its own construction (finite + bound + modifier), so a bad value throws there, through
-  // this instance's error store. Used by `m()` for a plain number and by every unit helper.
+  // Build a measurement from a PLAIN numeric value: embed a `u` carrying ONLY error plumbing (no
+  // bound, modifier, or hardening — `m` is a pure container). The `u` validates finiteness at its own
+  // construction, so a non-finite value throws there, through this instance's error store. Used by
+  // `m()` for a plain number and by every unit helper.
   const buildMeasurement = <Unit extends string>(
     value: number,
     normalizedUnit: Unit,
-    scalarConfig: {
-      min?: number;
-      max?: number;
-      modifier?: (value: number) => number;
-    },
     contextLabel: string | undefined,
   ): InscribedMeasurement<Unit> =>
     createMeasurement(
       u(value, {
-        min: scalarConfig.min,
-        max: scalarConfig.max,
-        modifier: scalarConfig.modifier,
-        hardening,
         errorStore,
         context: contextLabel,
         // The embedded scalar names the measurement in its errors: `m(u): ...`.
@@ -422,25 +409,10 @@ export const createCoreApi = (
     const normalizedUnit = unit.toLowerCase() as Lowercase<Unit>;
 
     // A typed scalar (i / f) is INGESTED as-is: it already owns its numeric config (value, bound,
-    // hardening, modifier, integer-ness), so the measurement embeds it directly and delegates. Because
-    // that config is SET ONCE, a measurement-level bound or modifier on an ingested scalar is
-    // disallowed: bound / modify the scalar you pass in, or mint a fresh value.
+    // hardening, modifier, integer-ness), so the measurement embeds it directly and delegates. `m`
+    // adds NO numeric config of its own (it is a pure container), so there is nothing to reconcile: a
+    // bound / modifier rides on the scalar you pass in, or you mint a fresh value.
     if (typeof value === 'object' && value !== null) {
-      const hasDirectConfig =
-        options.min !== undefined ||
-        options.max !== undefined ||
-        options.modifier !== undefined;
-      if (hasDirectConfig) {
-        throwHelperError({
-          operation: 'css-calipers.m',
-          params: [],
-          message:
-            'a bound is set once, from one source: an ingested scalar owns its numeric config, so a measurement-level min / max / modifier cannot be added. Bound or modify the scalar you pass in, or mint a fresh value.',
-          context: contextLabel,
-          details: { code: 'CALIPERS_E_CONSTRAINT' },
-          includeStackHint: true,
-        });
-      }
       // Embed the ingested scalar under the `m` wrapper so its errors name the measurement AND the
       // subtype (`m(i): ...`), preserving its full config. Every scalar is a `ScalarBase` (that is
       // where `embedUnder` lives); the guard is a defensive narrow.
@@ -451,18 +423,9 @@ export const createCoreApi = (
       return createMeasurement(embedded, normalizedUnit);
     }
 
-    // A plain number embeds a config-neutral `u` carrying m's own hardening + error store, plus any
-    // direct bound / modifier. The `u` validates at construction.
-    return buildMeasurement(
-      value,
-      normalizedUnit,
-      {
-        min: options.min,
-        max: options.max,
-        modifier: options.modifier,
-      },
-      contextLabel,
-    );
+    // A plain number embeds a `u` carrying only m's error store (no bound / modifier / hardening).
+    // The `u` validates finiteness at construction.
+    return buildMeasurement(value, normalizedUnit, contextLabel);
   }
 
   type UnitHelperFactory<Unit extends string> = ((
@@ -472,23 +435,14 @@ export const createCoreApi = (
     unit: Unit;
   };
 
+  // Unit helpers are CONFIG-FREE, exactly like `m`: they attach a preset unit and nothing else. A
+  // bound / modifier rides on the `i` / `f` you hand `m(value, unit)`, never on the helper.
   const createUnitHelper = <Unit extends string>(
     unit: Unit,
-    helperName?: string,
-    config: UnitHelperConfig = {},
   ): UnitHelperFactory<Unit> => {
     const normalizedUnit = unit.toLowerCase() as Unit;
     const factory = (value: number, context?: string) =>
-      buildMeasurement(
-        value,
-        normalizedUnit,
-        {
-          min: config.min,
-          max: config.max,
-          modifier: config.modifier,
-        },
-        context,
-      );
+      buildMeasurement(value, normalizedUnit, context);
     return Object.assign(factory, {
       unit: normalizedUnit,
     });
@@ -496,16 +450,12 @@ export const createCoreApi = (
 
   const makeUnitHelper = <Unit extends string>(
     unit: Unit,
-    config?: UnitHelperConfig,
-  ): UnitHelper<Unit> => {
-    return createUnitHelper(unit, undefined, config);
-  };
+  ): UnitHelper<Unit> => createUnitHelper(unit);
 
   const makeUnitHelperFromDefinition = <Name extends UnitHelperName>(
     name: Name,
-    config?: UnitHelperConfig,
   ): UnitHelper<UnitDefinitionRecord[Name]['unit']> =>
-    createUnitHelper(UNIT_DEFINITIONS[name].unit, name, config);
+    createUnitHelper(UNIT_DEFINITIONS[name].unit);
 
   const measurementUnitMetadata = UNIT_DEFINITIONS;
   type MeasurementOfHelper<T extends UnitHelper> = ReturnType<T>;
@@ -619,7 +569,6 @@ export const createCoreApi = (
           buildMeasurement(
             fallbackValue,
             measurement.unit(),
-            {},
             undefined,
           ),
       },

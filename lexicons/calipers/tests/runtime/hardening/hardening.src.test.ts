@@ -10,7 +10,6 @@
 import { describe, expect, it, vi } from 'vitest';
 
 import { createFloat, createInteger, f, i } from '../../../src';
-import { createCalipers } from '../../../src/factory';
 import {
   inRange,
   m,
@@ -78,39 +77,41 @@ describe('hardening spectrum', () => {
     });
   });
 
-  /* ---- NEW: config-driven reaction when math breaks a carried bound ---- */
-  describe('hardening config when arithmetic breaks a carried bound', () => {
-    // A PLAIN-number measurement takes the bundle / measurement hardening (an ingested
-    // scalar would own its own reaction), so these exercise the measurement cascade.
+  /* ---- m carries the ingested scalar's OWN reaction (m holds no config) ---- */
+  describe('a measurement reacts per the ingested scalar, not m', () => {
+    // `m` is a pure container: it holds no bound or hardening of its own. A bound + its reaction ride
+    // on the `i` / `f` handed to `m()`, so the reaction is the ingested scalar's ("m ingests the
+    // hardening"). A plain-number measurement has no bound and never reacts.
     it("'warn' warns but proceeds", () => {
       const spy = vi
         .spyOn(console, 'warn')
         .mockImplementation(() => {});
-      const cal = createCalipers({ hardening: 'warn' });
-      expect(cal.m(8, { min: 0, max: 10 }).multiply(2).css()).toBe(
-        '16px',
-      );
+      expect(
+        m(i(8, { min: 0, max: 10, hardening: 'warn' }))
+          .multiply(2)
+          .css(),
+      ).toBe('16px');
       expect(spy).toHaveBeenCalled();
       spy.mockRestore();
     });
 
     it("'fail' throws on the breaking operation", () => {
-      const cal = createCalipers({ hardening: 'fail' });
-      expect(() => cal.m(8, { min: 0, max: 10 }).multiply(2)).toThrow(
-        /above the maximum/,
-      );
+      expect(() =>
+        m(i(8, { min: 0, max: 10, hardening: 'fail' })).multiply(2),
+      ).toThrow(/above the maximum/);
     });
 
     it('an in-bounds operation never reacts, regardless of config', () => {
-      const cal = createCalipers({ hardening: 'fail' });
-      expect(cal.m(8, { min: 0, max: 10 }).multiply(1).css()).toBe(
-        '8px',
-      );
+      expect(
+        m(i(8, { min: 0, max: 10, hardening: 'fail' }))
+          .multiply(1)
+          .css(),
+      ).toBe('8px');
     });
 
-    it('an unhardened scalar never reacts, regardless of config', () => {
-      const cal = createCalipers({ hardening: 'fail' });
-      expect(cal.m(i(8)).multiply(2).css()).toBe('16px');
+    it('a plain-number or unhardened measurement never reacts', () => {
+      expect(m(8).multiply(2).css()).toBe('16px');
+      expect(m(i(8)).multiply(2).css()).toBe('16px');
     });
   });
 });

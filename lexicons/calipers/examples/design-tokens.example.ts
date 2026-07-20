@@ -44,10 +44,8 @@ export const opacityOutOfRange = (): string => {
 const { i: zIndex } = createInteger({ min: 0, max: 9999 });
 export const modalLayer = zIndex(1000).css(); // '1000'
 
-// a bounded MEASUREMENT token: a radius scale checked at construction.
-export const radius = m(8, { unit: 'px', min: 0, max: 24 }).css(); // '8px'
-export const radiusBound = m(8, {
-  unit: 'px',
-  min: 0,
-  max: 24,
-}).constraints(); // { min: 0, max: 24 }
+// a bounded MEASUREMENT token: a radius scale checked at construction. The bound rides on the integer
+// scalar (m is a pure container); m only attaches the px unit.
+const { i: radiusScale } = createInteger({ min: 0, max: 24 });
+export const radius = m(radiusScale(8), 'px').css(); // '8px'
+export const radiusBound = m(radiusScale(8), 'px').constraints(); // { min: 0, max: 24 }

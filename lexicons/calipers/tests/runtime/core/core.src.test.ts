@@ -60,64 +60,64 @@ describe('m() accepts typed scalar (i / f) inputs', () => {
   });
 });
 
-describe('m() options: direct bound + input modifier', () => {
-  it('m(v, { min, max }) stores a direct bound, checked at construction', () => {
-    expect(
-      m(8, { unit: 'px', min: 0, max: 10 }).constraints(),
-    ).toEqual({ min: 0, max: 10 });
-    expect(() => m(50, { unit: 'px', min: 0, max: 10 })).toThrow(
+// A bounded / modified measurement is now built by handing `m` a CONFIGURED scalar (`m` itself is a
+// pure container). The bound + modifier ride on the ingested `i` / `f`; `m` only attaches the unit
+// and delegates. (Passing the bound / modifier directly to `m` is a compile-time error, locked in
+// tests/types/m.test-d.ts.)
+describe('a bounded / modified measurement is built from a configured scalar', () => {
+  it('a bound rides on the ingested scalar, surfaced through m.constraints()', () => {
+    expect(m(i(8, { min: 0, max: 10 }), 'px').constraints()).toEqual({
+      min: 0,
+      max: 10,
+    });
+    expect(() => m(i(50, { min: 0, max: 10 }), 'px')).toThrow(
       /above the maximum/,
     );
   });
 
-  it('the input modifier transforms the value at intake, before validation', () => {
+  it('a modifier rides on the ingested scalar, applied at intake before m wraps it', () => {
     const wrap = (n: number) => ((n % 360) + 360) % 360;
-    expect(m(400, { unit: 'deg', modifier: wrap }).value()).toBe(40);
+    expect(m(f(400, { modifier: wrap }), 'deg').value()).toBe(40);
     // modify THEN bound: 450 -> 90, within [0, 360]
     expect(
-      m(450, {
-        unit: 'deg',
-        min: 0,
-        max: 360,
-        modifier: wrap,
-      }).value(),
+      m(f(450, { min: 0, max: 360, modifier: wrap }), 'deg').value(),
     ).toBe(90);
-  });
-
-  it('a direct bound + an ingested-scalar bound together throw (set once)', () => {
-    expect(() =>
-      m(i(8, { min: 0, max: 10 }), {
-        unit: 'px',
-        min: 0,
-        max: 5,
-      }),
-    ).toThrow(/one source/);
   });
 });
 
-describe('unit helper config: modifier + bound on a purpose-built helper', () => {
-  it('a helper built with a modifier normalizes its input (wrapping angle)', () => {
-    const wrap = (n: number) => ((n % 360) + 360) % 360;
-    const hue = makeUnitHelperFromDefinition('mDeg', {
-      modifier: wrap,
+describe('unit helpers are config-free (like m)', () => {
+  it('a helper attaches only its unit; it carries no bound or modifier', () => {
+    const deg = makeUnitHelperFromDefinition('mDeg');
+    expect(deg(45).css()).toBe('45deg');
+    expect(deg(45).constraints()).toEqual({
+      min: undefined,
+      max: undefined,
     });
-    expect(hue(450).css()).toBe('90deg');
-    expect(hue(45).css()).toBe('45deg');
+
+    const level = makeUnitHelperFromDefinition('mPercent');
+    expect(level(50).css()).toBe('50%');
+    expect(level(50).constraints()).toEqual({
+      min: undefined,
+      max: undefined,
+    });
   });
 
-  it('a helper built with a bound checks it at construction', () => {
-    const level = makeUnitHelperFromDefinition('mPercent', {
-      min: 0,
-      max: 100,
-    });
-    expect(level(50).constraints()).toEqual({ min: 0, max: 100 });
-    expect(() => level(150)).toThrow(/above the maximum/);
+  it('a bounded unit measurement is built by handing m a bounded scalar', () => {
+    // The helper stays config-free, so a bounded angle rides on the scalar handed to m().
+    expect(m(i(50, { min: 0, max: 100 }), '%').constraints()).toEqual(
+      { min: 0, max: 100 },
+    );
+    expect(() => m(i(150, { min: 0, max: 100 }), '%')).toThrow(
+      /above the maximum/,
+    );
   });
 });
 
 describe('Measurement clone()', () => {
-  it('copies the value, unit, and bound', () => {
-    const orig = m(8, { unit: 'px', min: 0, max: 10 });
+  // The bound rides on the ingested scalar (m is a pure container), so clone must preserve the
+  // embedded scalar's bound through the copy.
+  it('copies the value, unit, and the ingested scalar bound', () => {
+    const orig = m(i(8, { min: 0, max: 10 }), 'px');
     const copy = orig.clone();
     expect(copy.value()).toBe(8);
     expect(copy.unit()).toBe('px');
@@ -129,7 +129,7 @@ describe('Measurement clone()', () => {
   it('is independent: deriving from the ORIGINAL leaves the clone untouched', () => {
     // Measurements are immutable, so "editing" means deriving a new value. That derivation
     // must not leak into the clone. (Regression lock: guards a future shared-state slip.)
-    const orig = m(8, { unit: 'px', min: 0, max: 10 });
+    const orig = m(i(8, { min: 0, max: 10 }), 'px');
     const copy = orig.clone();
     const derived = orig.add(1);
     expect(derived.value()).toBe(9);
@@ -138,7 +138,7 @@ describe('Measurement clone()', () => {
   });
 
   it('is independent: deriving from the CLONE leaves the original untouched', () => {
-    const orig = m(8, { unit: 'px', min: 0, max: 10 });
+    const orig = m(i(8, { min: 0, max: 10 }), 'px');
     const copy = orig.clone();
     const derived = copy.multiply(1).add(1);
     expect(derived.value()).toBe(9);

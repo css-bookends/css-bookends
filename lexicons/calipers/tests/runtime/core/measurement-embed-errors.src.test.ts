@@ -8,10 +8,9 @@ import { f, i, m } from '../../support/calipers_tests.src';
 // `wrapperLabel: 'm'`; an ingested scalar is stamped via `embedUnder('m')`, preserving its config.
 describe('measurement errors report m, the subtype, and the specific error', () => {
   it('a plain-number measurement: m(u) + the specific error', () => {
-    // 5 is above the max of 3, so it throws at construction.
-    expect(() => m(5, { max: 3 })).toThrow(
-      /m\(u\).*above the maximum/,
-    );
+    // `m` is a pure container with no bound, so the plain-number construction error is a finiteness
+    // violation; it still names BOTH the wrapper and the embedded subtype (`m(u): ...`).
+    expect(() => m(Number.NaN)).toThrow(/m\(u\).*finite/);
   });
 
   it('an integer-backed measurement: m(i) + the specific error', () => {
@@ -22,8 +21,7 @@ describe('measurement errors report m, the subtype, and the specific error', () 
   });
 
   it('a float-backed measurement: m(f) + the specific error', () => {
-    // the bound rides on the f (set-once: a direct bound on an ingested scalar throws), then
-    // arithmetic breaks it.
+    // the bound rides on the f (m is a pure container), then arithmetic breaks it.
     expect(() => m(f(5, { max: 10 })).add(10)).toThrow(
       /m\(f\).*above the maximum/,
     );

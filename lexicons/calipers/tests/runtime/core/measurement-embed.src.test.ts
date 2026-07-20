@@ -82,15 +82,8 @@ describe('.half() on a measurement respects the embedded scalar', () => {
   });
 });
 
-// DECIDED: a direct `min`/`max` on an INGESTED scalar throws (the scalar is set-once; bound the scalar
-// you pass in, or mint fresh). RED today: an unbounded ingested scalar + a direct bound currently
-// applies the bound silently instead of throwing.
-describe('a direct bound on an ingested scalar throws, bound is set once', () => {
-  it('rejects m(<scalar>, { max }) even when the ingested scalar is unbounded', () => {
-    expect(() => m(i(5), { max: 10 })).toThrow(/set once|one source/);
-  });
-
-  it('still allows a direct bound on a plain number', () => {
-    expect(m(5, { max: 10 }).value()).toBe(5);
-  });
-});
+// A direct `min` / `max` on `m` is no longer a runtime concern: `m` is a pure container and carries
+// NO numeric config, so passing a bound to `m` (whether the value is a plain number or an ingested
+// scalar) is a COMPILE-TIME error. That is locked as a type test in tests/types/m.test-d.ts
+// (`expectError(m(10, { max: 10 }))` and `expectError(m(i(5), { max: 10 }))`); there is nothing left
+// to assert at runtime here. A bounded measurement is built as `m(i(5, { max: 10 }), unit)`.

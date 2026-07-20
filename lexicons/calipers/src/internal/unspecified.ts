@@ -1,14 +1,24 @@
 import { type Scalar } from '../scalar';
-import {
-  type ScalarConstraints,
-  type ScalarOptions,
-} from './scalarBase';
-import { ScalarRestricted } from './scalarRestricted';
+import { type ErrorConfigStore } from './errors';
+import { ScalarBase, type ScalarConstraints } from './scalarBase';
+
+/**
+ * The plumbing-only options a `u` accepts. Unlike `i` / `f`, a `u` carries NO numeric config: no
+ * bound (`min` / `max`), no modifier, and no hardening reaction. It takes ONLY what it needs to live
+ * inside a measurement and throw correctly: the per-instance error store, an error `context`, and the
+ * outer `wrapperLabel` (so an embedded `u` names its measurement, `m(u): ...`). Narrowing the options
+ * to plumbing makes it a TYPE error to hand `u` a bound or a modifier.
+ */
+export type UnspecifiedOptions = {
+  context?: string;
+  errorStore?: ErrorConfigStore;
+  wrapperLabel?: string;
+};
 
 /**
  * `IUnspecified` — the PUBLIC type of an "unspecified number": a value that could be whole or
- * fractional but carries NO type security (unlike a proven `i` / `f`). It is exposed so `ratio` (and
- * later `m`) can hand one back HONESTLY, without stamping a guessed integer / float type onto a bare
+ * fractional but carries NO type security (unlike a proven `i` / `f`). It is exposed so `ratio` and
+ * `m` can hand one back HONESTLY, without stamping a guessed integer / float type onto a bare
  * number. There is NO public builder: you never construct a `u`, you only RECEIVE one, so there is no
  * `u()`-vs-`f()` confusion. To commit an unspecified value to a secure type, MINT a fresh one from
  * its value (`i(x.value())` / `f(x.value())`).
@@ -37,16 +47,17 @@ export interface IUnspecified {
 }
 
 /**
- * `u` — the internal "unspecified number" implementation. A sibling of `i` / `f` on the shared
- * `ScalarRestricted` base (for now; a later step moves `u` down to the bare `ScalarBase`). The TYPE
- * (`IUnspecified`) is public, but this CLASS and the `u` builder stay
- * INTERNAL (absent from the package's value exports and its `exports` map): `u` is `m`'s neutral wrap
- * for a plain number and `ratio`'s wrap for a bare operand, never something a consumer constructs. It
- * accepts any finite value (no integer rule, like `f`) and is config-NEUTRAL: it carries ONLY the
- * options it is handed, never an `i` / `f` lexicon config or any ambient default.
+ * `u` — the internal "unspecified number" implementation. It extends the BARE `ScalarBase` (NOT the
+ * checked `ScalarRestricted` that `i` / `f` extend), so it structurally has NO bound / modifier /
+ * hardening machinery: `u` is the deliberately UNSPECIFIED scalar, and hanging numeric config on it
+ * would defeat its purpose. The TYPE (`IUnspecified`) is public, but this CLASS and the `u` builder
+ * stay INTERNAL (absent from the package's value exports and its `exports` map): `u` is `m`'s neutral
+ * wrap for a plain number and `ratio`'s wrap for a bare operand, never something a consumer
+ * constructs. It accepts any finite value (no integer rule, like `f`) and carries only the plumbing
+ * it is handed (see {@link UnspecifiedOptions}).
  */
 export class UnspecifiedImpl
-  extends ScalarRestricted
+  extends ScalarBase
   implements IUnspecified
 {
   protected label(): string {
@@ -55,18 +66,20 @@ export class UnspecifiedImpl
 
   protected validateInput(): void {
     // Unspecified: any finite value is accepted; the base's finiteness check is enough. There is no
-    // integer rule (that is `i`'s job), and there is no lexicon config (that keeps `u` neutral).
+    // integer rule (that is `i`'s job), and there is no numeric config at all (that keeps `u`
+    // neutral).
   }
 
   protected rebuildWith(
     value: number,
-    options: ScalarOptions = this.options(),
+    options: UnspecifiedOptions = this.options(),
   ): this {
     return new UnspecifiedImpl(value, options) as this;
   }
 
-  // Public clamp so a measurement can delegate clamp() to an embedded `u`. Unlike i/f it carries no
-  // `InRange` brand (`u` is unspecified); the clamp MATH is shared in `ScalarBase.clampToRange`.
+  // Public clamp so a measurement can delegate clamp() to an embedded `u`. It is a ONE-SHOT
+  // computation on explicit args (NOT a stored, re-validating bound); unlike i/f it carries no
+  // `InRange` brand (`u` is unspecified). The clamp MATH is shared in `ScalarBase.clampToRange`.
   clamp(min: number, max: number): IUnspecified {
     return this.clampToRange(min, max);
   }
@@ -79,9 +92,9 @@ export const isUnspecified = (
 
 /**
  * Build an internal unspecified number. NOT public; `m`'s / `ratio`'s neutral wrap for a plain
- * number, carrying only the options it is handed.
+ * number, carrying only the plumbing it is handed (see {@link UnspecifiedOptions}).
  */
 export const u = (
   value: number,
-  options: ScalarOptions = {},
+  options: UnspecifiedOptions = {},
 ): UnspecifiedImpl => new UnspecifiedImpl(value, options);

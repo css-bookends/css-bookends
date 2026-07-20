@@ -14,9 +14,12 @@ import {
 } from '../../dist/index';
 import {
   assertPercentMeasurement,
+  i,
   isMeasurement,
   isPercentMeasurement,
   m,
+  makeUnitHelperFromDefinition,
+  mDeg,
   measurementMax,
   measurementMin,
   mPercent,
@@ -44,6 +47,27 @@ const explicitWithOptions = m(10, {
   context: 'spacing.token',
 });
 expectAssignable<IMeasurement<'em'>>(explicitWithOptions);
+
+// `m` is a pure container: it carries NO numeric config. A bound or a modifier belongs on the
+// `i` / `f` you hand it (e.g. `m(i(700, { min: 1, max: 900 }), 'px')`), so passing `min` / `max` /
+// `modifier` directly to `m` is a compile-time error.
+expectError(m(10, { max: 10 }));
+expectError(m(10, { min: 0 }));
+expectError(m(10, { modifier: (n: number) => Math.floor(n) }));
+
+// The same holds when the value is an ingested scalar: a bound on `m` is never accepted, whether the
+// value is a plain number or an `i` / `f` (the scalar you pass already owns its own config).
+expectError(m(i(5), { max: 10 }));
+
+// Unit helpers are config-free too (like `m`). The factory takes only a unit name, and a bound
+// helper takes only a value + optional string context, so handing either a numeric config does not
+// compile.
+expectError(
+  makeUnitHelperFromDefinition('mDeg', {
+    modifier: (n: number) => Math.floor(n),
+  }),
+);
+expectError(mDeg(45, { max: 10 }));
 
 const added = explicitPx.add(explicitPx);
 expectAssignable<IMeasurement<'px'>>(added);

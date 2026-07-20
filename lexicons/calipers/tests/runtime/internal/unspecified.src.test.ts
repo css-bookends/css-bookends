@@ -2,10 +2,11 @@ import { describe, expect, it } from 'vitest';
 
 import { u } from '../../../src/internal/unspecified';
 
-// `u` is the internal, NON-public "unspecified number" scalar: a sibling of i / f on the shared
-// ScalarImpl base, used by `m` to wrap a plain number. It accepts any finite number (no integer
-// check, like f), it is config-NEUTRAL (it carries only the options it is handed, never an i/f
-// lexicon config), and it labels its own errors "u". It is never exported from the package.
+// `u` is the internal, NON-public "unspecified number" scalar. Unlike i / f (which extend the checked
+// ScalarRestricted base), `u` extends the BARE ScalarBase, so it carries NO numeric config at all: no
+// bound, no modifier, no hardening. It is `m`'s neutral wrap for a plain number: it accepts any finite
+// number (no integer check, like f), takes only error plumbing, and labels its own errors "u". It is
+// never exported from the package.
 describe('u (internal unspecified number)', () => {
   it('accepts any finite number, integer or fractional (no integer check)', () => {
     expect(u(5).value()).toBe(5);
@@ -19,20 +20,30 @@ describe('u (internal unspecified number)', () => {
     expect(() => u(Number.POSITIVE_INFINITY)).toThrow(/finite/);
   });
 
-  it('carries only the config it is handed (bound, modifier)', () => {
-    expect(u(5, { min: 0, max: 10 }).constraints()).toEqual({
-      min: 0,
-      max: 10,
+  it('carries NO stored bound or modifier: it is the deliberately unspecified scalar', () => {
+    // `u` accepts any finite value and stores no numeric config, so constraints() is always empty.
+    // A bound / modifier is a TYPE error on `u` (locked structurally: `u` extends the bare base).
+    expect(u(5).value()).toBe(5);
+    expect(u(-42.5).value()).toBe(-42.5);
+    expect(u(5).constraints()).toEqual({
+      min: undefined,
+      max: undefined,
     });
-    // a modifier the caller hands it still applies at intake
-    expect(u(5.9, { modifier: 'floor' }).value()).toBe(5);
+    expect(u(-42.5).constraints()).toEqual({
+      min: undefined,
+      max: undefined,
+    });
   });
 
-  it('re-validates its bound through arithmetic', () => {
-    expect(u(5, { max: 10 }).add(3).value()).toBe(8);
-    expect(() => u(5, { max: 10 }).add(10)).toThrow(
-      /above the maximum/,
-    );
+  it('arithmetic is unrestricted (no stored bound to breach) but stays finite', () => {
+    // With no bound, arithmetic never reacts; the only guard left is finiteness.
+    expect(u(5).add(3).value()).toBe(8);
+    expect(u(5).add(100).value()).toBe(105);
+    expect(u(5).multiply(2).constraints()).toEqual({
+      min: undefined,
+      max: undefined,
+    });
+    expect(() => u(5).divide(0)).toThrow(/zero/);
   });
 
   it('clamps within bounds via a public clamp() (unbranded, u stays unspecified)', () => {
@@ -50,16 +61,17 @@ describe('u (internal unspecified number)', () => {
   });
 
   it('labels its own errors "u"', () => {
-    expect(() => u(5, { max: 3 })).toThrow(/^u:/);
+    // `u` has no bound to breach, so a finiteness violation is the construction error that names it.
+    expect(() => u(Number.NaN)).toThrow(/^u:/);
   });
 
   it('prefixes errors with a wrapper label when embedded (m(u): ...)', () => {
     // A measurement passes wrapperLabel: 'm' when it embeds a scalar, so the throw names BOTH the
     // wrapper and the kind. Without a wrapper it stays "u: ...".
-    expect(() => u(5, { wrapperLabel: 'm', max: 3 })).toThrow(
+    expect(() => u(Number.NaN, { wrapperLabel: 'm' })).toThrow(
       /^m\(u\):/,
     );
-    expect(() => u(5, { max: 3 })).toThrow(/^u:/);
+    expect(() => u(Number.NaN)).toThrow(/^u:/);
   });
 
   it('reports whether its CURRENT value is whole or fractional (value-based)', () => {
@@ -90,9 +102,12 @@ describe('u (internal unspecified number)', () => {
     expect(orig.isInt()).toBe(true);
   });
 
-  it('clone() preserves value and bound', () => {
-    const copy = u(5, { min: 0, max: 10 }).clone();
+  it('clone() preserves the value (and the empty constraints)', () => {
+    const copy = u(5).clone();
     expect(copy.value()).toBe(5);
-    expect(copy.constraints()).toEqual({ min: 0, max: 10 });
+    expect(copy.constraints()).toEqual({
+      min: undefined,
+      max: undefined,
+    });
   });
 });

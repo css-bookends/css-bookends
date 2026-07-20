@@ -14,39 +14,49 @@ import {
 import createCalipersBundle from '../../../src/codex';
 
 describe('codex config cascade (own key -> global -> factory default)', () => {
-  // A PLAIN-number measurement takes the measurement hardening resolved by the
-  // cascade (an ingested scalar would own its own reaction), so these exercise the
-  // bundle cascade for m.
-  describe('m (measurement)', () => {
-    it('unit key wins over global', () => {
+  // `m` is a pure container: it holds no hardening of its own. A bound + its reaction ride on the
+  // ingested `i` / `f`, whose hardening the SAME cascade configures (see the i / f blocks below), so a
+  // measurement's reaction flows THROUGH the bundle-configured scalar. The worked cascade example now
+  // lives on i / f / r.
+  describe('m (measurement) reacts via its ingested scalar', () => {
+    it("global 'warn' relaxes the breach through m", () => {
       const spy = vi
         .spyOn(console, 'warn')
         .mockImplementation(() => {});
       const c = createCalipersBundle({
-        global: { hardening: 'fail' },
-        measurement: { hardening: 'warn' },
+        global: { hardening: 'warn' },
       });
-      expect(c.m(8, { min: 0, max: 10 }).multiply(2).css()).toBe(
-        '16px',
-      );
+      expect(
+        c
+          .m(c.i(8, { min: 0, max: 10 }))
+          .multiply(2)
+          .css(),
+      ).toBe('16px');
       expect(spy).toHaveBeenCalled();
       spy.mockRestore();
     });
 
-    it('falls back to global when no unit key', () => {
+    it("global 'fail' throws through m", () => {
       const c = createCalipersBundle({
         global: { hardening: 'fail' },
       });
-      expect(() => c.m(8, { min: 0, max: 10 }).multiply(2)).toThrow(
-        /above the maximum/,
-      );
+      expect(() =>
+        c.m(c.i(8, { min: 0, max: 10 })).multiply(2),
+      ).toThrow(/above the maximum/);
     });
 
     it('factory default (fail) when neither is set', () => {
       const c = createCalipersBundle();
-      expect(() => c.m(8, { min: 0, max: 10 }).multiply(2)).toThrow(
-        /above the maximum/,
-      );
+      expect(() =>
+        c.m(c.i(8, { min: 0, max: 10 })).multiply(2),
+      ).toThrow(/above the maximum/);
+    });
+
+    it('a plain-number measurement holds no bound, so it never reacts', () => {
+      const c = createCalipersBundle({
+        global: { hardening: 'fail' },
+      });
+      expect(c.m(8).multiply(2).css()).toBe('16px');
     });
   });
 
