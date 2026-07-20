@@ -8,7 +8,8 @@
  * (`simplifyRatio` / `reduceRatio` / `normalizeRatio` / `parseRatio`) and the
  * `withNumerator` / `withDenominator` replacers round it out. Throughout, `r()` and
  * the helpers also consume the `i()` / `f()` scalar primitives wherever a raw number
- * is accepted.
+ * is accepted, and `numeratorScalar()` / `denominatorScalar()` recover them (an explicit
+ * `i` / `f` comes back intact; a bare number comes back UNSPECIFIED, with no guessed type).
  */
 
 import {
@@ -90,3 +91,14 @@ export const replaceWithScalar = r(2, 3).withNumerator(i(4)).css(); // '4/3'
 // `parseRatio` accepts scalars (denominator implied 1).
 export const parsedInteger = parseRatio(i(5)); // { numerator: 5, denominator: 1 }
 export const parsedFloat = parseRatio(f(2.5)); // { numerator: 2.5, denominator: 1 }
+
+// --- RECOVERING a part as a scalar: explicit intact, bare unspecified ------------
+
+// An explicit i() / f() operand comes back INTACT (the same secure type that went in).
+export const recoveredExplicit = r(i(16), f(9))
+  .numeratorScalar()
+  .value(); // 16, recovered as the same i()
+// A BARE number comes back UNSPECIFIED: its value is preserved, but it carries no integer / float
+// type security (a plain number was never a typed scalar). To commit it to a secure type, mint one
+// from its value: i(x.value()) / f(x.value()).
+export const recoveredBare = r(16, 9).numeratorScalar().value(); // 16, as an unspecified value

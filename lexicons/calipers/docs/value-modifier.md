@@ -4,7 +4,8 @@
 before the kind check and the bound, and carried through arithmetic and clone. It is mechanism, not
 policy. The library ships no built-in normalization decisions; you pass the transform where you need
 it. This is a sibling to [hardening](./hardening.md) (which governs the range bound) and covers the
-transform-on-the-way-in that hardening does not.
+transform-on-the-way-in that hardening does not. For the scalar family as a whole (`i` / `f` / `u`,
+their shared config, and the brands), see the overview in [`scalars.md`](./scalars.md).
 
 ## The shape
 

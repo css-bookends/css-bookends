@@ -111,3 +111,6 @@ their hardening self-contained (constraints carried on the value, re-checked on
 derivation) to avoid coupling the standalone `ratio` / `integer` / `float` modules to
 the measurement core. The two vocabularies parallel each other and may share a brand
 vocabulary in a later pass.
+
+For the combined scalar reference (`i` / `f`, the internal unspecified `u`, their shared config, and
+the brands), see [`scalars.md`](./scalars.md).
