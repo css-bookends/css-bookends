@@ -128,8 +128,11 @@ class FloatImpl extends ScalarImpl implements IFloat {
     // Floats accept any finite value; the base's finiteness check is enough.
   }
 
-  protected rebuildWith(value: number): this {
-    return new FloatImpl(value, this.options()) as this;
+  protected rebuildWith(
+    value: number,
+    options: ScalarOptions = this.options(),
+  ): this {
+    return new FloatImpl(value, options) as this;
   }
 
   // clamp forces the value in-range, so the InRange brand is always honest regardless of the

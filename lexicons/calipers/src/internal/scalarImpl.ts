@@ -142,8 +142,12 @@ export abstract class ScalarImpl {
     value: number,
     context?: string,
   ): void;
-  /** Build a NEW value of the same kind, carrying this value's options. */
-  protected abstract rebuildWith(value: number): this;
+  /** Build a NEW value of the same kind. Carries this value's options by default; pass `options` to
+   *  rebuild with a modified config (used by `embedUnder` to stamp a wrapper label). */
+  protected abstract rebuildWith(
+    value: number,
+    options?: ScalarOptions,
+  ): this;
   /**
    * A kind-specific diagnostic on the RAW value, run BEFORE the modifier. Default no-op; `i`
    * overrides it to honour `warnOnNonIntegerInput`. Only warns, never throws or transforms.
@@ -331,5 +335,19 @@ export abstract class ScalarImpl {
 
   clone(): this {
     return this.rebuildWith(this.#value);
+  }
+
+  /**
+   * Internal: a copy of this scalar embedded under an outer WRAPPER label, so its errors read
+   * `<wrapper>(<kind>): ...` instead of `<kind>: ...`. Preserves the full config (bound, hardening,
+   * modifier); re-validates the current value (a no-op for an in-range value). A measurement calls
+   * this when it ingests a scalar, passing `'m'`, so an embedded `i` throws `m(i): ...`. Not a public
+   * knob (see {@link ScalarOptions.wrapperLabel}).
+   */
+  embedUnder(wrapperLabel: string): this {
+    return this.rebuildWith(this.#value, {
+      ...this.options(),
+      wrapperLabel,
+    });
   }
 }

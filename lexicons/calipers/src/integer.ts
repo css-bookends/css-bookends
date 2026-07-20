@@ -148,8 +148,11 @@ class IntegerImpl extends ScalarImpl implements IInteger {
     }
   }
 
-  protected rebuildWith(value: number): this {
-    return new IntegerImpl(value, this.options()) as this;
+  protected rebuildWith(
+    value: number,
+    options: ScalarOptions = this.options(),
+  ): this {
+    return new IntegerImpl(value, options) as this;
   }
 
   // clamp forces the value in-range, so the InRange brand is always honest regardless of the

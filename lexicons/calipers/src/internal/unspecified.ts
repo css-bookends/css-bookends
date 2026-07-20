@@ -57,8 +57,11 @@ export class UnspecifiedImpl
     // integer rule (that is `i`'s job), and there is no lexicon config (that keeps `u` neutral).
   }
 
-  protected rebuildWith(value: number): this {
-    return new UnspecifiedImpl(value, this.options()) as this;
+  protected rebuildWith(
+    value: number,
+    options: ScalarOptions = this.options(),
+  ): this {
+    return new UnspecifiedImpl(value, options) as this;
   }
 
   // Public clamp so a measurement can delegate clamp() to an embedded `u`. Unlike i/f it carries no
