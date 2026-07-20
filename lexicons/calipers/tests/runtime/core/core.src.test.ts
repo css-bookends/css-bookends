@@ -114,3 +114,35 @@ describe('unit helper config: modifier + bound on a purpose-built helper', () =>
     expect(() => level(150)).toThrow(/outside the bound/);
   });
 });
+
+describe('Measurement clone()', () => {
+  it('copies the value, unit, and bound', () => {
+    const orig = m(8, { unit: 'px', min: 0, max: 10 });
+    const copy = orig.clone();
+    expect(copy.value()).toBe(8);
+    expect(copy.unit()).toBe('px');
+    expect(copy.css()).toBe('8px');
+    expect(copy.constraints()).toEqual(orig.constraints());
+    expect(copy.constraints()).toEqual({ min: 0, max: 10 });
+  });
+
+  it('is independent: deriving from the ORIGINAL leaves the clone untouched', () => {
+    // Measurements are immutable, so "editing" means deriving a new value. That derivation
+    // must not leak into the clone. (Regression lock: guards a future shared-state slip.)
+    const orig = m(8, { unit: 'px', min: 0, max: 10 });
+    const copy = orig.clone();
+    const derived = orig.add(1);
+    expect(derived.value()).toBe(9);
+    expect(copy.value()).toBe(8);
+    expect(copy.constraints()).toEqual({ min: 0, max: 10 });
+  });
+
+  it('is independent: deriving from the CLONE leaves the original untouched', () => {
+    const orig = m(8, { unit: 'px', min: 0, max: 10 });
+    const copy = orig.clone();
+    const derived = copy.multiply(1).add(1);
+    expect(derived.value()).toBe(9);
+    expect(orig.value()).toBe(8);
+    expect(orig.constraints()).toEqual({ min: 0, max: 10 });
+  });
+});

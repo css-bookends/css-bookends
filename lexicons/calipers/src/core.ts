@@ -123,6 +123,9 @@ export interface IMeasurement<Unit extends string = string> {
     min: IMeasurement<Unit>,
     max: IMeasurement<Unit>,
   ): IMeasurement<Unit>;
+  /** An independent, config-preserving copy (same value, unit, and bound). Returns `this`, so a
+   *  branded receiver keeps its brand; to change a bound, mint a fresh value. */
+  clone(): this;
 }
 
 export type InscribedMeasurement<Unit extends string> =

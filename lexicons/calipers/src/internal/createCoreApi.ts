@@ -363,6 +363,13 @@ export const createCoreApi = (
       return this.#clone(clamped);
     }
 
+    clone(): this {
+      // Route through the single rebuild point (`#clone`), so any config a measurement gains
+      // later is carried here for free. Same value, so the bound re-check is a no-op in range;
+      // a faithful copy that keeps the unit and bound.
+      return this.#clone(this.#value) as this;
+    }
+
     #clone(value: number): Measurement<Unit> {
       if (violatesConstraints(value, this.#constraints)) {
         const result = `${toPlainDecimal(value)}${this.#unit}`;
