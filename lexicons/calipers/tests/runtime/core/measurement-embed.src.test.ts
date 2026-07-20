@@ -62,3 +62,61 @@ describe('measurement math delegates to the embedded scalar (PENDING embed work)
     expect(() => copy.multiply(0.5)).toThrow(/expected an integer/);
   });
 });
+
+// The rounding / scaling methods also run THROUGH the embedded scalar, so an integer-backed
+// measurement stays integer through them and a plain / float measurement is unrestricted. Mostly
+// GREEN today (they must STAY green through the rewire); the integer-preservation is the real point.
+describe('measurement rounding + scaling methods delegate to the embedded scalar (PENDING embed work)', () => {
+  it('double / negation keep an integer-backed measurement integer', () => {
+    expect(m(i(4)).double().value()).toBe(8);
+    expect(m(i(4)).negation().value()).toBe(-4);
+  });
+
+  it('round / floor / ceil of an integer-backed measurement stay integer', () => {
+    expect(m(i(5)).round().value()).toBe(5);
+    expect(m(i(5)).floor().value()).toBe(5);
+    expect(m(i(5)).ceil().value()).toBe(5);
+  });
+
+  it('round / floor / ceil snap a plain-number measurement', () => {
+    expect(m(2.4).round().value()).toBe(2);
+    expect(m(2.4).floor().value()).toBe(2);
+    expect(m(2.4).ceil().value()).toBe(3);
+  });
+
+  it('double a plain-number measurement is unrestricted', () => {
+    expect(m(5).double().value()).toBe(10);
+  });
+});
+
+// `.half()` is `divide(2)` routed through the embedded scalar, so on an integer-backed measurement a
+// fractional half must THROW (the `i` rejects a non-integer). DECIDED: keep this strict, do NOT widen
+// an integer to a float. A plain / float measurement halves freely. RED today: `m(i(5)).half()`
+// currently returns `2.5px`.
+describe('.half() on a measurement respects the embedded scalar (PENDING embed work)', () => {
+  it('throws on an integer-backed measurement whose half is fractional', () => {
+    expect(() => m(i(5)).half()).toThrow(/expected an integer/);
+  });
+
+  it('halves an even integer-backed measurement to a whole value', () => {
+    expect(m(i(8)).half().value()).toBe(4);
+  });
+
+  it('halves a plain-number / float-backed measurement freely', () => {
+    expect(m(5).half().value()).toBe(2.5);
+    expect(m(f(5)).half().value()).toBe(2.5);
+  });
+});
+
+// DECIDED: a direct `min`/`max` on an INGESTED scalar throws (the scalar is set-once; bound the scalar
+// you pass in, or mint fresh). RED today: an unbounded ingested scalar + a direct bound currently
+// applies the bound silently instead of throwing.
+describe('a direct bound on an ingested scalar throws, bound is set once (PENDING embed work)', () => {
+  it('rejects m(<scalar>, { max }) even when the ingested scalar is unbounded', () => {
+    expect(() => m(i(5), { max: 10 })).toThrow(/set once|one source/);
+  });
+
+  it('still allows a direct bound on a plain number', () => {
+    expect(m(5, { max: 10 }).value()).toBe(5);
+  });
+});
