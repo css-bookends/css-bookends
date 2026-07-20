@@ -21,6 +21,7 @@ import {
   type RefinementSpec,
 } from './internal/refinement';
 import {
+  type Modifier,
   type ScalarConstraints,
   ScalarImpl,
   type ScalarOptions,
@@ -254,6 +255,11 @@ export type FloatFactoryConfig<
    */
   min?: Min;
   max?: Max;
+  /**
+   * The value modifier baked into every value this factory builds. Per-call `options.modifier`
+   * overrides it. Floats accept whatever the modifier returns (no integer check).
+   */
+  modifier?: Modifier;
 };
 
 /**
@@ -317,7 +323,7 @@ export const createFloat = <
   config: FloatFactoryConfig<Min, Max, H> = {},
 ): FloatApi<Min, Max, H> => {
   const hardening = config.hardening ?? DEFAULT_HARDENING;
-  const { min, max } = config;
+  const { min, max, modifier } = config;
   const factoryBounded = min !== undefined || max !== undefined;
   // One per-instance error store, shared by every value this factory binds, so
   // the resolved `stackHints` config reaches `f`.
@@ -364,6 +370,7 @@ export const createFloat = <
       errorStore,
       min,
       max,
+      modifier,
       ...options,
     }) as unknown as ResolveFloatBrand<
       [

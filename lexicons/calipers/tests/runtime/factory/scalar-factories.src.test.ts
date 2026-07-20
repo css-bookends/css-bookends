@@ -137,4 +137,19 @@ describe('scalar factory bounds (min / max)', () => {
       /already set/,
     );
   });
+
+  it('createInteger bakes a modifier the whole domain inherits', () => {
+    const { i: weight } = createInteger({
+      min: 100,
+      max: 900,
+      modifier: (n) => Math.round(n / 100) * 100,
+    });
+    // 100 * 2.2 = 220 -> snapped to the nearest 100 -> 200
+    expect(weight(100).multiply(2.2).value()).toBe(200);
+  });
+
+  it('createFloat bakes a modifier (e.g. a floor shortcut)', () => {
+    const { f: down } = createFloat({ modifier: 'floor' });
+    expect(down(2.9).value()).toBe(2);
+  });
 });

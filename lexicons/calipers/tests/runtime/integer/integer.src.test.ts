@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 
 import { f, i, isInteger } from '../../support/calipers_tests.src';
 
@@ -155,5 +155,121 @@ describe('Integer primitive (src)', () => {
     expect(derived.value()).toBe(300);
     expect(orig.value()).toBe(700);
     expect(orig.constraints()).toEqual({ min: 100, max: 900 });
+  });
+});
+
+describe('Integer modifier (value transform at intake)', () => {
+  it('the default fails loudly: a non-integer throws and no modifier runs', () => {
+    const spy = vi.fn((n: number) => Math.floor(n));
+    // With no modifier, a non-integer throws right away; the modifier path is never entered.
+    expect(() => i(8.7)).toThrow(/expected an integer/);
+    expect(() => i(5).multiply(4.44455222333)).toThrow(
+      /expected an integer/,
+    );
+    expect(spy).not.toHaveBeenCalled();
+    // The modifier is strictly opt-in: supply one and it runs (rescues 8.7 -> 8).
+    expect(i(8.7, { modifier: spy }).value()).toBe(8);
+    expect(spy).toHaveBeenCalledTimes(1);
+  });
+
+  it("the 'floor' shortcut rounds down via Math.floor", () => {
+    // 5 * 4.44455222333 = 22.2227... -> 22
+    expect(
+      i(5, { modifier: 'floor' }).multiply(4.44455222333).value(),
+    ).toBe(22);
+    expect(i(8.7, { modifier: 'floor' }).value()).toBe(8);
+  });
+
+  it("the 'ceil' shortcut rounds up via Math.ceil", () => {
+    expect(
+      i(5, { modifier: 'ceil' }).multiply(4.44455222333).value(),
+    ).toBe(23);
+    expect(i(8.2, { modifier: 'ceil' }).value()).toBe(9);
+  });
+
+  it("the 'round' shortcut rounds to nearest via Math.round", () => {
+    expect(
+      i(5, { modifier: 'round' }).multiply(4.44455222333).value(),
+    ).toBe(22);
+    expect(i(8.5, { modifier: 'round' }).value()).toBe(9);
+  });
+
+  it('accepts a custom modifier function', () => {
+    expect(i(8.9, { modifier: (n) => Math.trunc(n) }).value()).toBe(
+      8,
+    );
+  });
+
+  it('a custom modifier can snap to a grid (font-weight multiples of 100)', () => {
+    const snap100 = (n: number) => Math.round(n / 100) * 100;
+    const weight = i(100, { modifier: snap100 });
+    // 100 * 2.2 = 220 -> nearest 100 -> 200 (an integer input still gets snapped)
+    expect(weight.multiply(2.2).value()).toBe(200);
+    expect(weight.multiply(2.6).value()).toBe(300);
+  });
+
+  it('throws if the modifier still yields a non-integer', () => {
+    expect(() => i(5.5, { modifier: (n) => n })).toThrow(
+      /expected an integer/,
+    );
+  });
+
+  it('a rounding shortcut is a no-op on an already-integer value', () => {
+    expect(i(8, { modifier: 'ceil' }).value()).toBe(8);
+  });
+
+  it('carries the modifier through arithmetic and clone', () => {
+    const grid = i(10, { modifier: 'round' });
+    expect(grid.multiply(1.25).value()).toBe(13); // 12.5 -> 13
+    expect(grid.clone().multiply(0.14).value()).toBe(1); // 1.4 -> 1
+  });
+});
+
+describe('Integer warnOnNonIntegerInput (dirty-input diagnostic)', () => {
+  it('warns when a non-integer enters the modifier, then the modifier fixes it', () => {
+    const warn = vi
+      .spyOn(console, 'warn')
+      .mockImplementation(() => {});
+    try {
+      // 5 * 4.44... = 22.22 enters the rebuild (a non-integer) -> warn, then floor -> 22
+      const v = i(5, {
+        modifier: 'floor',
+        warnOnNonIntegerInput: true,
+      }).multiply(4.44455222333);
+      expect(v.value()).toBe(22);
+      expect(warn).toHaveBeenCalledTimes(1);
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('does not warn when the input is already an integer (even if the modifier re-grids it)', () => {
+    const warn = vi
+      .spyOn(console, 'warn')
+      .mockImplementation(() => {});
+    try {
+      const snap100 = (n: number) => Math.round(n / 100) * 100;
+      // 220 is a clean integer input -> no warn, though the modifier still snaps it to 200
+      const v = i(220, {
+        modifier: snap100,
+        warnOnNonIntegerInput: true,
+      });
+      expect(v.value()).toBe(200);
+      expect(warn).not.toHaveBeenCalled();
+    } finally {
+      warn.mockRestore();
+    }
+  });
+
+  it('is off by default (a non-integer input is silently modified)', () => {
+    const warn = vi
+      .spyOn(console, 'warn')
+      .mockImplementation(() => {});
+    try {
+      i(5, { modifier: 'floor' }).multiply(4.44455222333);
+      expect(warn).not.toHaveBeenCalled();
+    } finally {
+      warn.mockRestore();
+    }
   });
 });

@@ -20,6 +20,7 @@ import {
   type RefinementSpec,
 } from './internal/refinement';
 import {
+  type Modifier,
   type ScalarConstraints,
   ScalarImpl,
   type ScalarOptions,
@@ -122,9 +123,25 @@ class IntegerImpl extends ScalarImpl implements IInteger {
   }
 
   protected validateInput(value: number, context?: string): void {
+    // Runs on the MODIFIED value: a modifier (e.g. `'floor'`) can recover a non-integer, but with
+    // no modifier a non-integer fails loudly here.
     if (!Number.isInteger(value)) {
       this.throwScalar(
         `i: expected an integer (got ${value})${suffix(context)}`,
+      );
+    }
+  }
+
+  protected warnOnRawInput(
+    value: number,
+    options: ScalarOptions,
+    context?: string,
+  ): void {
+    // Fires on the RAW value, before the modifier: surface a messy non-integer input that a
+    // modifier would otherwise clean up silently. Opt-in; the default stays fail-loud.
+    if (options.warnOnNonIntegerInput && !Number.isInteger(value)) {
+      console.warn(
+        `css-calipers: i received a non-integer input (${value})${suffix(context)}`,
       );
     }
   }
@@ -263,6 +280,13 @@ export type IntegerFactoryConfig<
    */
   min?: Min;
   max?: Max;
+  /**
+   * The value modifier baked into every value this factory builds, e.g. a font-weight domain
+   * snapped to multiples of 100. Per-call `options.modifier` overrides it.
+   */
+  modifier?: Modifier;
+  /** Warn when a non-integer input reaches this factory's values (default: silent). */
+  warnOnNonIntegerInput?: boolean;
 };
 
 /**
@@ -326,7 +350,7 @@ export const createInteger = <
   config: IntegerFactoryConfig<Min, Max, H> = {},
 ): IntegerApi<Min, Max, H> => {
   const hardening = config.hardening ?? DEFAULT_HARDENING;
-  const { min, max } = config;
+  const { min, max, modifier, warnOnNonIntegerInput } = config;
   const factoryBounded = min !== undefined || max !== undefined;
   // One per-instance error store, shared by every value this factory binds, so
   // the resolved `stackHints` config reaches `i`.
@@ -373,6 +397,8 @@ export const createInteger = <
       errorStore,
       min,
       max,
+      modifier,
+      warnOnNonIntegerInput,
       ...options,
     }) as unknown as ResolveIntegerBrand<
       [

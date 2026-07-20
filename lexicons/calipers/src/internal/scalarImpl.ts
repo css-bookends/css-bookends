@@ -28,6 +28,35 @@ export type ScalarConstraints<
   max?: Max;
 };
 
+/**
+ * An optional value transform applied at intake. The three named shortcuts resolve to the JS
+ * rounding built-ins (`'floor'` -> `Math.floor`, `'ceil'` -> `Math.ceil`, `'round'` -> `Math.round`)
+ * for the common case; a function gives full control (e.g. `n => Math.round(n / 100) * 100` to snap
+ * a font weight to a grid).
+ */
+export type Modifier =
+  | 'floor'
+  | 'ceil'
+  | 'round'
+  | ((value: number) => number);
+
+const MATH_MODIFIERS: Record<
+  'floor' | 'ceil' | 'round',
+  (value: number) => number
+> = {
+  floor: Math.floor,
+  ceil: Math.ceil,
+  round: Math.round,
+};
+
+/** Resolve a {@link Modifier} to its function (a named shortcut reuses the JS built-in). */
+export const resolveModifier = (
+  modifier: Modifier,
+): ((value: number) => number) =>
+  typeof modifier === 'function'
+    ? modifier
+    : MATH_MODIFIERS[modifier];
+
 export type ScalarOptions<
   Min extends number = number,
   Max extends number = number,
@@ -46,6 +75,21 @@ export type ScalarOptions<
    * undefined and falls back to a default store.
    */
   errorStore?: ErrorConfigStore;
+  /**
+   * An optional value transform, ALWAYS applied at intake (before the kind check and the bound),
+   * if defined. Mechanism, not policy: pass `'floor'` to round an `i` down, or a function to snap
+   * to a grid. It runs on every value the builder mints, including arithmetic results (the config
+   * is carried), so a bounded domain stays normalized. For `i` the integer check still runs AFTER,
+   * so a modifier that yields a non-integer throws; with NO modifier a non-integer fails loudly.
+   * Mirrors the `modifier` on `m`.
+   */
+  modifier?: Modifier;
+  /**
+   * Integer-only diagnostic (default `false`): `console.warn` when the RAW value (before the
+   * modifier) is not an integer. Off by default so the fail-loud default stands; turn it on to
+   * surface messy inputs that a `modifier` would otherwise clean up silently.
+   */
+  warnOnNonIntegerInput?: boolean;
 };
 
 /**
@@ -82,13 +126,26 @@ export abstract class ScalarImpl {
 
   /** The message prefix for this kind (`i` / `f`). */
   protected abstract label(): string;
-  /** Extra input invariant beyond finiteness (integers reject non-integers; floats accept). */
+  /**
+   * The kind-specific input invariant, run AFTER the optional modifier (integers reject a
+   * non-integer; floats accept any finite value). Always throws on violation; it is a type
+   * invariant, not a bound.
+   */
   protected abstract validateInput(
     value: number,
     context?: string,
   ): void;
   /** Build a NEW value of the same kind, carrying this value's options. */
   protected abstract rebuildWith(value: number): this;
+  /**
+   * A kind-specific diagnostic on the RAW value, run BEFORE the modifier. Default no-op; `i`
+   * overrides it to honour `warnOnNonIntegerInput`. Only warns, never throws or transforms.
+   */
+  protected warnOnRawInput(
+    _value: number,
+    _options: ScalarOptions,
+    _context?: string,
+  ): void {}
 
   constructor(value: number, options: ScalarOptions = {}) {
     const { min, max, context } = options;
@@ -108,31 +165,44 @@ export abstract class ScalarImpl {
         `${label}: expected a finite number (got ${value})${suffix(context)}`,
       );
     }
-    // The kind-specific input invariant (e.g. integers reject non-integers). Always throws; it is
-    // a type invariant, not a bound.
-    this.validateInput(value, context);
+    // Diagnostic on the RAW value, BEFORE the modifier (e.g. `i` warns on a non-integer input).
+    this.warnOnRawInput(value, options, context);
+    // The optional modifier is ALWAYS applied at intake, before the kind check and the bound, so a
+    // bounded/typed domain stays normalized (e.g. an `i` rounded, or snapped to a grid).
+    const finalValue =
+      options.modifier !== undefined
+        ? resolveModifier(options.modifier)(value)
+        : value;
+    if (!Number.isFinite(finalValue)) {
+      this.throwScalar(
+        `${label}: modifier produced a non-finite value (${finalValue})${suffix(context)}`,
+      );
+    }
+    // The kind-specific input invariant, on the MODIFIED value (integers reject a non-integer;
+    // floats accept). Always throws on violation; it is a type invariant, not a bound.
+    this.validateInput(finalValue, context);
     // Range breaches go through the shared hardening reaction. On a 'warn' breach the reaction
     // returns here and the now-violated edge is DROPPED (its guarantee is broken); 'fail' has
     // already thrown.
     let effectiveMin = min;
     let effectiveMax = max;
-    if (min !== undefined && value < min) {
+    if (min !== undefined && finalValue < min) {
       reactToBreach(
         hardening,
-        `${label}: ${value} is below the minimum ${min}${suffix(context)}`,
+        `${label}: ${finalValue} is below the minimum ${min}${suffix(context)}`,
         (message) => this.throwScalar(message),
       );
       effectiveMin = undefined;
     }
-    if (max !== undefined && value > max) {
+    if (max !== undefined && finalValue > max) {
       reactToBreach(
         hardening,
-        `${label}: ${value} is above the maximum ${max}${suffix(context)}`,
+        `${label}: ${finalValue} is above the maximum ${max}${suffix(context)}`,
         (message) => this.throwScalar(message),
       );
       effectiveMax = undefined;
     }
-    this.#value = value;
+    this.#value = finalValue;
     // Assemble the frozen, normalized config with a SPREAD, not a hand-listed set: a future field
     // added to `ScalarOptions` flows in via `...options`; only the fields that need normalization
     // (the warn-dropped bounds, the defaulted hardening) are overridden by name.
