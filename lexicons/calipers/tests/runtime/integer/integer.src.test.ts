@@ -128,4 +128,32 @@ describe('Integer primitive (src)', () => {
     expect(isInteger({})).toBe(false);
     expect(isInteger(null)).toBe(false);
   });
+
+  it('clone() copies the value and the bound', () => {
+    const orig = i(700, { min: 100, max: 900 });
+    const copy = orig.clone();
+    expect(copy.value()).toBe(700);
+    expect(copy.constraints()).toEqual(orig.constraints());
+    expect(copy.constraints()).toEqual({ min: 100, max: 900 });
+  });
+
+  it('clone is independent: deriving from the ORIGINAL leaves the clone untouched', () => {
+    // Scalars are immutable, so "editing" means deriving a new value. That derivation must
+    // not leak into the clone. (Regression lock: green today, guards a future shared-state slip.)
+    const orig = i(700, { min: 100, max: 900 });
+    const copy = orig.clone();
+    const derived = orig.withValue(300);
+    expect(derived.value()).toBe(300); // the derived value did change
+    expect(copy.value()).toBe(700); // the clone did NOT
+    expect(copy.constraints()).toEqual({ min: 100, max: 900 });
+  });
+
+  it('clone is independent: deriving from the CLONE leaves the original untouched', () => {
+    const orig = i(700, { min: 100, max: 900 });
+    const copy = orig.clone();
+    const derived = copy.multiply(1).withValue(300);
+    expect(derived.value()).toBe(300);
+    expect(orig.value()).toBe(700);
+    expect(orig.constraints()).toEqual({ min: 100, max: 900 });
+  });
 });

@@ -4,7 +4,6 @@ import {
   reactToBreach,
 } from '../hardening';
 import { type Scalar, toNumber } from '../scalar';
-import { type InRangeBrand } from './brands';
 import {
   createErrorConfigStore,
   createErrorHelpers,
@@ -49,6 +48,15 @@ export type ScalarOptions<
   errorStore?: ErrorConfigStore;
 };
 
+/**
+ * The normalized config a scalar stores as its SINGLE source of truth (`#config`). It is a
+ * `ScalarOptions` after the constructor resolves it (the hardening default applied, the warn-dropped
+ * bounds baked in), so it is assignable back to `ScalarOptions` for `rebuildWith` / `clone`. New
+ * config props are added HERE (and to `ScalarOptions`); the constructor spread carries them into
+ * `#config` and `options()` returns the whole bag, so `clone` picks them up with no extra wiring.
+ */
+export type ScalarConfig = ScalarOptions & { hardening: Hardening };
+
 /** The `[context]` suffix appended to a scalar error message, or `''` when there is none. */
 export const suffix = (context?: string): string =>
   context ? ` [${context}]` : '';
@@ -64,11 +72,13 @@ const coerce = (value: Scalar): number => toNumber(value);
  */
 export abstract class ScalarImpl {
   #value: number;
-  #min?: number;
-  #max?: number;
-  #context?: string;
-  #hardening: Hardening;
-  #errorStore?: ErrorConfigStore;
+  // The SINGLE source of truth for everything about this value EXCEPT the value itself: bound,
+  // context, hardening, error store, and any config prop added later. `clone` / `rebuildWith`
+  // reconstruct from this whole object (via `options()`), so a new prop is carried automatically
+  // with no second list to keep in sync. It is frozen after construction; config props must be
+  // immutable values (a future mutable field, e.g. a `oneOf` array, must be frozen before it
+  // enters config, since `Object.freeze` is shallow).
+  #config: ScalarConfig;
 
   /** The message prefix for this kind (`i` / `f`). */
   protected abstract label(): string;
@@ -84,8 +94,10 @@ export abstract class ScalarImpl {
     const { min, max, context } = options;
     const hardening = options.hardening ?? DEFAULT_HARDENING;
     const label = this.label();
-    // Set the error store FIRST so every throw below renders through it.
-    this.#errorStore = options.errorStore;
+    // Preliminary config so every throw below renders through the right error store (the only
+    // config the construction-time throws need). The frozen, normalized config is assembled at
+    // the end once the warn-drop is known.
+    this.#config = { ...options, hardening };
     if (min !== undefined && max !== undefined && min > max) {
       this.throwScalar(
         `${label}: min (${min}) must be <= max (${max})${suffix(context)}`,
@@ -121,27 +133,26 @@ export abstract class ScalarImpl {
       effectiveMax = undefined;
     }
     this.#value = value;
-    this.#min = effectiveMin;
-    this.#max = effectiveMax;
-    this.#context = context;
-    this.#hardening = hardening;
+    // Assemble the frozen, normalized config with a SPREAD, not a hand-listed set: a future field
+    // added to `ScalarOptions` flows in via `...options`; only the fields that need normalization
+    // (the warn-dropped bounds, the defaulted hardening) are overridden by name.
+    this.#config = Object.freeze({
+      ...options,
+      min: effectiveMin,
+      max: effectiveMax,
+      hardening,
+    });
   }
 
   // Throw a scalar error through this instance's error store (or a default one for the storeless
   // free builder path), so `stackHints` decides the stack block.
   protected throwScalar(message: string): never {
-    const store = this.#errorStore ?? createErrorConfigStore();
+    const store = this.#config.errorStore ?? createErrorConfigStore();
     return createErrorHelpers(store).throwScalarError(message);
   }
 
   protected options(): ScalarOptions {
-    return {
-      min: this.#min,
-      max: this.#max,
-      context: this.#context,
-      hardening: this.#hardening,
-      errorStore: this.#errorStore,
-    };
+    return this.#config;
   }
 
   value(): number {
@@ -157,7 +168,7 @@ export abstract class ScalarImpl {
   }
 
   constraints(): ScalarConstraints {
-    return { min: this.#min, max: this.#max };
+    return { min: this.#config.min, max: this.#config.max };
   }
 
   isInt(): boolean {
@@ -197,32 +208,32 @@ export abstract class ScalarImpl {
     const label = this.label();
     if (numeric === 0) {
       this.throwScalar(
-        `${label}: cannot divide ${this.#value} by zero${suffix(this.#context)}`,
+        `${label}: cannot divide ${this.#value} by zero${suffix(this.#config.context)}`,
       );
     }
     const result = this.#value / numeric;
     if (!Number.isFinite(result)) {
       this.throwScalar(
-        `${label}: non-finite result dividing ${this.#value} by ${numeric}${suffix(this.#context)}`,
+        `${label}: non-finite result dividing ${this.#value} by ${numeric}${suffix(this.#config.context)}`,
       );
     }
     return this.rebuildWith(result);
   }
 
-  clamp<Min extends number, Max extends number>(
-    min: Min,
-    max: Max,
-  ): this & InRangeBrand<Min, Max> {
+  // The clamp MATH lives here; the public, brand-returning `clamp` is defined on each subclass
+  // (it returns the concrete `InRangeInteger` / `InRangeFloat`, whose `clone` preserves the brand
+  // through the interface's polymorphic `this`). A base method returning `this & InRangeBrand`
+  // could not compose with `clone(): this` in the implements check, since `this` drops an
+  // externally-intersected brand.
+  protected clampToRange(min: number, max: number): this {
     if (min > max) {
       this.throwScalar(
         `${this.label()}.clamp: min (${min}) must be <= max (${max})`,
       );
     }
-    // clamp forces the value in-range, so the InRange brand is always honest
-    // regardless of the hardening reaction (System A follows System B here).
     return this.rebuildWith(
       Math.min(max, Math.max(min, this.#value)),
-    ) as this & InRangeBrand<Min, Max>;
+    );
   }
 
   clone(): this {

@@ -55,9 +55,10 @@ export interface IInteger {
     min: Min,
     max: Max,
   ) => InRangeInteger<Min, Max>;
-  /** An independent, config-preserving copy (same value, bound, and config). To change a bound,
-   *  mint a fresh value. */
-  clone: () => IInteger;
+  /** An independent, config-preserving copy (same value, bound, and config). Returns `this`, so a
+   *  branded receiver keeps its brand (the copy holds the same value + bound, so the proof still
+   *  holds); arithmetic still drops the brand. To change a bound, mint a fresh value. */
+  clone(): this;
 }
 
 /**
@@ -130,6 +131,19 @@ class IntegerImpl extends ScalarImpl implements IInteger {
 
   protected rebuildWith(value: number): this {
     return new IntegerImpl(value, this.options()) as this;
+  }
+
+  // clamp forces the value in-range, so the InRange brand is always honest regardless of the
+  // hardening reaction (System A follows System B here). Defined per-subclass, returning the
+  // concrete `InRangeInteger`, so `clone` can preserve the brand (see `ScalarImpl.clampToRange`).
+  clamp<Min extends number, Max extends number>(
+    min: Min,
+    max: Max,
+  ): InRangeInteger<Min, Max> {
+    return this.clampToRange(min, max) as unknown as InRangeInteger<
+      Min,
+      Max
+    >;
   }
 
   toTypedValue(): IInteger {

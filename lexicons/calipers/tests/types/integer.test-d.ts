@@ -27,6 +27,11 @@ expectAssignable<IInteger>(bounded);
 const { i: fontWeight } = createInteger({ min: 100, max: 900 });
 expectType<InRangeInteger<100, 900>>(fontWeight(400));
 
+// clone() preserves the receiver's brand (same value + bound, so the proof still holds).
+expectType<InRangeInteger<100, 900>>(fontWeight(400).clone());
+// a plain integer's clone stays plain.
+expectType<IInteger>(i(5).clone());
+
 // under `warn` a breach is dropped rather than thrown, so the range cannot be
 // promised: the brand honestly falls back to a plain integer.
 const { i: fontWeightLoose } = createInteger({

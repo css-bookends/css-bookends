@@ -128,4 +128,32 @@ describe('Float primitive (src)', () => {
     expect(isFloat({})).toBe(false);
     expect(isFloat(null)).toBe(false);
   });
+
+  it('clone() copies the value and the bound', () => {
+    const orig = f(0.25, { min: 0, max: 1 });
+    const copy = orig.clone();
+    expect(copy.value()).toBe(0.25);
+    expect(copy.constraints()).toEqual(orig.constraints());
+    expect(copy.constraints()).toEqual({ min: 0, max: 1 });
+  });
+
+  it('clone is independent: deriving from the ORIGINAL leaves the clone untouched', () => {
+    // Scalars are immutable, so "editing" means deriving a new value. That derivation must
+    // not leak into the clone. (Regression lock: green today, guards a future shared-state slip.)
+    const orig = f(0.25, { min: 0, max: 1 });
+    const copy = orig.clone();
+    const derived = orig.withValue(0.75);
+    expect(derived.value()).toBe(0.75); // the derived value did change
+    expect(copy.value()).toBe(0.25); // the clone did NOT
+    expect(copy.constraints()).toEqual({ min: 0, max: 1 });
+  });
+
+  it('clone is independent: deriving from the CLONE leaves the original untouched', () => {
+    const orig = f(0.25, { min: 0, max: 1 });
+    const copy = orig.clone();
+    const derived = copy.multiply(1).withValue(0.75);
+    expect(derived.value()).toBe(0.75);
+    expect(orig.value()).toBe(0.25);
+    expect(orig.constraints()).toEqual({ min: 0, max: 1 });
+  });
 });

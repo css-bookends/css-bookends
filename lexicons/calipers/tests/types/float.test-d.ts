@@ -27,6 +27,11 @@ expectAssignable<IFloat>(opacity);
 const { f: alpha } = createFloat({ min: 0, max: 1 });
 expectType<InRangeFloat<0, 1>>(alpha(0.5));
 
+// clone() preserves the receiver's brand (same value + bound, so the proof still holds).
+expectType<InRangeFloat<0, 1>>(alpha(0.5).clone());
+// a plain float's clone stays plain.
+expectType<IFloat>(f(0.5).clone());
+
 // under `warn` a breach is dropped rather than thrown, so the range cannot be
 // promised: the brand honestly falls back to a plain float.
 const { f: alphaLoose } = createFloat({
