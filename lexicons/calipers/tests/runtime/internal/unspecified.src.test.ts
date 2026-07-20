@@ -39,6 +39,30 @@ describe('u (internal unspecified number)', () => {
     expect(() => u(5, { max: 3 })).toThrow(/^u:/);
   });
 
+  it('reports whether its CURRENT value is whole or fractional (value-based)', () => {
+    // `u` is unspecified, but you can still ask what the value currently is.
+    expect(u(5).isInt()).toBe(true);
+    expect(u(5).isFloat()).toBe(false);
+    expect(u(5.5).isInt()).toBe(false);
+    expect(u(5.5).isFloat()).toBe(true);
+  });
+
+  it('is immutable: an operation returns a NEW value and never mutates the source (isInt cannot go stale)', () => {
+    // Regression lock: green today because scalars are immutable, but it fails the moment any
+    // operation writes to `this`, which would let value() / isInt() on the source go stale.
+    const orig = u(5); // whole -> isInt() true
+    const half = orig.multiply(0.1); // a NEW u: 0.5, fractional
+    expect(half.value()).toBe(0.5);
+    expect(half.isInt()).toBe(false);
+    // the source is untouched by the derivation
+    expect(orig.value()).toBe(5);
+    expect(orig.isInt()).toBe(true);
+    // a second derivation also leaves the source alone
+    expect(orig.multiply(2).value()).toBe(10);
+    expect(orig.value()).toBe(5);
+    expect(orig.isInt()).toBe(true);
+  });
+
   it('clone() preserves value and bound', () => {
     const copy = u(5, { min: 0, max: 10 }).clone();
     expect(copy.value()).toBe(5);

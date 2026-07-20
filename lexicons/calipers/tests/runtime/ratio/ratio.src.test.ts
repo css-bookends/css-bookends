@@ -192,7 +192,7 @@ describe('Ratio helper (src)', () => {
     });
   });
 
-  it('returns numerator and denominator back as typed i()/f() scalars', () => {
+  it('recovers scalars: an explicit operand stays intact, a bare number is unspecified', () => {
     // typed operands come back INTACT (same kind that went in)
     const typed = r(i(16), f(9));
     expect(isInteger(typed.numeratorScalar())).toBe(true);
@@ -200,16 +200,21 @@ describe('Ratio helper (src)', () => {
     expect(isFloat(typed.denominatorScalar())).toBe(true);
     expect(typed.denominatorScalar().valueOf()).toBe(9);
 
-    // raw numbers reconstruct by value: whole -> i(), fractional -> f()
+    // a BARE number is UNSPECIFIED: it comes back as neither an integer nor a float (no guessed
+    // type stamped on a plain number), but its value is preserved.
     const raw = r(4, 2.5);
-    expect(isInteger(raw.numeratorScalar())).toBe(true);
+    expect(isInteger(raw.numeratorScalar())).toBe(false);
+    expect(isFloat(raw.numeratorScalar())).toBe(false);
     expect(raw.numeratorScalar().valueOf()).toBe(4);
-    expect(isFloat(raw.denominatorScalar())).toBe(true);
+    expect(isInteger(raw.denominatorScalar())).toBe(false);
+    expect(isFloat(raw.denominatorScalar())).toBe(false);
     expect(raw.denominatorScalar().valueOf()).toBe(2.5);
 
-    // a replaced side keeps the new operand's type
+    // a replaced side keeps the new operand's type; the untouched (unspecified) side flows back
+    // through the constructor intact.
     expect(
       isInteger(r(2, 3).withNumerator(i(4)).numeratorScalar()),
     ).toBe(true);
+    expect(r(2, 3).withNumerator(i(4)).denominator()).toBe(3);
   });
 });

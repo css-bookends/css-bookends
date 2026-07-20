@@ -29,3 +29,36 @@ describe('measurement errors report m, the subtype, and the specific error (PEND
     );
   });
 });
+
+// The core of the rewire: m's math runs THROUGH the embedded scalar, so the scalar's rules
+// (integer-ness, modifier, bound) hold across m's arithmetic and clone. Integer / modifier / clone
+// cases are RED today (m drops that info); the u / f cases are GREEN locks the rewire must keep.
+describe('measurement math delegates to the embedded scalar (PENDING embed work)', () => {
+  it('an integer-backed measurement stays an integer through arithmetic', () => {
+    expect(m(i(4)).multiply(2).value()).toBe(8);
+    // a fractional result must throw: the embedded `i` rejects a non-integer
+    expect(() => m(i(5)).multiply(0.5)).toThrow(
+      /expected an integer/,
+    );
+  });
+
+  it('an integer-backed measurement honours the embedded modifier', () => {
+    const gridInt = i(10, { modifier: 'round' });
+    // 10 * 1.25 = 12.5 -> the embedded modifier rounds -> 13
+    expect(m(gridInt).multiply(1.25).value()).toBe(13);
+  });
+
+  it('a plain-number measurement accepts any finite result (no integer rule)', () => {
+    expect(m(5).multiply(0.5).value()).toBe(2.5);
+  });
+
+  it('a float-backed measurement accepts any finite result (no integer rule)', () => {
+    expect(m(f(5)).multiply(0.5).value()).toBe(2.5);
+  });
+
+  it('clone preserves the embedded scalar (integer-ness survives the copy)', () => {
+    const copy = m(i(5, { max: 10 })).clone();
+    expect(copy.value()).toBe(5);
+    expect(() => copy.multiply(0.5)).toThrow(/expected an integer/);
+  });
+});
