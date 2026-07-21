@@ -1,10 +1,11 @@
 /* eslint-disable no-restricted-syntax, no-restricted-imports -- this whole file
    verifies the EXPORT SURFACE: it imports bound values and calls the /units factories
    from dist to assert they are exported. */
-import { expectAssignable } from 'tsd';
+import { expectAssignable, expectError } from 'tsd';
 
 import {
   type CqwMeasurement,
+  createCalipersBundle,
   type DegMeasurement,
   type DpiMeasurement,
   type DvwMeasurement,
@@ -82,7 +83,7 @@ expectAssignable<IMeasurement<'%'>>(apiMeasurementPercent);
 
 const errorConfig: ErrorConfig = getErrorConfig();
 setErrorConfig(errorConfig);
-const errorCode: ErrorCode = 'CALIPERS_E_NONFINITE';
+const errorCode: ErrorCode = 'CALIPERS_E_UNIT_MISMATCH';
 void errorCode;
 
 // Guards and assertions are exported with the expected shapes
@@ -191,3 +192,14 @@ declare const maybeHasCss: unknown;
 if (hasCssMethod(maybeHasCss)) {
   expectAssignable<() => string>(maybeHasCss.css);
 }
+
+// `hardening` has left the measurement + unit-group surface of the bundle: neither
+// the `measurement` key nor a unit-group key (e.g. `absolute`) accepts it. The
+// hardening reaction is now purely a scalar concern, configured through the
+// `integer` / `float` keys (and `global`, which cascades to the scalar family).
+expectError(
+  createCalipersBundle({ measurement: { hardening: 'warn' } }),
+);
+expectError(
+  createCalipersBundle({ absolute: { hardening: 'warn' } }),
+);

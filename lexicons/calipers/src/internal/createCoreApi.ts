@@ -11,11 +11,7 @@ import type {
   UnitHelper,
 } from '../core';
 import { f } from '../float';
-import {
-  type Constraints,
-  DEFAULT_HARDENING,
-  type Hardening,
-} from '../hardening';
+import { type Constraints } from '../hardening';
 import { i } from '../integer';
 import { type Scalar, toNumber } from '../scalar';
 import {
@@ -41,10 +37,6 @@ type MeasurementCreateOptions<Unit extends string> = {
 
 export const createCoreApi = (
   errorStore: ErrorConfigStore,
-  // Unused now that `m` carries no hardening (it is a pure container). The param and its whole bundle
-  // cascade are removed in the next step (hardening out of the factory); kept here for one step so the
-  // call sites do not churn twice.
-  _hardening: Hardening = DEFAULT_HARDENING,
   defaultUnit: string = 'px',
 ) => {
   const { throwHelperError, throwMeasurementMethodError } =

@@ -53,11 +53,17 @@ export const breakThrows = (): string => {
   }
 };
 
-// 'warn' instances warn, drop the broken bound, and proceed.
+// The reaction rides on the ingested scalar: `m` is a pure container and holds no
+// hardening of its own. Configure the bundle's SCALAR family with a 'warn'
+// reaction (`global.hardening` cascades to i / f), build the bounded `i` from THAT
+// bundle so it carries 'warn', then hand it to m(): the breach warns and proceeds.
 const lenient = createCalipersBundle({
-  measurement: { hardening: 'warn' },
+  global: { hardening: 'warn' },
 });
-export const lenientResult = lenient.m(bounded(8)).multiply(2).css(); // '16px'
+export const lenientResult = lenient
+  .m(lenient.i(8, { min: 0, max: 10 }))
+  .multiply(2)
+  .css(); // '16px'
 
 // --- the integer / float factories bake the same reaction ----------------------
 
