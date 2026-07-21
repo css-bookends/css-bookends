@@ -3,6 +3,7 @@ import { type Scalar, toNumber } from '../scalar';
 import {
   createErrorConfigStore,
   createErrorHelpers,
+  type ErrorCode,
   type ErrorConfigStore,
 } from './errors';
 import { toPlainDecimal } from './toPlainDecimal';
@@ -219,6 +220,7 @@ export abstract class ScalarBase {
     if (!Number.isFinite(value)) {
       this.throwScalar(
         `${label}: expected a finite number (got ${value})${suffix(options.context)}`,
+        'CALIPERS_E_NONFINITE',
       );
     }
     // Diagnostic on the RAW value, BEFORE the modifier (e.g. `i` warns on a non-integer input).
@@ -242,9 +244,9 @@ export abstract class ScalarBase {
 
   // Throw a scalar error through this instance's error store (or a default one for the storeless
   // free builder path), so `stackHints` decides the stack block.
-  protected throwScalar(message: string): never {
+  protected throwScalar(message: string, code?: ErrorCode): never {
     const store = this.#config.errorStore ?? createErrorConfigStore();
-    return createErrorHelpers(store).throwScalarError(message);
+    return createErrorHelpers(store).throwScalarError(message, code);
   }
 
   // The error-message prefix: this kind's label, wrapped by the outer context when one is set
@@ -319,12 +321,14 @@ export abstract class ScalarBase {
     if (numeric === 0) {
       this.throwScalar(
         `${label}: cannot divide ${this.#value} by zero${suffix(this.#config.context)}`,
+        'CALIPERS_E_DIVIDE_BY_ZERO',
       );
     }
     const result = this.#value / numeric;
     if (!Number.isFinite(result)) {
       this.throwScalar(
         `${label}: non-finite result dividing ${this.#value} by ${numeric}${suffix(this.#config.context)}`,
+        'CALIPERS_E_NONFINITE_RESULT',
       );
     }
     return this.rebuildWith(result);

@@ -5,6 +5,8 @@ import {
   assertCondition,
   assertUnit,
   color,
+  f,
+  i,
   inRange,
   m,
   makeUnitAssert,
@@ -16,12 +18,13 @@ import {
  * Publish-readiness: ERROR-CODE CONSISTENCY.
  *
  * The package has two intentional error tiers:
- *   1. The MEASUREMENT CORE carries machine-readable `CALIPERS_E_*` codes in the
- *      error message (`[code=...]`). Every code in the `ErrorCode` union is
- *      reachable and documented in docs/errors.md.
- *   2. The SCALAR (i/f/r) and COLOUR layers throw plain `Error` messages
- *      WITHOUT a code. This test pins that boundary so a future change that adds
- *      or moves a code is a deliberate, visible edit.
+ *   1. The MEASUREMENT CORE and the SCALAR ARITHMETIC CONTRACT (non-finiteness,
+ *      divide-by-zero) carry machine-readable `CALIPERS_E_*` codes in the error
+ *      message (`[code=...]`). Every code in the `ErrorCode` union is reachable and
+ *      documented in docs/errors.md.
+ *   2. The DESCRIPTIVE validation messages (a bound's `min <= max`, a colour parse
+ *      failure) throw plain `Error` messages WITHOUT a code. This test pins that
+ *      boundary so a future change that adds or moves a code is a deliberate, visible edit.
  */
 
 const messageOf = (fn: () => unknown): string => {
@@ -42,7 +45,6 @@ describe('every CALIPERS_E_* code in the union is reachable', () => {
       () => unknown,
     ]
   > = [
-    // retired from the m() inventory: routed through the codeless scalar by the embed; union/helper cleanup is a separate deferred commit.
     [
       'CALIPERS_E_UNIT_MISMATCH',
       () =>
@@ -83,6 +85,19 @@ describe('every CALIPERS_E_* code in the union is reachable', () => {
       'CALIPERS_E_CLAMP_INVALID_RANGE',
       () => m(1, 'px').clamp(m(10, 'px'), m(0, 'px')),
     ],
+    // arithmetic-contract codes, emitted by the scalar core (reachable via i / f / u / m / r):
+    [
+      'CALIPERS_E_DIVIDE_BY_ZERO',
+      () => i(5).divide(0),
+    ],
+    [
+      'CALIPERS_E_NONFINITE',
+      () => f(Number.POSITIVE_INFINITY),
+    ],
+    [
+      'CALIPERS_E_NONFINITE_RESULT',
+      () => f(Number.MAX_VALUE).divide(1e-300),
+    ],
   ];
 
   it.each(cases)('%s is emitted by its throw site', (code, fn) => {
@@ -99,7 +114,7 @@ describe('makeUnitAssert emits the assert-unit code', () => {
   });
 });
 
-describe('the scalar / colour layers throw codeless messages', () => {
+describe('the descriptive scalar / colour messages stay codeless', () => {
   it('colour bad input is codeless with a color: prefix', () => {
     const msg = messageOf(() => color('definitely-not-a-color'));
     expect(msg).toMatch(/^color:/);

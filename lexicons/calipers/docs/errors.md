@@ -24,16 +24,28 @@ validation examples:
 
 ## Common errors
 
-### Non-finite measurement value
+### Non-finite value
 
 ```
-css-calipers.m: Non-finite measurement value: undefined [code=CALIPERS_E_NONFINITE | helper=m | inputs=value=undefined, unit=px | stack=...]
+m(u): expected a finite number (got Infinity) [code=CALIPERS_E_NONFINITE]
 ```
 
-- **Means:** a measurement was constructed with `undefined`, `NaN`, or `Infinity`.
-- **Fix:** provide a real numeric value and a unit (`m(12)`, `m(12, "px")`). Add a context
-  label so the error points to the calling helper or token
-  (`m(12, { context: "tokens.cardWidth" })`).
+- **Means:** a value was built from `undefined`, `NaN`, or `Infinity`. The check lives in the
+  scalar core, so it fires for `m`, `i`, `f`, `u`, and a ratio operand alike (a measurement's
+  prefix names its embedded scalar, e.g. `m(u)` / `m(i)`).
+- **Fix:** provide a real numeric value (`m(12)`, `i(3)`, `f(2.5)`). Add a context label so the
+  error points to the calling helper or token (`m(12, { context: "tokens.cardWidth" })`).
+
+### Non-finite result
+
+```
+f: non-finite result dividing 1.7976931348623157e+308 by 1e-300 [code=CALIPERS_E_NONFINITE_RESULT]
+```
+
+- **Means:** a finite operation overflowed to `Infinity` (for example dividing or multiplying
+  very large magnitudes). The scalar re-validates every arithmetic result, so this is caught at
+  the operation site rather than propagated into a render.
+- **Fix:** bound the inputs, or `clamp` into a safe range before the operation.
 
 ### Unit mismatch
 

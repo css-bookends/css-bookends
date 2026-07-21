@@ -1,17 +1,18 @@
 import type { IMeasurement } from '../core';
 
 export type ErrorCode =
-  | 'CALIPERS_E_NONFINITE'
   | 'CALIPERS_E_UNIT_MISMATCH'
   | 'CALIPERS_E_ASSERT_UNIT'
   | 'CALIPERS_E_ASSERT_CONDITION'
   | 'CALIPERS_E_ASSERT_PREDICATE'
   | 'CALIPERS_E_CONSTRAINT'
-  | 'CALIPERS_E_DIVIDE_BY_ZERO'
-  | 'CALIPERS_E_NONFINITE_RESULT'
   | 'CALIPERS_E_CLAMP_NONFINITE_BOUNDS'
   | 'CALIPERS_E_CLAMP_INVALID_RANGE'
-  | 'CALIPERS_E_HARDENING_BREACH';
+  | 'CALIPERS_E_HARDENING_BREACH'
+  // The scalar arithmetic contract, emitted by the scalar core for m / i / f / u AND ratio.
+  | 'CALIPERS_E_NONFINITE'
+  | 'CALIPERS_E_NONFINITE_RESULT'
+  | 'CALIPERS_E_DIVIDE_BY_ZERO';
 
 export interface ErrorDetails {
   code?: ErrorCode;
@@ -124,11 +125,15 @@ export const createErrorHelpers = (store: ErrorConfigStore) => {
       }),
     );
   };
-  // The SCALAR (i / f / r) thrower: the scalar + colour layers throw plain
-  // messages WITHOUT a `[code=...]` (see tests/runtime/audit/error-codes) — the
-  // message is already fully formed, so this only appends the optional
-  // `[stack=...]` block per the instance's resolved `stackHints` config.
-  const throwScalarError = (message: string): never => {
+  // The SCALAR (i / f / u / r) thrower. The scalar ARITHMETIC CONTRACT (non-finiteness,
+  // divide-by-zero) passes a machine-readable `code`, matching the measurement core; DESCRIPTIVE
+  // messages (a bound's `min <= max`, colour parse failures) pass none (see
+  // tests/runtime/audit/error-codes). The message is already fully formed, so this appends the
+  // optional `[code=...]` and `[stack=...]` blocks per the instance's resolved config.
+  const throwScalarError = (
+    message: string,
+    code?: ErrorCode,
+  ): never => {
     const includeStack = shouldIncludeStackHint(
       undefined,
       getConfig(),
@@ -136,7 +141,9 @@ export const createErrorHelpers = (store: ErrorConfigStore) => {
     const stackHint = includeStack
       ? extractStackHint(new Error().stack)
       : undefined;
-    throw new Error(`${message}${formatDetailBlock({ stackHint })}`);
+    throw new Error(
+      `${message}${formatDetailBlock({ code, stackHint })}`,
+    );
   };
   return {
     throwMeasurementMethodError,

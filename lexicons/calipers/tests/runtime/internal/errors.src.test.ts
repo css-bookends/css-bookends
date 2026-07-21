@@ -97,15 +97,15 @@ describe('errors — throwMeasurementMethodError (per-instance store)', () => {
     });
     const message = messageOf(() =>
       throwMeasurementMethodError({
-        operation: 'divide',
+        operation: 'clamp',
         caller: { unit: () => 'px' } as never,
         params: baseParams,
-        message: 'cannot divide by zero',
-        details: { code: 'CALIPERS_E_DIVIDE_BY_ZERO' },
+        message: 'min must be <= max',
+        details: { code: 'CALIPERS_E_CLAMP_INVALID_RANGE' },
       }),
     );
-    expect(message).toContain('divide: cannot divide by zero');
-    expect(message).toContain('code=CALIPERS_E_DIVIDE_BY_ZERO');
+    expect(message).toContain('clamp: min must be <= max');
+    expect(message).toContain('code=CALIPERS_E_CLAMP_INVALID_RANGE');
     expect(message).toContain('stack=');
   });
 

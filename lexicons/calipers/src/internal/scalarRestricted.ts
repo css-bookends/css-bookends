@@ -43,6 +43,7 @@ export abstract class ScalarRestricted extends ScalarBase {
     if (!Number.isFinite(finalValue)) {
       this.throwScalar(
         `${label}: modifier produced a non-finite value (${finalValue})${suffix(options.context)}`,
+        'CALIPERS_E_NONFINITE_RESULT',
       );
     }
     return finalValue;
