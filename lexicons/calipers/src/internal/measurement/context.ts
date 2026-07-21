@@ -66,6 +66,12 @@ export const makeDeltaToNumber =
     return delta.value();
   };
 
+/** The bound helper types, so a module receiving these as deps (e.g. the class) can type them. */
+export type AssertMatchingUnits = ReturnType<
+  typeof makeAssertMatchingUnits
+>;
+export type DeltaToNumber = ReturnType<typeof makeDeltaToNumber>;
+
 export const hasCssMethod = (
   x: unknown,
 ): x is { css: () => string } => {
