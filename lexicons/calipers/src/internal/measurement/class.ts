@@ -298,3 +298,8 @@ export const makeMeasurementClass = (
 
   return Measurement;
 };
+
+/** The constructed `Measurement` class type, so a downstream module can type it as a dependency. */
+export type MeasurementClass = ReturnType<
+  typeof makeMeasurementClass
+>;
