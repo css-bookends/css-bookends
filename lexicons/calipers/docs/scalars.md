@@ -35,8 +35,8 @@ means.
 the numeric config (set ONCE at construction; to change it, mint a fresh value). `u` extends the BARE
 base (`ScalarBase`) and carries NONE of it, it is finite math only. So the config below is `i` / `f`:
 
-- **Bounds** (`min` / `max`) and the **hardening** reaction (`'warn' | 'fail'`) when a bound is broken.
-  See [`hardening.md`](./hardening.md).
+- **Bounds** (`min` / `max`); a broken bound **throws** (there is no reaction knob — the planned
+  `clamp` will add absorb-to-limit). See [`hardening.md`](./hardening.md).
 - **The modifier** (`'floor'` / `'ceil'` / `'round'` or a function) and the opt-in
   **`warnOnNonIntegerInput`** diagnostic. See [`value-modifier.md`](./value-modifier.md).
 - **The `InRange` compile-time brands** (a runtime bound surfaced as a type-level proof). See
@@ -76,6 +76,6 @@ config you want is always one construction away.
 
 - [`number-space.md`](./number-space.md) — where scalars fit in the CSS number space.
 - [`value-modifier.md`](./value-modifier.md) — the modifier and the `warnOnNonIntegerInput` diagnostic.
-- [`hardening.md`](./hardening.md) — bounds, the hardening reaction, refinements, and the brands.
+- [`hardening.md`](./hardening.md) — bounds (throw on breach), refinements, and the brands.
 - Examples: `examples/integers-floats.example.ts`, `examples/integer-modifier.example.ts`,
   `examples/constraint-brands.example.ts`, `examples/named-domain-teaching.example.ts`.

@@ -17,10 +17,12 @@ brand that records it.
 
 > **System A vs System B.** The refinements here are System A: compile-time BRANDS
 > (`NonNegativeMeasurement`, `InRangeMeasurement`) stamped by a runtime check. They are distinct from
-> System B, the stored runtime bound (`min` / `max`, `.constraints()`) and its `'warn' | 'fail'`
-> hardening REACTION, which live on the config-bearing scalars `i` / `f` (a measurement carries a bound
-> only via the `i` / `f` it embeds, `m` itself has no numeric config). See [`scalars.md`](./scalars.md)
-> and `docs/foundations.md` ("The two constraint systems").
+> System B, the stored runtime bound (`min` / `max`, `.constraints()`), which lives on the
+> config-bearing scalars `i` / `f` and **throws when arithmetic breaks it** (a measurement carries a
+> bound only via the `i` / `f` it embeds, `m` itself has no numeric config). There is no reaction knob:
+> the old `hardening: 'warn' | 'fail'` config was retired 2026-07-21 (bound → fail, or `u` for no bound,
+> or the planned `clamp` to absorb). See [`scalars.md`](./scalars.md) and `docs/foundations.md`
+> ("The two constraint systems").
 
 ## The pattern
 

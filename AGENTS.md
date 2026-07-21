@@ -78,7 +78,7 @@ leaves → bookends**.
 - **Spec first.** Document the target (these rules / `docs/` / skills) BEFORE any code, per
   test-first, and land it as its OWN commit once the user approves. Code never leads the spec.
 - **Then code, foundational → leaves.** The shared machinery everything depends on (the core, the
-  error / hardening infra, the bundle / cascade) before the individual lexicons / units that ride on
+  error / bound infra, the bundle / cascade) before the individual lexicons / units that ride on
   it; the bookends layer last.
 - **Descend when a step needs a lower level.** If a batch surfaces a deeper dependency, descend to
   that level, complete and commit it, then bump back UP and continue the cycle.
@@ -142,7 +142,7 @@ in the `smart-factory` + `config-cascade` skills — invoke them before designin
   change the per-book contract.
 - **Everything is config-driven.** A behaviour that could reasonably vary is a config OPTION
   (enumerated + sensible default), never a baked-in branch — "should it do X or Y?" is answered
-  "neither, it's a config" (e.g. `format`, `outOfRange: 'throw' | 'clamp'`, hardening `'warn' | 'fail'`).
+  "neither, it's a config" (e.g. `format`, `outOfRange: 'throw' | 'clamp'`, the planned per-edge `clamp`).
 - **Three-tier cascade.** Each setting resolves: the unit's OWN key → the bundle `global` slot → the
   unit default. Set once in `global` (the only bundle-wide switch), a unit key overrides.
 - **Same shape all the way down — mirror `lexicons/calipers/src/bundle.ts`.** Every grouping (lexicon
@@ -177,19 +177,19 @@ embeds (its bound surfaces through `.constraints()`). `u` is the bare scalar and
   (`InRange<0,50>`, `NonNegative`) into the type on success. Additive, dropped by arithmetic. The
   editor feedback (see THE THESIS above).
 - **System B, the runtime bound** (stored `min`/`max`, `.constraints()`): carried through arithmetic,
-  enforced by the `hardening` reaction. Real data on the value.
+  enforced by **failing on breach**. Real data on the value.
 
 Surface: **bounded builders mint branded values** (`createInteger({ min, max })` -> `InRange<min,max>`).
 A bound is set ONCE at construction (a factory config OR per-value options, never both -> throws), then
 it is immutable; to change a bound you MINT A FRESH value (`i(v.value(), { min, max })`), the
 always-available escape. There is NO bound merging and NO in-place bound mutation.
 
-- **`clone()`** is a zero-arg, config-preserving copy (same value, bound, hardening, error config, a
+- **`clone()`** is a zero-arg, config-preserving copy (same value, bound, error config, a
   fresh instance); to change anything, mint fresh. There is no `sealed` and no clone patch: with no
   bound mutation, nothing needs locking.
-- **Terminology (absolute):** the bound is `constraints`, NEVER `hardening` (the `'warn' | 'fail'`
-  reaction). The value and its bound are both immutable. Full model + the two-systems table in
-  `docs/foundations.md`.
+- **Terminology (absolute):** the bound is `constraints`; breaching it **throws** — there is no
+  reaction knob (`hardening` retired 2026-07-21). The value and its bound are both immutable. Full
+  model + the two-systems table in `docs/foundations.md`.
 
 ### The two lazy-defaults exports (the zero-config path, absolute)
 

@@ -16,14 +16,15 @@ implement; copy it, never reinvent a per-feature scheme.
   (`m`), `createInteger` (`i`), `createFloat` (`f`), `createColor`. A bookends book:
   `publishBook<Name>`. The factory bakes the config into the unit it produces. No bare
   pre-made instance is the configurable path.
-- **Units of a KIND share an IDENTICAL config shape.** The config-bearing SCALARS (`i` / `f`)
-  carry the same shared field(s) for a cross-cutting numeric option, typed from ONE shared type,
-  never redefined. Example: `Hardening = 'ignore' | 'warn' | 'fail'` + `HardeningConfig` live once
-  in `lexicons/calipers/src/hardening.ts` and are imported by the `i` / `f` factory configs. A new
-  shared option is added to that one shared type, then it is automatically identical across the
-  scalars. `m` / `r` are CONTAINERS: they embed a scalar and carry NO numeric config, so they
-  cascade only their own non-numeric fields (`errorConfig`, plus `m`'s `unit` / `defaultUnit`) and
-  DELEGATE the numeric config (bound, hardening, modifier) to the scalar they hold.
+- **Units of a KIND share an IDENTICAL config shape.** Every unit carries the same shared field for a
+  cross-cutting option, typed from ONE shared type, never redefined. The live example is `errorConfig`:
+  its shared type + config slice live once (`lexicons/calipers/src/internal/errors.ts`) and are imported
+  by every unit factory. A new shared option is added to that one shared type, then it is automatically
+  identical across the units. The config-bearing SCALARS (`i` / `f`) ALSO share a numeric config shape
+  (the bound `min` / `max`, the modifier, and the planned per-edge `clamp`); `m` / `r` are CONTAINERS
+  that embed a scalar, carry NO numeric config, and DELEGATE all of it (bound, modifier, clamp) to the
+  scalar they hold, cascading only their own non-numeric fields (`errorConfig`, plus `m`'s
+  `unit` / `defaultUnit`).
 - **A bundle exposes `global` PLUS one key per unit.** `CalipersBundleConfig` (codex):
   `{ global?, measurement?, integer?, float?, ratio?, color? }`. `CompendiumConfig`:
   `{ global?, <book keys>…, calipers?: CalipersBundleConfig }`. The bundle factory must
@@ -32,7 +33,7 @@ implement; copy it, never reinvent a per-feature scheme.
 - **Resolution is `unit key -> bundle global -> factory default`** (most specific wins). In
   the user's words: set in BOTH the global and the unit key -> the unit key wins; only the
   global -> use the global; neither -> the factory default. One line per unit, e.g.
-  `hardening: config.integer?.hardening ?? config.global?.hardening` (then the factory applies
+  `errorConfig: config.integer?.errorConfig ?? config.global?.errorConfig` (then the factory applies
   its built-in default when that is `undefined`).
 - **Bundles NEST; the inner global overrides the outer.** The compendium carries the whole
   codex config under a `calipers` key and forwards it to `createCalipersBundle`, merging so a
@@ -42,13 +43,12 @@ implement; copy it, never reinvent a per-feature scheme.
   unit option, you ALSO add it to the bundle config + cascade in the SAME change. An option
   that only works standalone is a bug.
 - **Cross-cutting vs unit-local.** `errorConfig` is CROSS-CUTTING: it lives in every `global` and
-  reaches every error-producing unit. `hardening` is also carried in every `global`, but it reaches
-  the config-bearing SCALARS (`i` / `f`) only; `m` / `r` are containers with no numeric config, so a
-  measurement reacts to a broken bound only via the `i` / `f` it embeds. The constraint bound
-  (`min` / `max`) and `sealed` (`sealedMin` /
-  `sealedMax` / `sealedRange`) are UNIT-LOCAL, like `defaultUnit` / the colour config: set through a
-  unit's own key (or on the value itself), never a shared `global`. Do NOT add a `global` tier for a
-  unit-local option. See `docs/foundations.md` ("The two constraint systems") and `docs/config-flow.md`.
+  reaches every error-producing unit (the planned per-edge `clamp` will be the next cross-cutting
+  scalar option). The constraint bound (`min` / `max`) is UNIT-LOCAL, like `defaultUnit` / the colour
+  config: set through a unit's own key (or on the value itself), never a shared `global`. Do NOT add a
+  `global` tier for a unit-local option. A broken bound simply THROWS — there is no reaction knob (the
+  `hardening: 'warn' | 'fail'` config was retired 2026-07-21). See `docs/foundations.md` ("The two
+  constraint systems") and `docs/config-flow.md`.
 - **The publishBook engine has no global tier.** `self-publish/src/publishBook.ts` merges only
   `defaults <- config`. So per-book global resolution happens INSIDE `publishCompendium` (merge
   the global-applicable fields under each book's own config before calling the factory), and a
@@ -73,11 +73,11 @@ it by spreading it under the cascade, exactly like any other sub-factory:
 ```ts
 // src/scalar-bundle.ts — mirrors src/bundle.ts, one level down
 export const createScalarBundle = (config: ScalarBundleConfig = {}) => {
-  const cascade = (own) => ({ ...own, hardening: own?.hardening ?? config.global?.hardening });
+  const cascade = (own) => ({ ...own, errorConfig: own?.errorConfig ?? config.global?.errorConfig });
   return {
     ...createInteger(cascade(config.integer)),
     ...createFloat(cascade(config.float)),
-    ...createRatio(config.ratio), // ratio has no hardening; passes through
+    ...createRatio(cascade(config.ratio)), // ratio cascades errorConfig too
   };
 };
 
@@ -103,8 +103,8 @@ bundle levels:
 - **factory default** when neither is set,
 - and (for nested bundles) the **inner global overrides the outer**.
 
-Use a real worked option (today: `hardening`) with an observable effect (`ignore` proceeds,
-`fail` throws). Tighten throw-assertions to the real message (e.g. `toThrow(/maximum/)`) so a
+Use a real worked option (today: `errorConfig.stackHints`) with an observable effect (`'on'` shows the
+`stack=` block in a thrown error, `'off'` omits it). Assert on the real rendered message so a
 `TypeError` from an unbuilt API cannot pass spuriously. Reference: codex cascade tests live in
 `lexicons/calipers/tests/runtime/codex/codex.src.test.ts`.
 
@@ -113,7 +113,7 @@ Use a real worked option (today: `hardening`) with an observable effect (`ignore
 `lexicons/calipers/src/bundle.ts` (`createCalipersBundle` = the canonical cascade — MIRROR
 it for every new grouping; `src/codex.ts` only re-exports it);
 `createInteger` / `createFloat` in `lexicons/calipers/src/integer.ts` / `float.ts`;
-the shared `Hardening` / `HardeningConfig` in `lexicons/calipers/src/hardening.ts`;
+the shared error-config type in `lexicons/calipers/src/internal/errors.ts`;
 `packages/compendium/src/index.ts` (`publishCompendium`). Companion skills: `doc-test-code`
 (build order), `smart-factory` (the factory itself), `output-shape` (the `format` option).
 The concrete end-to-end MAP of every setting's path (compendium → codex → scalar family →

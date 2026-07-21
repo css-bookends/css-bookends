@@ -82,7 +82,7 @@ through every level (compendium → codex → scalar family → standalone lexic
 value types split by how much numeric control you want, so the simple path stays simple and you opt
 into complexity only when you need it. `m(5)` is breezy: it wraps a plain number in `u`, the bare
 scalar (finite math, no config, no ceremony). You reach for a config-bearing SCALAR only when you
-need constraints: `i` / `f` carry the bound, the hardening reaction, the modifier, and the
+need constraints: `i` / `f` carry the bound (enforced by failing on breach), the modifier, and the
 compile-time brands. `m` and `r` are CONTAINERS that embed a scalar and carry NO numeric config of
 their own (`m` = one scalar + a unit; `r` = two scalars), so numeric control always lives on the
 `i` / `f` you hand them (`m(i(700, { min: 1, max: 900 }), 'px')`) and composes up through the
@@ -133,8 +133,9 @@ is why spacing cannot be used alone, and why it is a lexicon but not a *codex* l
 A behaviour that could reasonably vary is a CONFIG OPTION, not a hardcoded decision. When the
 design forces a "should it do X or Y?" question, the answer is almost always "neither — it's a
 config" with a sensible default. Examples in play: output shape (`format: 'object' | 'string'`),
-out-of-range handling (`outOfRange: 'throw' | 'clamp'`), and how a scalar (`i` / `f`) reacts when
-arithmetic breaks its bound (`'warn' | 'fail'`).
+out-of-range handling in books (`outOfRange: 'throw' | 'clamp'`), and whether a bounded scalar
+(`i` / `f`) absorbs an out-of-range result (the planned per-edge `clamp` reaction). (A bounded
+scalar with no `clamp` simply **throws** on breach — that is not a config, it is the one rule.)
 
 - Expose the behaviour as an explicit, enumerated, named config value; never bake one branch in.
 - Ship a sensible DEFAULT (the most useful real behaviour), fully overridable.
@@ -217,33 +218,34 @@ The conformance rules that follow:
 - **`m()` / the lexicons stay PERMISSIVE.** Only truly-invalid input (non-finite) fails; range
   rules are not their job. Ordinary in-range variation (an opacity moving 1 -> 0.4) is never an
   error.
-- **Hardening is OPT-IN.** `m()`'s refinement quartet, and a bound on `i`/`f` (`i(v, {min,max})` /
+- **Bounds are OPT-IN.** `m()`'s refinement quartet, and a bound on `i`/`f` (`i(v, {min,max})` /
   `createInteger({min,max})`), let a consumer add strict bounds when they want them; it is never forced.
 
-### Hardening: config-driven reaction to loss / breach (locked 2026-06-29)
+### The runtime bound fails on breach (locked 2026-06-29; `warn` retired 2026-07-21)
 
 All numeric checking lives on the SCALARS. The config-bearing scalars `i` / `f` carry the bound
 (`i(v, {min,max})` / `createInteger({min,max})`, runtime bounds re-validated through arithmetic,
-exposed via `.constraints()`), the hardening reaction, and the modifier. A measurement ALSO keeps its
-refinement quartet (`nonNegative` / `nonPositive` / `inRange`) for stamping a compile-time brand on a
-measurement directly (System A, below). `m` itself carries NO numeric config: its options are only
-`{ unit, context }`, and there is no `hardenMeasurement`.
+exposed via `.constraints()`) and the modifier. A measurement ALSO keeps its refinement quartet
+(`nonNegative` / `nonPositive` / `inRange`) for stamping a compile-time brand on a measurement directly
+(System A, below). `m` itself carries NO numeric config: its options are only `{ unit, context }`, and
+there is no `hardenMeasurement`.
 
 `m()` accepts `number | i | f`. A plain number wraps in `u` (the bare scalar) and has no bound, so it
-never reacts. Hand `m` a bounded / hardened `i` / `f` instead — `m(i(v, { min, max }), 'px')` — and the
-measurement CARRIES that scalar's bound (exposed as a runtime `.constraints()`); ingestion itself is
-silent (nothing is lost, it is kept). What happens when later ARITHMETIC crosses (breaks) the carried
-bound is **config-driven** (per the first principle), set on the scalar, one knob with two values:
+never reacts. Hand `m` a bounded `i` / `f` instead — `m(i(v, { min, max }), 'px')` — and the measurement
+CARRIES that scalar's bound (exposed as a runtime `.constraints()`); ingestion itself is silent (nothing
+is lost, it is kept). When later ARITHMETIC crosses (breaks) the carried bound, the operation **fails
+(throws)**. There is no reaction knob: a bound you set is a bound you enforce. An in-bounds operation
+keeps the constraint; ingesting an unbounded scalar (or a plain number) carries nothing.
 
-- `'warn'` → proceed, but warn that the guarantee was broken (drops the now-violated constraint);
-- `'fail'` → throw (disallow the breaking operation).
-
-So `fail` gives enforce-through-math and `warn` a loose drop with a warning. (There is no silent
-"ignore": dropping a bound silently is the same as never bounding the value.) An in-bounds operation
-keeps the constraint; ingesting an UNHARDENED scalar (or a plain number) carries nothing. The config
-lives on the scalar factories (`createInteger` / `createFloat`) and is reachable from
-`createCalipersBundle` under the `integer` / `float` keys + the `global` cascade (default `fail`); it
-no longer reaches `m` or the unit helpers.
+**Why there is no "just warn" / "just ignore" mode.** Dropping a bound — silently or with a warning — is
+the same as never bounding the value, so if you do not want enforcement, use `u` (the unbounded scalar)
+and carry no bound. And a value that must survive out-of-range in production without crashing is served
+by clamping it to a valid limit, not by shipping the broken value (which CSS ignores anyway). So there
+are three real intents, each with its own tool: don't-enforce → `u`; catch-the-bug → the bound **throws**;
+stay-valid-without-crashing → the planned **`clamp`** opt-in (absorb to the limit). The old
+`hardening: 'warn' | 'fail'` knob is retired (2026-07-21): `warn` was dominated by `u` / `fail` / `clamp`
+in every direction and added no coherent behaviour, and with `fail` the sole reaction the config knob
+itself disappears.
 
 **The input `modifier` (generic normalization hook).** The scalar options take an optional
 `modifier: (n: number) => number`, applied to the raw value at INTAKE, before the bound is checked and
@@ -263,7 +265,7 @@ Constraints on a numeric value are really TWO orthogonal systems. Keep them apar
   brand (`InRange<0, 50>`, `NonNegative`, ...) into the type on success. It stores nothing at
   runtime, is ADDITIVE (brands stack), and is DROPPED by arithmetic. This is the editor feedback.
 - **System B, the runtime bound (stored min/max).** A per-instance `.constraints()` bound, carried
-  through arithmetic and enforced by the `hardening` reaction. This is real data on the value.
+  through arithmetic and enforced by **failing on breach**. This is real data on the value.
 
 The config-bearing SCALARS `i` / `f` carry BOTH: System B (the runtime bound) and System A (a brand on
 a bounded builder). `m` and `r` are CONTAINERS: they embed a scalar and hold no numeric config of
@@ -283,15 +285,15 @@ through the container. The surface that follows:
   (`i(v.value(), { min, max })`), the always-available escape (see "Calipers is the assembly language
   for CSS"). There is no in-place way to widen, narrow, or re-restrict a bound.
 - **`clone()`** returns an independent, config-preserving copy: the same value, the same bound, the
-  same hardening / error config, as a fresh instance. It takes NO arguments; to change anything, mint
+  same error config, as a fresh instance. It takes NO arguments; to change anything, mint
   a fresh value.
 - **Arithmetic re-checks at runtime and re-proves in the editor.** A derived value re-validates its
-  bound in JS (the `hardening` reaction fires on breach) and DROPS its brand (the type system cannot
+  bound in JS (**a breach throws**) and DROPS its brand (the type system cannot
   know the result's magnitude), so the result is unproven and must be re-checked before it re-enters
   a bounded slot.
 
-Terminology guardrails: the bound is **`constraints`**, never `hardening` (which stays the name of
-the `'warn' | 'fail'` reaction). The value is already immutable (every operation returns a new
+Terminology guardrails: the bound is **`constraints`**; breaching it **throws** — there is no reaction
+knob (`hardening` is retired 2026-07-21). The value is already immutable (every operation returns a new
 instance), and its bound is immutable too: there is no mutation API, so no separate lock concept is
 needed.
 

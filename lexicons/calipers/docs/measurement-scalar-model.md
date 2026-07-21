@@ -27,14 +27,14 @@ purpose is to be neutral, so it carries no typed-input machinery.
   `floor` / `ceil`, `negation`, `absolute`); introspection (`value` / `valueOf` / `css` / `kind` /
   `isInt` / `isFloat`, `constraints()` returning `{}`); `withValue` / `clone`; and the error plumbing it
   needs to live inside `m` (`errorStore`, `wrapperLabel`, `context`).
-- **Drops:** the stored bound (`min` / `max`), the modifier, and the hardening reaction. With no bound
-  there is no breach, so hardening is moot.
+- **Drops:** the stored bound (`min` / `max`) and the modifier. With no bound there is no breach to
+  enforce.
 
 `clamp` / `round` / `floor` / `ceil` stay because they are one-shot computations on explicit arguments,
 not a stored, re-validating bound.
 
 ### `i` / `f` are the opt-in systems
-All checking lives here: the stored bound, the hardening reaction, the modifier, integer-ness, and the
+All checking lives here: the stored bound (throws on breach), the modifier, integer-ness, and the
 compile-time brands (System A). If you care about any of it, you reach for `i` / `f`.
 
 ### The two-level scalar base
@@ -44,7 +44,7 @@ The class hierarchy encodes the opt-in model so a bound on `u` is impossible, no
   `withValue` / `clone` / `embedUnder`, and the abstract kind hooks (`label`, `validateInput`,
   `rebuildWith`).
 - **Checked base** (extends the bare base; `i` / `f` extend it): adds the stored bound + real
-  `constraints()`, the hardening reaction, the modifier, the integer-input diagnostic, the
+  `constraints()` (throwing on breach), the modifier, the integer-input diagnostic, the
   refinement / brand hooks, and the branded `clamp` override.
 
 The intake pipeline (`modify -> validate(kind) -> enforce-bound`) is not split by `super()` layering:
@@ -54,8 +54,9 @@ finiteness + `validateInput` + store, and the checked body enforces the bound af
 
 ### A measurement gets config only by ingestion
 Because `m` holds a scalar and delegates, an ingested `i` / `f`'s own config governs through `m`:
-`m(i(8, { min: 0, max: 10, hardening: 'warn' })).multiply(2)` warns because the `i` says so. That is
-"`m` ingests the hardening". A plain-number measurement (a `u`) has no bound, so it never reacts.
+`m(i(8, { min: 0, max: 10 })).multiply(2)` throws because the `i`'s bound says so (16 breaks `[0, 10]`).
+That is "`m` ingests the scalar's enforcement". A plain-number measurement (a `u`) has no bound, so it
+never reacts.
 
 ### Unit helpers = like `m`, for now
 `mDeg`, `mPx`, etc. are `m` with a preset unit and are config-free for now: `mDeg(numberOrScalar)`
@@ -78,9 +79,11 @@ that lands on the scalar is a parked open question (below).
   disappears; there are no numeric options left to conflict.
 - Hardening leaves `createCalipers` / `createCoreApi` (the `hardening` param) and the bundle:
   `CalipersBundleConfig.measurement` loses `hardening`, and `global.hardening` no longer reaches
-  measurements (it still governs `integer` / `float` / `ratio`).
+  measurements. *(Update 2026-07-21: `hardening` is now retired ENTIRELY, see todo §3; it no longer
+  governs `integer` / `float` / `ratio` either. A breached bound throws; there is no reaction knob.)*
 - The `config-cascade` skill and `config-flow.md` move their worked cascade example from `m` to the
-  scalar family (`i` / `f` / `ratio`).
+  scalar family (`i` / `f` / `ratio`). *(Update 2026-07-21: with `hardening` retired, that worked
+  example is now `errorConfig`.)*
 - Roughly a third of the 3b.1 / 3b.2 construction logic comes back out (the bounded-`u` path, `m`'s
   numeric options, the plain-number hardening path). What survives: the embed itself (`m` holds a
   scalar and delegates), ingestion of a passed `i` / `f`, and the `wrapperLabel` / `embedUnder` error
