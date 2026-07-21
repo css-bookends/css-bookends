@@ -3,6 +3,12 @@
 Guidance for agents working in CSS-Bookends. See `ARCHITECTURE.md` for the full
 factory + book model, and each package's `design.md` / `notes.md` for specifics.
 
+> **How this file works (the contract).** Each rule below has ONE canonical home, here. Other docs
+> (`.claude/CLAUDE.md`, package READMEs, skills) LINK to it, they do NOT restate it. Every line is
+> absolute and enough to obey on its own; follow a `→ skill:` pointer for the procedure and a
+> `→ docs/` pointer for depth. One home per rule, link don't duplicate — that is what stops these from
+> drifting.
+
 ## All packages stay PUBLIC (absolute)
 
 Every package here is public, INCLUDING test / `e2e` packages. NEVER set `"private": true`,
@@ -12,9 +18,8 @@ explicit, repeated instruction. (Full statement in `.claude/CLAUDE.md`.)
 
 ## Architecture: the three layers (canonical, ABSOLUTE)
 
-The same statement lives in `.claude/CLAUDE.md`, the package READMEs, and the skills.
-Keep them in sync. For the map at a glance (units × bundles, plus the foundation→family model),
-see `docs/foundations.md` ("The map"). The stack is three strictly-separated layers, each with one
+For the map at a glance (units × bundles, plus the foundation→family model), see
+`docs/foundations.md` ("The map"). The stack is three strictly-separated layers, each with one
 job (a Layer-1 unit is a **lexicon**; "primitive" is the retired synonym):
 
 1. **css-calipers (Layer 1), typed CSS input LEXICONS only.** Fills the gap where
@@ -90,101 +95,76 @@ WINS. "calipers reads as complete / standalone" governs how the MIRROR presents 
 outranks what bookends requires. Order of work: change calipers HERE for bookends first, THEN
 verify the mirror still publishes cleanly.
 
+### css-calipers positioning (README, docs, all public copy) (absolute)
+
+- NEVER knock or disparage `csstype`. It is loved and used as a DEPENDENCY. Frame
+  calipers as COMPLEMENTARY to csstype, never a replacement and never a criticism.
+- Lead with the gap calipers fills: csstype types the shape of CSS well, but leaves
+  gaps for certain typed CSS INPUT values (e.g. a property type allows a bare
+  `number` / `string`, so you cannot construct a build-time-validated value). calipers
+  fills exactly that gap: typed, validated CSS input values that still satisfy csstype
+  on output.
+- Keep it SMALL and focused. Trim exhaustive feature dumps; lead with the goal and the
+  space it fills, then concise examples, and link to `docs/` for depth. Do not oversell.
+- calipers is and stays a STANDALONE library that fills a gap; it must read as complete
+  and useful on its own (you never need bookends to use it). Pointing to the larger
+  CSS-Bookends project (helpers on top, Layer 2; CSS Squire the opinionated Layer 3) is
+  welcome but SECONDARY: a "there is more if you want it" note, never a framing that
+  makes calipers feel incomplete without it or subordinate to it. (This governs how the
+  MIRROR presents itself; per "Source of truth" above, standalone NEVER outranks a bookends need.)
+
+### css-bookends positioning (README, docs, public copy) (absolute)
+
+- The dream, in one line: TYPED INPUT and TYPED OUTPUT with a LOOSE MIDDLE. Typed CSS
+  input values (calipers) go in, a typed `.css()` output that satisfies csstype comes
+  out, and the middle, composing helpers and books, stays flexible and ergonomic. Type
+  safety is anchored at the two ends; you are not forced to type every intermediate
+  step. That is the whole appeal of the helper layer.
+- Bookends is the helper layer that turns those typed inputs into something useful;
+  emphasize the typed-ends, loose-middle framing as its reason to exist.
+
 ### Consume helpers from a factory, never import directly (absolute)
 
-Every helper (lexicon or book) is produced by a factory. Consume the factory, or
-an instance the composition root made from it, never the raw helper/value-function
-imported straight from its module.
+Every helper (lexicon or book) is produced by a factory; consume the factory (or an instance the
+composition root bound from it), never the raw value-function. Full rationale + the bind-once-export
+pattern: `docs/factory-first-pattern.md`. The factory / cascade / bundle procedure and examples live
+in the `smart-factory` + `config-cascade` skills — invoke them before designing any factory or bundle.
 
-See `docs/factory-first-pattern.md` for the full rationale: why the factory is the
-one supported construction path, and the recommended bind-once-and-export pattern.
-
-**Examples and tests dogfood this (absolute).** Example files consume helpers the
-recommended way: bind a factory once (at the top of the file, or via a binding
-module) and use that, never a bare value-function. An example may break best
-practice ONLY when demonstrating that the inline / non-recommended path also works
-is the explicit POINT of that example, and it says so (e.g. the labelled inline `p`
-in `examples/bind-once/`). The test suite follows the same rule: default tests
-import their helpers from the shared bound codex in `tests/support/` (bind once,
-re-export), and only tests whose SUBJECT is a factory / its config, or the built
-artifact, construct their own instances.
-
-- **Factory naming: `publishBook<BookName>`.** A book's factory is named with the
-  `publishBook` prefix plus the book's name, e.g. `publishBookBorders`,
-  `publishBookShadows`, `publishBookOpacity`. The engine (`@css-bookends/self-publish`)
-  exposes `publishBook`, which binds a book from its manuscript. Do NOT use
-  `make*` / `create*` for a book factory.
-
-The public surface of a per-book package is its factory; a per-book package ships no
-pre-made default instance. The compendium is the one aggregate on top: its entry is the
-`publishCompendium` factory itself, and a bare `publishCompendium()` is the lazy-defaults
-form (every book bound at defaults). That aggregate does not change the per-book contract.
-
-- **A book package exports its `publishBook<Name>` factory** (plus value builders and
-  composition helpers where useful, e.g. `anchorSize`, or margin/padding's `parse*`/`store*`),
-  never a pre-made instance as the consumer entry. A consumer binds a book once
-  (`const borders = publishBookBorders()`) and calls it.
-- **The compendium (aggregate root).** `@css-bookends/compendium`'s entry IS the
-  `publishCompendium` factory, exported as the package's DEFAULT export (the entry file is
-  the factory). A bare `publishCompendium()` binds every active book at its own defaults
-  (the lazy-defaults form); passing a master `CompendiumConfig` configures any subset.
-  `CompendiumConfig` is an amalgam: an optional `global` slot of shared options PLUS one
-  OPTIONAL key per configurable book, each keyed to that book's own config type
-  (`{ global?: { format?: 'object' | 'string'; … }; color?: Partial<ColorConfig>;
-  opacity?: OpacityConfig; borders?: BordersConfig; ... }`). The factory fans each sub-config
-  into the matching `publishBook<Name>` and binds the rest at defaults. It returns every book
-  bound in one object and does NOT re-export raw helpers, so a raw value-helper is not reachable
-  through it. This aggregate sits ON TOP of the per-book factories; it does not change the
-  per-book contract (each package still exports only its `publishBook<Name>`, no pre-made
-  instance).
-- **Everything is config-driven (absolute, first principle).** A behaviour that could reasonably
-  vary is a config OPTION (an explicit, enumerated value with a sensible default), never a hardcoded
-  decision. When the design forces a "should it do X or Y?" choice, the answer is "neither — it's a
-  config." Do not bake one branch in. Every such option then follows the cascade +
-  bundle-reachability rules below. (Examples: `format: 'object' | 'string'`,
-  `outOfRange: 'throw' | 'clamp'`, the hardening reaction `'warn' | 'fail'`.)
-- **Three-tier config cascade (absolute).** A bundle (`publishCompendium`, `createCalipersBundle`)
-  resolves every setting per unit as: the unit's OWN keyed config -> the bundle's `global` slot
-  (where that option applies) -> the unit's built-in default. Set a value once in `global` and
-  every applicable unit inherits it; a unit's own key overrides. The `global` slot is the only
-  way to set a value across the whole bundle at once.
-- **Same pattern all the way down; mirror `src/bundle.ts` (absolute).** Every grouping is the
-  SAME bundle-factory shape, recursively: a lexicon family (e.g. `scalar` = integer/float/ratio),
-  the codex, the compendium. Each has a `global` slot + one OPTIONAL key per sub-factory + a
-  `cascade` helper + a body that SPREADS every sub-factory (called through the cascade) into one
-  bound object. A sub-factory can itself be a bundle: the codex composes a family bundle exactly
-  as it composes a lexicon factory. `createCalipersBundle` in `lexicons/calipers/src/bundle.ts`
-  is the ONE canonical implementation. Before designing or changing ANY factory, bundle, or NEW
-  grouping / family factory, invoke the `config-cascade` + `smart-factory` skills and MIRROR
-  `src/bundle.ts` — never design a bundle shape from memory. A grouping that does not take
-  `global` and cascade is wrong; the answer to "should this be its own new shape?" is always
-  "no, mirror the bundle."
-- **A book self-instantiates its dependencies; it never REQUIRES their config (absolute).** When
-  a book needs a calipers lexicon configured a certain way, it CREATES its own calipers
-  instance via the factory (`createCalipers` / `createColor`) with the config it needs, INTERNAL
-  to the book. A book never asks the consumer to pass a calipers config through, and never takes
-  a hard dependency on a shared calipers instance. This keeps books decoupled from calipers'
-  config surface and minimizes the config a consumer ever has to supply. (The compendium's
-  `calipers` slot configures the calipers LAYER you use directly through the bundle; it is not a
-  channel for wiring an individual book's internal calipers needs.)
-- **Call sites bind, then call** (`const borders = publishBookBorders(); borders(spec).css()`),
-  or pull a bound book off `publishCompendium()`. Pass config at bind time
-  (`publishBookBorders({ config })`), or via the matching `CompendiumConfig` key when
-  configuring through the compendium (`publishCompendium({ color: { config } })`).
-- **Never reach past the factory** to import the underlying value-helper as the consumer
-  entry, even when it is exported from its own package for the factory's use.
-- **Exception: `css-calipers` (the codex bundle and its lexicons).** A lexicon is consumed
-  directly via its `create*` factory (`createCalipers` → `m()`, `createColor` → `color()`), not
-  via a `publishBook` factory; `m()` / `color()` are those factories bound at defaults.
-- **Exception: composed books (a DOCUMENTED namespace class).** A small, fixed set of
-  books are multi-function utility namespaces, not single value->CSS manuscripts, so they
-  expose NO `publishBook<Name>` factory: `shadows`, `positioning`, `supports-fallback`,
-  `backdrop-filter`, `transforms`. Their public surface is the namespace of pure
-  functions (`backdropFilterValue` / `backdropFilterStyle`, `transformValue` /
-  `transformStyle`, etc.). They ALSO ship NO pre-made bound instance and no default
-  export: there is no bound default anywhere in the books layer. The compendium binds
-  each of these via `import * as X` under its namespace. This list is closed; a new
-  per-property / per-value book is a `publishBook<Name>` factory, never a namespace.
+- **Factory naming: `publishBook<Name>`** (e.g. `publishBookBorders`), bound from a manuscript by
+  `@css-bookends/self-publish`. NEVER `make*` / `create*` for a book factory.
+- **A book package exports ONLY its `publishBook<Name>` factory** (plus value builders / composition
+  helpers where useful), never a pre-made instance as the consumer entry. Bind once
+  (`const borders = publishBookBorders()`), then call; pass config at bind time.
+- **The compendium is the aggregate root.** `@css-bookends/compendium`'s DEFAULT export IS
+  `publishCompendium`; a bare `publishCompendium()` binds every book at defaults (lazy form), a
+  `CompendiumConfig` (a `global` slot + one optional key per book) configures any subset. It fans
+  each sub-config into the matching `publishBook<Name>`, re-exports NO raw helpers, and does not
+  change the per-book contract.
+- **Everything is config-driven.** A behaviour that could reasonably vary is a config OPTION
+  (enumerated + sensible default), never a baked-in branch — "should it do X or Y?" is answered
+  "neither, it's a config" (e.g. `format`, `outOfRange: 'throw' | 'clamp'`, hardening `'warn' | 'fail'`).
+- **Three-tier cascade.** Each setting resolves: the unit's OWN key → the bundle `global` slot → the
+  unit default. Set once in `global` (the only bundle-wide switch), a unit key overrides.
+- **Same shape all the way down — mirror `lexicons/calipers/src/bundle.ts`.** Every grouping (lexicon
+  family, codex, compendium) is the same bundle-factory shape: a `global` slot + one optional key per
+  sub-factory + a `cascade` helper spreading each sub-factory into one bound object; a sub-factory can
+  itself be a bundle. Never design a bundle shape from memory; "should this be a new shape?" is always
+  "no, mirror the bundle." (Detail: `config-cascade` skill.)
+- **A book self-instantiates its dependencies; it never REQUIRES their config.** It creates its own
+  calipers instance (`createCalipers` / `createColor`) internally with the config it needs; it never
+  threads a calipers config through the consumer or hard-depends on a shared instance. (The
+  compendium's `calipers` slot configures the calipers LAYER you use directly, not a book's internals.)
+- **Never reach past the factory** to import the underlying value-helper as the consumer entry.
+- **Examples and tests dogfood this.** Examples bind a factory once and use it (a bare value-function
+  only when demoing that the inline path works is the explicit POINT, and it says so). Default tests
+  import helpers from the bound codex in `tests/support/`; only factory-subject / built-artifact tests
+  construct their own instances.
+- **Exception: `css-calipers`.** A lexicon is consumed via its `create*` factory (`createCalipers` →
+  `m()`, `createColor` → `color()`); `m()` / `color()` are those factories bound at defaults.
+- **Exception: composed books (closed, documented namespace class).** `shadows`, `positioning`,
+  `supports-fallback`, `backdrop-filter`, `transforms` expose NO `publishBook<Name>` factory — their
+  surface is a namespace of pure functions, and they ship no bound instance / no default export. The
+  list is closed; a new per-property / per-value book is always a `publishBook<Name>` factory.
 
 ### Constraints and brands (the two systems, absolute)
 
@@ -357,16 +337,17 @@ per-package ESLint `--fix`, then per-package `tsc --noEmit`, then Prettier. It
 is a safety net, not a substitute: leave the tree already clean rather than
 relying on the hook.
 
-### Test-first, always (absolute)
+### Testing (absolute)
 
-When adding or changing behaviour that needs tests, write the tests FIRST and confirm they
-genuinely FAIL against the current code before writing any implementation. The failing test is
-the spec.
+Every line is a hard rule; procedure, examples, and the full rationale live in the
+`doc-test-code` skill.
 
-- NEVER `it.skip` / `it.todo` / `xit`, or an always-passing assertion. A deliberately-failing
-  stub must stay RED and visible (`expect.fail('not implemented')`), never skipped or todo'd.
-- Confirm the red by running the test BEFORE writing the implementation.
-- A type-level change MUST have a `tsd` test that does NOT compile against the old types (a
-  runtime test that is green from the start does not validate a type-level change).
-- Report test status ACCURATELY: never call a suite green or done while anything is red.
-- Only once the test is truly red do you implement to make it green.
+- **Test-first.** Changed or new behaviour gets a test you confirm FAILS (run it) against the
+  current code before you implement. The failing test is the spec.
+- **Red-first for type-level changes.** Use a `tsd` test that does NOT compile against the old
+  types; a runtime test green from the start does not validate a type-level change.
+- **No fake-green.** Never `it.skip` / `it.todo` / `xit` or an always-passing assertion; a
+  deliberately-failing stub stays RED and visible (`expect.fail('not implemented')`).
+- **Full-matrix coverage.** Test every `(outcome × type × position)` cell; never skip one as
+  "unreachable" or "caught upstream" — that cell is the one that regresses when its other guard moves.
+- **Report honestly.** Never call a suite green or done while anything is red.
