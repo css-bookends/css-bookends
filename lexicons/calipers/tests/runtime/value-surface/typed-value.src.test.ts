@@ -1,5 +1,5 @@
 // Value introspection + interconversion: .isInt() / .isFloat() (by the numeric
-// value) and .toTypedValue() (recover the matching unitless i() / f()). Uniform
+// value) and .asScalar() (recover the matching unitless i() / f()). Uniform
 // across m / i / f.
 import { describe, expect, it } from 'vitest';
 
@@ -25,22 +25,22 @@ describe('value introspection: .isInt() / .isFloat()', () => {
   });
 });
 
-describe('value interconversion: .toTypedValue()', () => {
+describe('value interconversion: .asScalar()', () => {
   it('measurement -> unitless i / f by value', () => {
-    const ti = m(8).toTypedValue();
+    const ti = m(8).asScalar();
     expect(ti.value()).toBe(8);
     expect(ti.unit()).toBe('');
     expect(ti.isInt()).toBe(true);
 
-    const tf = m(2.5, 'rem').toTypedValue();
+    const tf = m(2.5, 'rem').asScalar();
     expect(tf.value()).toBe(2.5);
     expect(tf.isFloat()).toBe(true);
   });
 
   it('integer -> i; float -> i when integral, f when fractional', () => {
-    expect(i(4).toTypedValue().value()).toBe(4);
-    expect(i(4).toTypedValue().isInt()).toBe(true);
-    expect(f(3).toTypedValue().isInt()).toBe(true);
-    expect(f(2.5).toTypedValue().isFloat()).toBe(true);
+    expect(i(4).asScalar().value()).toBe(4);
+    expect(i(4).asScalar().isInt()).toBe(true);
+    expect(f(3).asScalar().isInt()).toBe(true);
+    expect(f(2.5).asScalar().isFloat()).toBe(true);
   });
 });

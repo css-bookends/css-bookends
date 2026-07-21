@@ -48,7 +48,7 @@ export interface IFloat {
   constraints: () => FloatConstraints;
   isInt: () => boolean;
   isFloat: () => boolean;
-  toTypedValue: () => IInteger | IFloat;
+  asScalar: () => IInteger | IFloat;
   withValue: (value: number) => IFloat;
   add: (delta: Scalar) => IFloat;
   subtract: (delta: Scalar) => IFloat;
@@ -148,7 +148,7 @@ class FloatImpl extends ScalarRestricted implements IFloat {
     >;
   }
 
-  toTypedValue(): IInteger | IFloat {
+  asScalar(): IInteger | IFloat {
     return Number.isInteger(this.value())
       ? i(this.value())
       : f(this.value());

@@ -34,7 +34,7 @@ export const category = m(8).category(); // 'length-absolute'
 export const isAbsolute = m(8).isAbsolute(); // true
 export const isRelative = m(2, 'rem').isRelative(); // true
 export const isPercent = m(50, '%').isPercent(); // true
-export const recovered = m(2.5).toTypedValue().css(); // '2.5'  (fractional -> f)
+export const recovered = m(2.5).asScalar().css(); // '2.5'  (fractional -> f)
 export const integral = m(8).isInt(); // true
 
 // --- m carries an ingested hardened bound; reaction is config-driven ------------

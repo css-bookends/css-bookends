@@ -122,7 +122,7 @@ const coerce = (value: Scalar): number => toNumber(value);
  *
  * `IntegerImpl` / `FloatImpl` / `UnspecifiedImpl` supply ONLY what differs per kind: the message
  * label (`i` / `f` / `u`), the extra input invariant (integers reject non-integers; floats and
- * unspecified accept any finite value), how a derived value is rebuilt, and `toTypedValue`. Every
+ * unspecified accept any finite value), how a derived value is rebuilt, and `asScalar`. Every
  * value-producing method returns `this`, so each subclass keeps its own concrete type through
  * arithmetic and `clone`.
  */

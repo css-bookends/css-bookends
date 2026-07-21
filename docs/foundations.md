@@ -193,7 +193,7 @@ ratio `.numerator()`/`.denominator()`). The conformance target:
   change, no deprecation window). So `result.value.value()` / `result.value.unit()` are uniform
   whether the leaf is a scalar or a measurement.
 - **`m()` accepts `number | i | f`** (via the existing `Scalar` / `toNumber`), not just `number`.
-- **Interconversion helpers on every value:** a generic `.toTypedValue()` (returns the matching
+- **Interconversion helpers on every value:** a generic `.asScalar()` (returns the matching
   `i()`/`f()`) plus `.isInt` / `.isFloat` queries (modelled on the colour object's queries), so a
   value can be recovered as a typed scalar through `.value`.
 - **CLOSED, not doing: type-through-math.** Values keep their kind through arithmetic. CSS does

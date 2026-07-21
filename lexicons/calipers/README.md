@@ -153,7 +153,7 @@ color('#3366cc80', { strictness: 'silent' }).rgb().css(); // 'rgb(51, 102, 204)'
 
 `m(value, unit?)` builds a measurement (unit defaults to `px`, lower-cased). Arithmetic, `round`, and `clamp` return new measurements in the same unit. Per-unit helpers bind the unit (`mPx`, `mEm`, `mRem`, `mPercent`, `mCqw`, ...) across every unit family: absolute, font-relative, viewport, container, angle, time, frequency, resolution, and grid.
 
-`m()` accepts a plain number OR a typed scalar (`m(i(8))`, `m(f(2.5), 'rem')`). The raw accessor is uniform across measurements, integers, and floats: `.value()` (the raw number) and `.unit()` (the unit string, empty for the unitless scalars); the old `.getValue()` / `.getUnit()` are removed (a breaking change). Recover a typed scalar with `.toTypedValue()` (returns `i()` when the value is integral, else `f()`), and query a value with `.isInt()` / `.isFloat()`. A measurement also reports its CSS category, `.category()` (e.g. `'length-absolute'`, `'percent'`, `'angle'`, or `undefined` for an unknown unit), plus `.isLength()` / `.isAbsolute()` / `.isRelative()` / `.isPercent()` / `.isAngle()`.
+`m()` accepts a plain number OR a typed scalar (`m(i(8))`, `m(f(2.5), 'rem')`). The raw accessor is uniform across measurements, integers, and floats: `.value()` (the raw number) and `.unit()` (the unit string, empty for the unitless scalars); the old `.getValue()` / `.getUnit()` are removed (a breaking change). Recover a typed scalar with `.asScalar()` (returns `i()` when the value is integral, else `f()`), and query a value with `.isInt()` / `.isFloat()`. A measurement also reports its CSS category, `.category()` (e.g. `'length-absolute'`, `'percent'`, `'angle'`, or `undefined` for an unknown unit), plus `.isLength()` / `.isAbsolute()` / `.isRelative()` / `.isPercent()` / `.isAngle()`.
 
 ```ts
 import { m, i } from '@css-bookends/css-calipers';
@@ -164,7 +164,7 @@ m(2.5, 'rem').unit();   // 'rem'
 m(8).category();        // 'length-absolute'
 m(8).isAbsolute();      // true
 m(50, '%').isPercent(); // true
-m(2.5).toTypedValue();  // f(2.5)             (integral -> i, fractional -> f)
+m(2.5).asScalar();  // f(2.5)             (integral -> i, fractional -> f)
 ```
 
 ## Integers and floats

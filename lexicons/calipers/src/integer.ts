@@ -48,7 +48,7 @@ export interface IInteger {
   constraints: () => IntegerConstraints;
   isInt: () => boolean;
   isFloat: () => boolean;
-  toTypedValue: () => IInteger;
+  asScalar: () => IInteger;
   withValue: (value: number) => IInteger;
   add: (delta: Scalar) => IInteger;
   subtract: (delta: Scalar) => IInteger;
@@ -168,7 +168,7 @@ class IntegerImpl extends ScalarRestricted implements IInteger {
     >;
   }
 
-  toTypedValue(): IInteger {
+  asScalar(): IInteger {
     return i(this.value());
   }
 }

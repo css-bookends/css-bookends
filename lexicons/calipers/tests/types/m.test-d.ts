@@ -28,6 +28,11 @@ import {
 
 const implicit = m(10);
 expectAssignable<IMeasurement<string>>(implicit);
+
+// The value-surface accessor is `asScalar()` (a view of the value as a scalar, not a conversion);
+// the obscure `toTypedValue` name is removed.
+m(10).asScalar();
+expectError(m(10).toTypedValue());
 expectAssignable<PxMeasurement>(implicit);
 
 const explicitPx = m(10, 'px');

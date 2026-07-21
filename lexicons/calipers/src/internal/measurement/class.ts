@@ -83,7 +83,7 @@ export const makeMeasurementClass = (
       return this.#scalar.isFloat();
     }
 
-    toTypedValue() {
+    asScalar() {
       const value = this.#scalar.value();
       return this.#scalar.isInt() ? i(value) : f(value);
     }

@@ -83,7 +83,7 @@ export interface IMeasurement<Unit extends string = string> {
   isInt: () => boolean;
   isFloat: () => boolean;
   /** Recover the matching unitless typed scalar (`i()` if integral, else `f()`). */
-  toTypedValue: () => IInteger | IFloat;
+  asScalar: () => IInteger | IFloat;
   /** The unit's CSS category (e.g. `'length-absolute'`), or `undefined` for an unknown unit. */
   category: () => UnitCategory | undefined;
   /** True for any length unit (absolute or relative). */
