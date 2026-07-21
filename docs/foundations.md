@@ -78,6 +78,16 @@ older synonym for "lexicon"; prefer **lexicon**.) For the full end-to-end path a
 through every level (compendium → codex → scalar family → standalone lexicon), see
 `docs/config-flow.md`.
 
+**Graduated control within the calipers lexicons (keep it simple, add complexity as needed).** The
+value types split by how much numeric control you want, so the simple path stays simple and you opt
+into complexity only when you need it. `m(5)` is breezy: it wraps a plain number in `u`, the bare
+scalar (finite math, no config, no ceremony). You reach for a config-bearing SCALAR only when you
+need constraints: `i` / `f` carry the bound, the hardening reaction, the modifier, and the
+compile-time brands. `m` and `r` are CONTAINERS that embed a scalar and carry NO numeric config of
+their own (`m` = one scalar + a unit; `r` = two scalars), so numeric control always lives on the
+`i` / `f` you hand them (`m(i(700, { min: 1, max: 900 }), 'px')`) and composes up through the
+container. You opt in to a checked system, or you don't. (Full model: `docs/measurement-scalar-model.md`.)
+
 Consumption is one-way: **lexicon → book → squire (TBD)**. A book peer-depends on the lexicons it
 uses and self-instantiates them; a lexicon never depends on a book.
 
@@ -123,8 +133,8 @@ is why spacing cannot be used alone, and why it is a lexicon but not a *codex* l
 A behaviour that could reasonably vary is a CONFIG OPTION, not a hardcoded decision. When the
 design forces a "should it do X or Y?" question, the answer is almost always "neither — it's a
 config" with a sensible default. Examples in play: output shape (`format: 'object' | 'string'`),
-out-of-range handling (`outOfRange: 'throw' | 'clamp'`), and how `m` reacts to a lost/broken
-hardening (`'warn' | 'fail'`).
+out-of-range handling (`outOfRange: 'throw' | 'clamp'`), and how a scalar (`i` / `f`) reacts when
+arithmetic breaks its bound (`'warn' | 'fail'`).
 
 - Expose the behaviour as an explicit, enumerated, named config value; never bake one branch in.
 - Ship a sensible DEFAULT (the most useful real behaviour), fully overridable.
@@ -212,38 +222,38 @@ The conformance rules that follow:
 
 ### Hardening: config-driven reaction to loss / breach (locked 2026-06-29)
 
-Each value type keeps its existing hardening tools: a bound on the scalars (`i(v, {min,max})` /
-`createInteger({min,max})`, runtime bounds re-validated through arithmetic, exposed via
-`.constraints()`), and `m`'s refinement quartet (`nonNegative` / `nonPositive` / `inRange`) for
-hardening a measurement directly.
-`m` ALSO takes a DIRECT construction bound via its options object — `m(v, { min, max })` — making it a
-directly-bounded lexicon like `i`/`f` (a direct bound is checked at construction). A measurement's bound
-therefore comes from ONE source: the direct `min`/`max`, an ingested hardened scalar, or the refinement
-quartet — passing both a direct bound AND an ingested-scalar bound throws (a bound is set once). There
-is no `hardenMeasurement`.
+All numeric checking lives on the SCALARS. The config-bearing scalars `i` / `f` carry the bound
+(`i(v, {min,max})` / `createInteger({min,max})`, runtime bounds re-validated through arithmetic,
+exposed via `.constraints()`), the hardening reaction, and the modifier. A measurement ALSO keeps its
+refinement quartet (`nonNegative` / `nonPositive` / `inRange`) for stamping a compile-time brand on a
+measurement directly (System A, below). `m` itself carries NO numeric config: its options are only
+`{ unit, context }`, and there is no `hardenMeasurement`.
 
-`m()` accepts `number | i | f`. When it ingests a HARDENED `i`/`f`, `m` CARRIES the bound (exposed
-as a runtime `.constraints()`); ingestion itself is silent (nothing is lost, it is kept). What
-happens when later ARITHMETIC on that hardened `m` crosses (breaks) the carried bound is
-**config-driven** (per the first principle), one knob with two values:
+`m()` accepts `number | i | f`. A plain number wraps in `u` (the bare scalar) and has no bound, so it
+never reacts. Hand `m` a bounded / hardened `i` / `f` instead — `m(i(v, { min, max }), 'px')` — and the
+measurement CARRIES that scalar's bound (exposed as a runtime `.constraints()`); ingestion itself is
+silent (nothing is lost, it is kept). What happens when later ARITHMETIC crosses (breaks) the carried
+bound is **config-driven** (per the first principle), set on the scalar, one knob with two values:
 
 - `'warn'` → proceed, but warn that the guarantee was broken (drops the now-violated constraint);
 - `'fail'` → throw (disallow the breaking operation).
 
-So `fail` gives the `i`/`f`-style enforce-through-math and `warn` a loose drop with a warning. (There
-is no silent "ignore": dropping a bound silently is the same as never bounding the value.) An
-in-bounds operation keeps the constraint; ingesting an UNHARDENED scalar carries nothing. The config
-lives on `CalipersFactoryConfig` (today `{ errorConfig? }`) and is reachable from
-`createCalipersBundle` under the `measurement` key + the `global` cascade (default `fail`).
+So `fail` gives enforce-through-math and `warn` a loose drop with a warning. (There is no silent
+"ignore": dropping a bound silently is the same as never bounding the value.) An in-bounds operation
+keeps the constraint; ingesting an UNHARDENED scalar (or a plain number) carries nothing. The config
+lives on the scalar factories (`createInteger` / `createFloat`) and is reachable from
+`createCalipersBundle` under the `integer` / `float` keys + the `global` cascade (default `fail`); it
+no longer reaches `m` or the unit helpers.
 
-**The input `modifier` (generic normalization hook).** `m`'s options also take an optional
-`modifier: (n: number) => number`, applied to the raw value at INTAKE — before the bound is checked and
+**The input `modifier` (generic normalization hook).** The scalar options take an optional
+`modifier: (n: number) => number`, applied to the raw value at INTAKE, before the bound is checked and
 before the value is stored (modify-then-validate). It is a generic MECHANISM, not policy: the core ships
-no built-in normalization. Domain-specific behaviour is built WHERE it is needed — e.g. a cyclic-angle
-helper that runs modulo 360 is its OWN unit helper carrying `modifier`, NOT a change to `mDeg` (angles
-legitimately exceed 360°, as in `rotate(720deg)`). A non-special clamp like opacity does NOT belong here
-at all — CSS already clamps it, so it is the opacity book's concern, not the lexicon's. Every unit
-helper can carry the same per-helper config (`min` / `max` / `modifier`), defaulting to none.
+no built-in normalization. Domain-specific behaviour is built WHERE it is needed, e.g. a cyclic-angle
+transform that runs modulo 360 rides on the `f` you hand `m` (`m(f(deg, { modifier: wrap360 }), 'deg')`),
+NOT on `m` or `mDeg` (angles legitimately exceed 360°, as in `rotate(720deg)`). A non-special clamp like
+opacity does NOT belong here at all — CSS already clamps it, so it is the opacity book's concern, not the
+lexicon's. `m` and the unit helpers carry no `modifier`; a unit helper that later presets one would
+translate it into the scalar it builds (a parked future door, see `docs/measurement-scalar-model.md`).
 
 ### The two constraint systems (brands and the runtime bound) (locked 2026-07-16)
 
@@ -255,15 +265,18 @@ Constraints on a numeric value are really TWO orthogonal systems. Keep them apar
 - **System B, the runtime bound (stored min/max).** A per-instance `.constraints()` bound, carried
   through arithmetic and enforced by the `hardening` reaction. This is real data on the value.
 
-Today measurements have both; `i` / `f` have System B only; ratio has neither. The conformance
-target is that every numeric lexicon (`i`, `f`, `m`, `r`) has BOTH, so a bounded value carries its
-proof in the type (A) and its bound at runtime (B). The surface that follows:
+The config-bearing SCALARS `i` / `f` carry BOTH: System B (the runtime bound) and System A (a brand on
+a bounded builder). `m` and `r` are CONTAINERS: they embed a scalar and hold no numeric config of
+their own, so a measurement surfaces the embedded scalar's bound via `.constraints()` (and can still
+stamp a measurement brand through its refinement quartet, System A). `u` is the bare scalar: neither
+system. So the runtime bound lives where the numeric config does, on the scalar, and composes up
+through the container. The surface that follows:
 
 - **Bounded builders mint branded values.** `createInteger({ min, max })` produces an `i` whose
   values are typed `InRange<min, max>`: the constructor runs the real check in JS, and the type
   carries the proof. A refinement (`inRange(a, b).ensure(x)`) tightens a value downstream,
-  additively. (`m` now ALSO takes a direct construction bound via `m(v, { min, max })`; a measurement's
-  bound comes from ONE source — direct, an ingested hardened scalar, or the refinement quartet.)
+  additively. `m` carries no bound of its own; hand it a bounded scalar, `m(i(v, { min, max }), 'px')`,
+  and the measurement carries that bound.
 - **A bound is set ONCE, at construction, then it is immutable.** A value takes its bound from a
   single source (a factory config OR per-value options, never both — passing both throws); there is
   no merging of two specs. To get a different bound you MINT A FRESH value from the number

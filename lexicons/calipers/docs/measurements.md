@@ -35,10 +35,11 @@ spec is `tests/runtime/core/measurement-embed.src.test.ts` (6 red delegation/err
   numeric methods (value/valueOf/constraints/isInt/add/subtract/multiply/divide/clamp/round/floor/
   ceil/clone/…); keep the unit methods (unit/category/css/unit-safe add-subtract-clamp-equals-compare);
   delete the bespoke `#clone` bound logic. The core step, split if it grows.
-- [ ] **4. `m()` builds / embeds the scalar.** `m(5)` embeds a neutral `u` (only m's config); `m(i/f)`
-  embeds the passed scalar; thread the wrapper label `'m'`. Set-once bound conflict stays.
+- [ ] **4. `m()` builds / embeds the scalar.** `m(5)` embeds a neutral `u` (only m's `{ unit, context }`
+  config); `m(i/f)` embeds the passed scalar; thread the wrapper label `'m'`. `m` carries no numeric
+  config, so there is no direct-vs-ingested bound conflict.
 - [ ] **5. Unit helpers embed a scalar.** `createUnitHelper` / `makeUnitHelperFromDefinition` build and
-  embed a scalar, forwarding the helper's bound/modifier to it.
+  embed a scalar; they are config-free today (a preset that lands on the scalar is a parked future door).
 - [ ] **6. Wire + green the spec.** Add a `test:*` script for `measurement-embed.src.test.ts`, make
   every case green, verify full `pnpm test` + compendium tsc, migrate any existing measurement test
   that assumed the old internals.
@@ -65,19 +66,22 @@ to ratios (`r`).
 ```ts
 m(8);                                   // 8px  (px default)
 m(45, 'deg');                           // 45deg (unit-string sugar)
-m(8, { unit: 'rem', min: 0, max: 10 }); // the options form
+m(8, { unit: 'rem' });                  // the options form ({ unit, context } only)
+m(i(8, { min: 0, max: 10 }), 'rem');    // a bound rides on the embedded scalar
 mPx(8); mDeg(45); mPercent(50);         // named unit helpers
 ```
 
-Named helpers come from `makeUnitHelperFromDefinition`, which can bake per-unit config (a bound, a
-modifier) into a helper. A plain number embeds a `u`; a typed `m(i(8))` / `m(f(8.5))` embeds that
-scalar, so its bound and modifier ride along.
+Named helpers come from `makeUnitHelperFromDefinition` and are config-free today: `mDeg(x)` just
+attaches `deg`. A plain number embeds a `u` (bare, no config); a typed `m(i(8))` / `m(f(8.5))` embeds
+that scalar, so its bound and modifier ride along. (A helper may later carry a preset that lands on
+the scalar it builds, a parked future door, see [`measurement-scalar-model.md`](./measurement-scalar-model.md).)
 
 ### The number side (short, see [`scalars.md`](./scalars.md))
 
-A bound (`min`/`max`) checked at construction and re-validated through arithmetic; the hardening
-reaction (`'warn' | 'fail'`); an intake modifier. A bound is set ONCE. Full detail:
-[`scalars.md`](./scalars.md), [`value-modifier.md`](./value-modifier.md),
+The embedded scalar owns it: a bound (`min`/`max`) checked at construction and re-validated through
+arithmetic; the hardening reaction (`'warn' | 'fail'`); an intake modifier. All of it is set on the
+`i` / `f` you hand `m`, never on `m` itself (`m` carries no numeric config). A bound is set ONCE. Full
+detail: [`scalars.md`](./scalars.md), [`value-modifier.md`](./value-modifier.md),
 [`hardening.md`](./hardening.md).
 
 ### The unit side (measurement-only)

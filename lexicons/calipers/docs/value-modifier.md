@@ -1,11 +1,13 @@
 # The value modifier (and the non-integer reaction)
 
-`i()`, `f()`, and `m()` each take an optional `modifier`: a value transform applied at INTAKE,
-before the kind check and the bound, and carried through arithmetic and clone. It is mechanism, not
-policy. The library ships no built-in normalization decisions; you pass the transform where you need
-it. This is a sibling to [hardening](./hardening.md) (which governs the range bound) and covers the
-transform-on-the-way-in that hardening does not. For the scalar family as a whole (`i` / `f` / `u`,
-their shared config, and the brands), see the overview in [`scalars.md`](./scalars.md).
+`i()` and `f()` each take an optional `modifier`: a value transform applied at INTAKE, before the kind
+check and the bound, and carried through arithmetic and clone. It is mechanism, not policy. The library
+ships no built-in normalization decisions; you pass the transform where you need it. `m` and the unit
+helpers carry no modifier of their own; a measurement gets one only via the `i` / `f` it embeds
+(`m(f(deg, { modifier: wrap360 }), 'deg')`). This is a sibling to [hardening](./hardening.md) (which
+governs the range bound) and covers the transform-on-the-way-in that hardening does not. For the scalar
+family as a whole (`i` / `f` / `u`, their config, and the brands), see the overview in
+[`scalars.md`](./scalars.md).
 
 ## The shape
 
@@ -79,5 +81,5 @@ arithmetic step.
   a grid snap, the fail-loud default, and a float modifier.
 - [`examples/warn-non-integer-input.example.ts`](../examples/warn-non-integer-input.example.ts) —
   the dirty-input diagnostic.
-- [`examples/m-modifier.example.ts`](../examples/m-modifier.example.ts) — the modifier on `m()` and
-  on a purpose-built unit helper (a wrapping angle).
+- [`examples/m-modifier.example.ts`](../examples/m-modifier.example.ts) — a modifier riding on the `f`
+  handed to `m()` (a wrapping angle); `m` only attaches the unit.

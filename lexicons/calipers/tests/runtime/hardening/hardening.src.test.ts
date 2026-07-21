@@ -3,8 +3,9 @@
 // reaction (`warn` / `fail`) when arithmetic breaks a carried bound (new).
 //
 // Per docs/foundations.md: the hardening reaction is config-driven via the shared
-// `Hardening = 'warn' | 'fail'` type, set on the m() factory (and the
-// codex / compendium bundle `global`). Default is `fail` (preserves i/f's throw).
+// `Hardening = 'warn' | 'fail'` type, set on the i() / f() factories (and the
+// codex / compendium bundle `global`); a measurement reacts via the i / f it
+// ingests, since m is a pure container. Default is `fail` (preserves i/f's throw).
 // The i/f + quartet blocks are regression coverage; the carry + config blocks
 // exercise the new m behaviour.
 import { describe, expect, it, vi } from 'vitest';

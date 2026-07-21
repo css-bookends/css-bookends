@@ -23,19 +23,19 @@ publishCompendium(cfg)                        cfg = { global?, calipers?, color?
     │   (codex.global merges UNDER compendium.global:    ← CALIPERS level
     │    calipers.global.X ?? compendium.global.X)
     │
-    ├── createCalipers(measurement)  ─► m      { hardening, errorConfig, defaultUnit }
-    ├── create*Units × 13  (unit-group keys) ─► mPx, mVh, mPercent, …   { hardening, errorConfig }
+    ├── createCalipers(measurement)  ─► m      { errorConfig, defaultUnit }   (container: numeric config rides on the embedded scalar)
+    ├── create*Units × 13  (unit-group keys) ─► mPx, mVh, mPercent, …   { errorConfig }   (containers)
     ├── createColor(color)            ─► color  { formats, output, strictness, transparent, omitOpaqueAlpha }
     └── createScalarBundle({ global, integer, float, ratio })          ← SCALAR FAMILY level
         │   global = { hardening, errorConfig }  (merges under codex.global)
         │
         ├── createInteger(integer)    ─► i      { hardening, errorConfig, min?, max? }
         ├── createFloat(float)        ─► f      { hardening, errorConfig, min?, max? }
-        └── createRatio(ratio)        ─► r      { errorConfig, min?, max? }   (bound for parity; structural throws, no hardening)
+        └── createRatio(ratio)        ─► r      { errorConfig }   (config-free container: two scalars; divide-by-zero throws; no bound, no hardening)
 
   every factory above builds ONE per-instance error store from its resolved `errorConfig`
-  (createErrorConfigStore → createErrorHelpers); `hardening` is baked into the bound helper.
-  NO process-global config exists: the cascade is the only path in.
+  (createErrorConfigStore → createErrorHelpers); the scalars (`i` / `f`) also bake `hardening` into
+  their bound helper. NO process-global config exists: the cascade is the only path in.
 ```
 
 ## The levels, package by package
@@ -49,7 +49,7 @@ and forwards the relevant slice to the next level down.
 | Bookends bundle | `@css-bookends/compendium` | `publishCompendium` | `hardening`, `errorConfig` | the `calipers?` key → codex |
 | Calipers bundle (codex) | `@css-bookends/css-calipers` | `createCalipersBundle` | `hardening`, `errorConfig` | the `cascade()` helper → each lexicon + unit-group factory, and the `global` slice → scalar family |
 | Scalar family | `css-calipers` `src/scalar-bundle.ts` | `createScalarBundle` | `hardening`, `errorConfig` | its `cascade()` → `createInteger` / `createFloat` / `createRatio` |
-| Standalone lexicons | `@css-bookends/{measurement,integer,float,ratio}` + colour | `createCalipers`, `createInteger`, `createFloat`, `createRatio`, `createColor` | — (leaf factories) | build a per-instance error store; bake hardening into the bound helper |
+| Standalone lexicons | `@css-bookends/{measurement,integer,float,ratio}` + colour | `createCalipers`, `createInteger`, `createFloat`, `createRatio`, `createColor` | — (leaf factories) | build a per-instance error store; the scalars (`i` / `f`) also bake hardening into their bound helper |
 
 The lexicon packages are thin slice re-exports of `css-calipers/src`, so a consumer can install
 just `@css-bookends/integer` and call `createInteger({ … })` with the exact same config shape it
@@ -76,18 +76,19 @@ own unit key  →  this level's global  →  the outer level's global  →  fact
 
 | Option | Values | Which globals carry it | Reaches | Built-in default |
 | --- | --- | --- | --- | --- |
-| `hardening` | `'warn' \| 'fail'` | compendium, codex, scalar | `m`, `i`, `f`, unit groups (the range-breach reaction) | `'fail'` |
+| `hardening` | `'warn' \| 'fail'` | compendium, codex, scalar | `i`, `f` (the scalar family; the range-breach reaction). `m` / `r` are containers, so a measurement reacts only via the `i` / `f` it embeds | `'fail'` |
 | `errorConfig.stackHints` | `'auto' \| 'on' \| 'off'` | compendium, codex, scalar | every error-producing factory: `m`, `i`, `f`, `r`, unit groups | `'auto'` |
 | `defaultUnit` | a CSS unit string | — (the codex `measurement` key only) | `m` | `'px'` |
 | colour config | `formats`, `output`, `strictness`, `transparent`, `omitOpaqueAlpha` | — (the codex `color` key only) | `color` | `defaultColorConfig` |
 | `format` | `'object' \| 'string'` | — (per-book key today) | books | `'object'` |
-| constraint bound (`min`, `max`) | a `number` | — (the unit's own key `integer` / `float` / `ratio`, per value, or a `m()` / unit-helper option for `m`) | `i`, `f`, `r`: a bounded builder brands the value `InRange<min,max>` (System A) and stores the bound (System B). `m` takes a DIRECT bound via `m(v, {min,max})` or a per-helper config, checked at construction. Set once from ONE source (a direct bound + an ingested-scalar bound throws), then immutable; mint a fresh value to change it | unbounded |
-| input `modifier` | `(n: number) => number` | — (a `m()` option or per-unit-helper config; m-only) | `m`: transforms the raw value at intake, before validate/store (modify-then-validate). Generic mechanism; specific normalization (e.g. cyclic-angle modulo) lives on a purpose-built helper | none |
+| constraint bound (`min`, `max`) | a `number` | — (the scalar's own key `integer` / `float`, or per value) | `i`, `f`: a bounded builder brands the value `InRange<min,max>` (System A) and stores the bound (System B). `m` / `r` are containers with no bound of their own: a measurement's bound rides on the `i` / `f` it embeds (`m(i(v, {min,max}))`), surfaced via `.constraints()`; ratio has no bound. Set once at construction, then immutable; mint a fresh scalar to change it | unbounded |
+| input `modifier` | `(n: number) => number` | — (the scalar's own key `integer` / `float`, or per value) | `i`, `f`: transforms the raw value at intake, before validate/store (modify-then-validate). A measurement gets it via the `i` / `f` it embeds. Generic mechanism; specific normalization (e.g. cyclic-angle modulo) lives on a purpose-built scalar or helper | none |
 
-`hardening` and `errorConfig` are the two CROSS-CUTTING options: they live in every level's
-`global` and reach every error-producing unit. `defaultUnit`, `formats`, `format`, the constraint
-bound (`min` / `max`), and the `m` input `modifier` are unit-local or per-value (set through a unit's
-own key, a per-value / `m()` option, or a per-helper config, never a shared global).
+`errorConfig` reaches every error-producing unit; `hardening` is also carried in every level's
+`global`, but it reaches the config-bearing SCALARS (`i` / `f`) only, and a measurement reacts to a
+broken bound via the `i` / `f` it embeds. `defaultUnit`, `formats`, `format`, the constraint bound
+(`min` / `max`), and the scalar `modifier` are unit-local or per-value (set through a unit's own key
+or a per-value option, never a shared global).
 
 ## Worked example, top to bottom
 
@@ -98,7 +99,7 @@ const bookends = publishCompendium({
 });
 ```
 
-- `hardening` resolves per calipers lexicon as `own → codex.global('fail') → compendium.global('warn') → 'fail'`
+- `hardening` resolves per scalar (`i` / `f`) as `own → codex.global('fail') → compendium.global('warn') → 'fail'`
   ⇒ **`'fail'`** (the codex global wins over the compendium global).
 - `errorConfig.stackHints` has no codex global, so it resolves `own → codex.global(unset) →
   compendium.global('off') → 'auto'` ⇒ **`'off'`** (every calipers error omits the `stack=` block).

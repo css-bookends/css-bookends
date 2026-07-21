@@ -188,8 +188,10 @@ form (every book bound at defaults). That aggregate does not change the per-book
 
 ### Constraints and brands (the two systems, absolute)
 
-A numeric lexicon's restrictions are TWO orthogonal systems, and every numeric lexicon (`i`, `f`,
-`m`, `r`) gets BOTH:
+A numeric value's restrictions are TWO orthogonal systems. Both live on the config-bearing SCALARS
+(`i`, `f`); `m` and `r` are CONTAINERS that embed a scalar and carry NO numeric config of their own
+(`m` = one scalar + a unit; `r` = two scalars), so a measurement gets BOTH only via the `i` / `f` it
+embeds (its bound surfaces through `.constraints()`). `u` is the bare scalar and gets neither:
 
 - **System A, brands** (compile-time proof): the refinement quartet stamps a phantom brand
   (`InRange<0,50>`, `NonNegative`) into the type on success. Additive, dropped by arithmetic. The

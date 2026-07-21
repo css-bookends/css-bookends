@@ -16,12 +16,14 @@ implement; copy it, never reinvent a per-feature scheme.
   (`m`), `createInteger` (`i`), `createFloat` (`f`), `createColor`. A bookends book:
   `publishBook<Name>`. The factory bakes the config into the unit it produces. No bare
   pre-made instance is the configurable path.
-- **Units of a KIND share an IDENTICAL config shape.** `m` / `i` / `f` all carry the same
-  shared field(s) for a cross-cutting option, typed from ONE shared type, never redefined.
-  Example: `Hardening = 'ignore' | 'warn' | 'fail'` + `HardeningConfig` live once in
-  `lexicons/calipers/src/hardening.ts` and are imported by the `m` / `i` / `f` factory
-  configs. A new shared option is added to that one shared type, then it is automatically
-  identical across the units.
+- **Units of a KIND share an IDENTICAL config shape.** The config-bearing SCALARS (`i` / `f`)
+  carry the same shared field(s) for a cross-cutting numeric option, typed from ONE shared type,
+  never redefined. Example: `Hardening = 'ignore' | 'warn' | 'fail'` + `HardeningConfig` live once
+  in `lexicons/calipers/src/hardening.ts` and are imported by the `i` / `f` factory configs. A new
+  shared option is added to that one shared type, then it is automatically identical across the
+  scalars. `m` / `r` are CONTAINERS: they embed a scalar and carry NO numeric config, so they
+  cascade only their own non-numeric fields (`errorConfig`, plus `m`'s `unit` / `defaultUnit`) and
+  DELEGATE the numeric config (bound, hardening, modifier) to the scalar they hold.
 - **A bundle exposes `global` PLUS one key per unit.** `CalipersBundleConfig` (codex):
   `{ global?, measurement?, integer?, float?, ratio?, color? }`. `CompendiumConfig`:
   `{ global?, <book keys>…, calipers?: CalipersBundleConfig }`. The bundle factory must
@@ -39,8 +41,11 @@ implement; copy it, never reinvent a per-feature scheme.
 - **Reachability is mandatory.** No unit config the bundle factory cannot reach. If you add a
   unit option, you ALSO add it to the bundle config + cascade in the SAME change. An option
   that only works standalone is a bug.
-- **Cross-cutting vs unit-local.** `hardening` / `errorConfig` are CROSS-CUTTING: they live in every
-  `global` and reach every unit. The constraint bound (`min` / `max`) and `sealed` (`sealedMin` /
+- **Cross-cutting vs unit-local.** `errorConfig` is CROSS-CUTTING: it lives in every `global` and
+  reaches every error-producing unit. `hardening` is also carried in every `global`, but it reaches
+  the config-bearing SCALARS (`i` / `f`) only; `m` / `r` are containers with no numeric config, so a
+  measurement reacts to a broken bound only via the `i` / `f` it embeds. The constraint bound
+  (`min` / `max`) and `sealed` (`sealedMin` /
   `sealedMax` / `sealedRange`) are UNIT-LOCAL, like `defaultUnit` / the colour config: set through a
   unit's own key (or on the value itself), never a shared `global`. Do NOT add a `global` tier for a
   unit-local option. See `docs/foundations.md` ("The two constraint systems") and `docs/config-flow.md`.

@@ -218,8 +218,10 @@ design forces a "should it do X or Y?" choice, it is a config, not a baked-in br
 
 ### Constraints and brands (the two systems)
 
-A numeric lexicon's restrictions are TWO orthogonal systems, and every numeric lexicon (`i`, `f`,
-`m`, `r`) gets BOTH:
+A numeric value's restrictions are TWO orthogonal systems. Both live on the config-bearing SCALARS
+(`i`, `f`); `m` and `r` are CONTAINERS that embed a scalar and carry NO numeric config of their own
+(`m` = one scalar + a unit; `r` = two scalars), so a measurement gets BOTH only via the `i` / `f` it
+embeds (its bound surfaces through `.constraints()`). `u` is the bare scalar and gets neither:
 
 - **System A, brands** (compile-time proof): the refinement quartet stamps a phantom brand
   (`InRange<0,50>`, `NonNegative`) into the type on success. Additive, dropped by arithmetic. This
@@ -285,6 +287,23 @@ failing test is the spec.
   MUST be a TYPE test (`tsd`) that does NOT compile against the old types. A runtime test
   that is green from the start does not validate a type-level change.
 - Only once the test is truly red do you implement to make it green.
+
+### Full-matrix coverage, no "unreachable" shortcuts (absolute)
+
+When a behaviour spans a set of TYPES or POSITIONS, test the FULL cross-product, never a
+representative subset. Concretely: an error code (or any typed outcome) that can arise for the
+scalar types `u` / `i` / `f`, in each structural position (a ratio's numerator AND denominator, a
+measurement's receiver AND operand), gets a test for EVERY `(outcome × type × position)` cell.
+
+- NEVER drop a cell as "unreachable", "redundant", "structurally impossible", or "already caught
+  upstream". The cell you skip because another guard catches it TODAY is exactly the one that
+  regresses silently when that guard later moves or is removed. The matrix cell is the fence that
+  catches that regression; skipping it removes the fence.
+- If a cell's throw originates at a DIFFERENT site than expected (e.g. `r(i(Infinity), 2)` throws
+  at `i()`'s own construction, not at `r`), still write the cell and assert the same code STILL
+  fires. Do not omit it, and do not weaken the assertion.
+- This rule exists because losing coverage / features by rationalizing a skipped case is a
+  recurring failure. When in doubt, add the cell.
 
 ## No helpers in calipers (the css-values legacy is already removed)
 

@@ -15,6 +15,13 @@ returns a **branded** type whose brand reflects the actual constraint, and `inRa
 carries its bounds. New constraints follow the same shape: a runtime predicate plus a
 brand that records it.
 
+> **System A vs System B.** The refinements here are System A: compile-time BRANDS
+> (`NonNegativeMeasurement`, `InRangeMeasurement`) stamped by a runtime check. They are distinct from
+> System B, the stored runtime bound (`min` / `max`, `.constraints()`) and its `'warn' | 'fail'`
+> hardening REACTION, which live on the config-bearing scalars `i` / `f` (a measurement carries a bound
+> only via the `i` / `f` it embeds, `m` itself has no numeric config). See [`scalars.md`](./scalars.md)
+> and `docs/foundations.md` ("The two constraint systems").
+
 ## The pattern
 
 A **refinement** takes a measurement, checks a constraint at runtime, and returns the same

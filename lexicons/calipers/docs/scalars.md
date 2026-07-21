@@ -29,10 +29,11 @@ Two different questions, and they can disagree on a `u`:
 That gap, a value that reads whole but carries no integer guarantee, is exactly what "unspecified"
 means.
 
-## The shared config, at a glance
+## The scalar config, at a glance
 
-All three sit on one `ScalarImpl` base and share the same config surface (set ONCE at construction; to
-change it, mint a fresh value):
+`i` / `f` are the config-bearing scalars: they extend the checked base (`ScalarRestricted`) and hold
+the numeric config (set ONCE at construction; to change it, mint a fresh value). `u` extends the BARE
+base (`ScalarBase`) and carries NONE of it, it is finite math only. So the config below is `i` / `f`:
 
 - **Bounds** (`min` / `max`) and the **hardening** reaction (`'warn' | 'fail'`) when a bound is broken.
   See [`hardening.md`](./hardening.md).
@@ -40,8 +41,10 @@ change it, mint a fresh value):
   **`warnOnNonIntegerInput`** diagnostic. See [`value-modifier.md`](./value-modifier.md).
 - **The `InRange` compile-time brands** (a runtime bound surfaced as a type-level proof). See
   [`hardening.md`](./hardening.md).
-- **`clone()`** — a config-preserving copy. Scalars are immutable, an operation returns a NEW value
-  and never mutates the source, so a value's `isInt()` can never go stale.
+
+All three share the finite-math core and immutability: **`clone()`** is a config-preserving copy, and
+every operation returns a NEW value without mutating the source, so a value's `isInt()` can never go
+stale.
 
 ## Why `u` exists
 
