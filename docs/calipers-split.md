@@ -29,7 +29,7 @@ cycles**.
 | `@css-bookends/float` | `./float` | float + integer + scalar + hardening | `csstype` |
 | `@css-bookends/ratio` | `./ratio` | ratio + integer + float + scalar + hardening | `csstype` |
 | `@css-bookends/color` | `./color` | colour + measurement (angle) + scalar + hardening | `csstype`, `culori` |
-| `@css-bookends/hardening` | `./hardening` (+ refinements) | the hardening reaction + restrictions / refinements | (none) |
+| `@css-bookends/hardening` | `./hardening` (+ refinements) | the bound / restrictions / refinements (System A brands + System B bound; a breach throws) | (none) |
 | **`css-calipers` (the codex)** | `.` (everything) | the whole source | `csstype`, `culori` |
 
 These are the canonical slices; the same principle allows any other entry or combination (e.g. a

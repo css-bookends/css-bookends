@@ -49,13 +49,13 @@ publishCompendium({ color: { output: colorFormats.rgba } })
   .css(); // 'rgba(51, 102, 204, 1)'
 
 // a global reaches the calipers primitives through the nested codex
-const lenient = publishCompendium({ global: { hardening: 'ignore' } });
-lenient.i(8, { min: 0, max: 10 }).multiply(2).value(); // 16  (broken bound dropped)
+const compact = publishCompendium({ global: { errorConfig: { stackHints: 'off' } } });
+compact.i(8, { min: 0, max: 10 }).multiply(2); // throws (16 breaks [0,10]); the error omits the stack= block
 
 // most specific wins: the codex global overrides the compendium global for primitives
 publishCompendium({
-  global: { hardening: 'fail' },
-  calipers: { global: { hardening: 'ignore' } }, // primitives end up 'ignore'
+  global: { errorConfig: { stackHints: 'off' } },
+  calipers: { global: { errorConfig: { stackHints: 'on' } } }, // primitives end up 'on'
 });
 ```
 

@@ -79,7 +79,7 @@ the scalar it builds, a parked future door, see [`measurement-scalar-model.md`](
 ### The number side (short, see [`scalars.md`](./scalars.md))
 
 The embedded scalar owns it: a bound (`min`/`max`) checked at construction and re-validated through
-arithmetic; the hardening reaction (`'warn' | 'fail'`); an intake modifier. All of it is set on the
+arithmetic (a breach throws); an intake modifier. All of it is set on the
 `i` / `f` you hand `m`, never on `m` itself (`m` carries no numeric config). A bound is set ONCE. Full
 detail: [`scalars.md`](./scalars.md), [`value-modifier.md`](./value-modifier.md),
 [`hardening.md`](./hardening.md).
