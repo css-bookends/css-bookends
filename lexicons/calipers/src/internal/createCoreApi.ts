@@ -21,12 +21,18 @@ import {
   type UnitDefinitionRecord,
   type UnitHelperName,
 } from '../unitDefinitions';
-import { createErrorHelpers, type ErrorConfigStore } from './errors';
+import { type ErrorConfigStore } from './errors';
+import {
+  createMeasurementContext,
+  hasCssMethod,
+  makeAssertCondition,
+  makeAssertMatchingUnits,
+  makeDeltaToNumber,
+} from './measurement/context';
 import { makeRefinement } from './refinement';
 import { ScalarBase } from './scalarBase';
 import { type IUnspecified, u } from './unspecified';
 
-type DeltaInput = number | IMeasurement<string>;
 // `m` is a PURE CONTAINER: it carries NO numeric config. A bound / modifier / hardening belong on the
 // `i` / `f` you hand it (`m(i(700, { min: 1, max: 900 }), 'px')`), never on `m` itself. So its options
 // are only the unit + an error context.
@@ -39,38 +45,10 @@ export const createCoreApi = (
   errorStore: ErrorConfigStore,
   defaultUnit: string = 'px',
 ) => {
-  const { throwHelperError, throwMeasurementMethodError } =
-    createErrorHelpers(errorStore);
-
-  const assertMatchingUnits = <Unit extends string>(
-    left: IMeasurement<Unit>,
-    right: IMeasurement<Unit>,
-    context: string,
-  ): void => {
-    const leftUnit = left.unit();
-    const rightUnit = right.unit();
-    if (leftUnit !== rightUnit) {
-      throwHelperError({
-        operation: 'css-calipers.assertMatchingUnits',
-        params: [
-          left,
-          right,
-        ],
-        message: `measurement unit mismatch: ${leftUnit} vs ${rightUnit}`,
-        context,
-        details: { code: 'CALIPERS_E_UNIT_MISMATCH' },
-      });
-    }
-  };
-
-  const deltaToNumber = (
-    base: IMeasurement<string>,
-    delta: DeltaInput,
-  ): number => {
-    if (typeof delta === 'number') return delta;
-    assertMatchingUnits(base, delta, 'deltaToNumber');
-    return delta.value();
-  };
+  const ctx = createMeasurementContext(errorStore, defaultUnit);
+  const { throwHelperError, throwMeasurementMethodError } = ctx;
+  const assertMatchingUnits = makeAssertMatchingUnits(ctx);
+  const deltaToNumber = makeDeltaToNumber(assertMatchingUnits);
 
   class Measurement<
     Unit extends string,
@@ -483,15 +461,6 @@ export const createCoreApi = (
     };
   };
 
-  const hasCssMethod = (x: unknown): x is { css: () => string } => {
-    return (
-      typeof x === 'object' &&
-      x !== null &&
-      'css' in x &&
-      typeof x.css === 'function'
-    );
-  };
-
   const measurementMin = <Unit extends string>(
     a: IMeasurement<Unit>,
     b: IMeasurement<NoInfer<Unit>>,
@@ -514,21 +483,7 @@ export const createCoreApi = (
     context?: string,
   ) => measurement.assertUnit(expectedUnit, context);
 
-  const assertCondition = (
-    condition: boolean | (() => boolean),
-    message: string,
-  ): void => {
-    const passed =
-      typeof condition === 'function' ? condition() : condition;
-    if (!passed) {
-      throwHelperError({
-        operation: 'css-calipers.assertCondition',
-        params: [],
-        message,
-        details: { code: 'CALIPERS_E_ASSERT_CONDITION' },
-      });
-    }
-  };
+  const assertCondition = makeAssertCondition(ctx);
 
   // Value-constraint refinements. One factory builds the quartet (is / ensure / check /
   // hardenWith) from a numeric predicate and narrows to a constraint brand. The brand is
