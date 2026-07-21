@@ -107,3 +107,6 @@ export const makeConstruct = (
 
   return { createMeasurement, buildMeasurement, isMeasurement, m };
 };
+
+/** The construction module's shape, so a downstream module can type it as a dependency. */
+export type Construct = ReturnType<typeof makeConstruct>;
