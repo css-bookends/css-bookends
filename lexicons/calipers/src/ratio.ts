@@ -3,14 +3,12 @@ import { type IInteger, isInteger } from './integer';
 import {
   createErrorConfigStore,
   createErrorHelpers,
+  type ErrorCode,
   type ErrorConfig,
   type ErrorConfigStore,
 } from './internal/errors';
-import {
-  isUnspecified,
-  type IUnspecified,
-  u,
-} from './internal/unspecified';
+import { ScalarBase } from './internal/scalarBase';
+import { type IUnspecified, u } from './internal/unspecified';
 import { type Scalar } from './scalar';
 
 /** A value `ratio` can consume publicly: a raw number or a typed scalar primitive. */
@@ -24,20 +22,8 @@ export type RatioScalar = IInteger | IFloat | IUnspecified;
 // the constructor (e.g. via `withNumerator`, which re-passes the untouched side).
 type RatioOperand = RatioValue | IUnspecified;
 
-const ratioValueToNumber = (value: RatioOperand): number =>
-  typeof value === 'number' ? value : value.valueOf();
-
 const isRatioValue = (value: unknown): value is RatioValue =>
   typeof value === 'number' || isInteger(value) || isFloat(value);
-
-/** Recover a typed scalar from a ratio operand: an explicit `i` / `f` / `u` comes back INTACT; a
- *  bare number becomes an unspecified `u` (a plain number carries no integer / float commitment). */
-const toScalar = (value: RatioOperand): RatioScalar => {
-  if (isInteger(value) || isFloat(value) || isUnspecified(value)) {
-    return value;
-  }
-  return u(value);
-};
 
 export interface IRatio {
   css: () => string;
@@ -59,8 +45,6 @@ export type RatioParts = {
 };
 
 class RatioImpl implements IRatio {
-  #numerator: number;
-  #denominator: number;
   #numeratorScalar: RatioScalar;
   #denominatorScalar: RatioScalar;
   #omitDenominatorWhenOne: boolean;
@@ -74,40 +58,52 @@ class RatioImpl implements IRatio {
       errorStore?: ErrorConfigStore;
     } = {},
   ) {
-    // Set the error store FIRST so the structural throws below render through it.
+    // Set the error store FIRST so the throws below render through it.
     this.#errorStore = options.errorStore;
-    const numeratorValue = ratioValueToNumber(numerator);
-    const denominatorValue = ratioValueToNumber(denominator);
-    if (
-      !Number.isFinite(numeratorValue) ||
-      !Number.isFinite(denominatorValue)
-    ) {
-      this.#throwScalar('Ratio values must be finite numbers.');
+    // A ratio is TWO scalars: embed each operand under the `r` wrapper (mirrors m's embedUnder), so
+    // errors read `r(<subtype>): ...` and finiteness is DELEGATED to the scalar (a non-finite raw
+    // operand throws `r(u): expected a finite number` with CALIPERS_E_NONFINITE at construction).
+    // The scalars are the source of truth; numeric values are read back through `.value()`.
+    this.#numeratorScalar = this.#embedOperand(numerator);
+    this.#denominatorScalar = this.#embedOperand(denominator);
+    // The one rule a bare scalar does NOT enforce (0 is a valid scalar; only a ratio forbids it as
+    // a denominator): reject a zero denominator, prefixed with its own subtype (`r(<subtype>)`).
+    if (this.#denominatorScalar.value() === 0) {
+      this.#throwScalar(
+        `r(${this.#denominatorScalar.kind()}): denominator cannot be zero`,
+        'CALIPERS_E_DIVIDE_BY_ZERO',
+      );
     }
-    if (denominatorValue === 0) {
-      this.#throwScalar('Ratio denominator cannot be zero.');
-    }
-    this.#numerator = numeratorValue;
-    this.#denominator = denominatorValue;
-    this.#numeratorScalar = toScalar(numerator);
-    this.#denominatorScalar = toScalar(denominator);
     this.#omitDenominatorWhenOne =
       options.omitDenominatorWhenOne ?? false;
   }
 
-  // Throw a scalar error through this instance's error store (or a default one
-  // for the storeless free `r()` path), so `stackHints` decides the stack block.
-  #throwScalar(message: string): never {
+  // Embed a ratio operand as a scalar under the `r` wrapper: an ingested i / f / u is re-labelled
+  // intact (its errors become `r(i): ...`), a raw number becomes a `u` carrying the ratio's error
+  // store, which validates finiteness at construction (`r(u): expected a finite number`).
+  #embedOperand(value: RatioOperand): RatioScalar {
+    if (value instanceof ScalarBase) {
+      return value.embedUnder('r') as unknown as RatioScalar;
+    }
+    return u(value as number, {
+      errorStore: this.#errorStore,
+      wrapperLabel: 'r',
+    });
+  }
+
+  // Throw a scalar error through this instance's error store (or a default one for the storeless
+  // free `r()` path), so `stackHints` decides the stack block and an optional code is appended.
+  #throwScalar(message: string, code?: ErrorCode): never {
     const store = this.#errorStore ?? createErrorConfigStore();
-    return createErrorHelpers(store).throwScalarError(message);
+    return createErrorHelpers(store).throwScalarError(message, code);
   }
 
   numerator(): number {
-    return this.#numerator;
+    return this.#numeratorScalar.value();
   }
 
   denominator(): number {
-    return this.#denominator;
+    return this.#denominatorScalar.value();
   }
 
   numeratorScalar(): RatioScalar {
@@ -131,14 +127,18 @@ class RatioImpl implements IRatio {
   }
 
   valueOf(): number {
-    return this.#numerator / this.#denominator;
+    return (
+      this.#numeratorScalar.value() / this.#denominatorScalar.value()
+    );
   }
 
   css(): string {
-    if (this.#omitDenominatorWhenOne && this.#denominator === 1) {
-      return String(this.#numerator);
+    const numerator = this.#numeratorScalar.value();
+    const denominator = this.#denominatorScalar.value();
+    if (this.#omitDenominatorWhenOne && denominator === 1) {
+      return String(numerator);
     }
-    return `${this.#numerator}/${this.#denominator}`;
+    return `${numerator}/${denominator}`;
   }
 
   toString(): string {
@@ -301,13 +301,9 @@ export const normalizeRatio = (ratio: IRatio): IRatio => {
   let numerator = ratio.numerator();
   let denominator = ratio.denominator();
 
-  if (!Number.isFinite(numerator) || !Number.isFinite(denominator)) {
-    throw new Error('Ratio values must be finite numbers.');
-  }
-  if (denominator === 0) {
-    throw new Error('Ratio denominator cannot be zero.');
-  }
-
+  // Re-validation is DELEGATED to the RatioImpl constructor built below (and the non-integer early
+  // return): it embeds each operand as a scalar, so a non-finite value or a zero denominator throws
+  // `r(<subtype>): ...` WITH a code through the error store, never a bare, store-bypassing Error.
   if (
     !Number.isInteger(numerator) ||
     !Number.isInteger(denominator)

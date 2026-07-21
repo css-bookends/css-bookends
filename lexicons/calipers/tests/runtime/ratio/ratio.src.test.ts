@@ -130,25 +130,28 @@ describe('Ratio helper (src)', () => {
   });
 
   it('rejects invalid values', () => {
+    // A ratio embeds each operand as a scalar under the `r` wrapper, so a non-finite operand and a
+    // zero denominator throw the `r(<subtype>): ...` message WITH a code (mirrors m(<subtype>)).
     expect(() => r(Number.NaN)).toThrow(
-      'Ratio values must be finite numbers.',
+      /r\(u\): expected a finite number .*code=CALIPERS_E_NONFINITE/,
     );
     expect(() => r(2, 0)).toThrow(
-      'Ratio denominator cannot be zero.',
+      /r\(u\): denominator cannot be zero .*code=CALIPERS_E_DIVIDE_BY_ZERO/,
     );
+    // r() rejects at construction, so these throw before normalizeRatio runs.
     expect(() => normalizeRatio(r(Number.NaN))).toThrow(
-      'Ratio values must be finite numbers.',
+      /code=CALIPERS_E_NONFINITE/,
     );
     expect(() => normalizeRatio(r(2, 0))).toThrow(
-      'Ratio denominator cannot be zero.',
+      /code=CALIPERS_E_DIVIDE_BY_ZERO/,
     );
   });
 
-  it('normalizeRatio re-validates its own input (not only the r() constructor)', () => {
-    // r() rejects bad inputs at construction, so the earlier cases never reach
-    // normalizeRatio's own guards. A hand-rolled IRatio that bypasses r() proves
-    // normalizeRatio independently rejects non-finite numerators and a zero
-    // denominator (its defensive re-validation, lines 185-190 of ratio.ts).
+  it('normalizeRatio re-validates its own input through the r() constructor', () => {
+    // r() rejects bad inputs at construction, so the earlier cases never reach normalizeRatio.
+    // A hand-rolled IRatio that bypasses r() proves normalizeRatio still rejects a non-finite
+    // numerator and a zero denominator: it builds a fresh RatioImpl at the end, so the throw now
+    // routes through the embedded scalar + error store (carrying the code), not a bare Error.
     const fakeRatio = (
       numerator: number,
       denominator: number,
@@ -165,13 +168,13 @@ describe('Ratio helper (src)', () => {
     });
 
     expect(() => normalizeRatio(fakeRatio(Number.NaN, 2))).toThrow(
-      'Ratio values must be finite numbers.',
+      /code=CALIPERS_E_NONFINITE/,
     );
     expect(() =>
       normalizeRatio(fakeRatio(Number.POSITIVE_INFINITY, 2)),
-    ).toThrow('Ratio values must be finite numbers.');
+    ).toThrow(/code=CALIPERS_E_NONFINITE/);
     expect(() => normalizeRatio(fakeRatio(1, 0))).toThrow(
-      'Ratio denominator cannot be zero.',
+      /code=CALIPERS_E_DIVIDE_BY_ZERO/,
     );
   });
 
