@@ -71,6 +71,7 @@ export type AssertMatchingUnits = ReturnType<
   typeof makeAssertMatchingUnits
 >;
 export type DeltaToNumber = ReturnType<typeof makeDeltaToNumber>;
+export type AssertCondition = ReturnType<typeof makeAssertCondition>;
 
 export const hasCssMethod = (
   x: unknown,
