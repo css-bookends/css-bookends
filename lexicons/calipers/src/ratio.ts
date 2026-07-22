@@ -209,7 +209,7 @@ export const isRatio = (value: unknown): value is IRatio => {
 };
 
 /**
- * The ratio factory config. Ratio has NO hardening (its throws are structural,
+ * The ratio factory config. Ratio has NO bound (its throws are structural,
  * not bound breaches), so it carries only the shared `errorConfig` (stack-hint
  * rendering) — enough for `createRatio` to build its own per-instance error
  * store like the other lexicon factories.
@@ -228,7 +228,7 @@ export interface RatioApi {
  * The ratio FACTORY: build a per-instance error store from `config.errorConfig`
  * and bind an `r` that threads it, so a `createRatio({ errorConfig })` instance
  * renders `stackHints` on its structural throws. Mirrors `createInteger` /
- * `createFloat` (minus hardening, which ratio has no bounds for).
+ * `createFloat` (minus the bound, which ratio has none of).
  */
 export const createRatio = (
   config: RatioFactoryConfig = {},

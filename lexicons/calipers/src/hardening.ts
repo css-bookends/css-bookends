@@ -1,49 +1,19 @@
-// The SHARED hardening surface. One module, one type, imported everywhere
-// (m / i / f and both bundle configs — codex, compendium); never redefined.
+// The SHARED bound surface. One module, imported everywhere (m / i / f and both
+// bundle configs), never redefined.
 //
-// "Hardening" is a carried range bound (min / max). This module owns the ONE
-// config that decides what a value type does when an operation would BREAK that
-// bound, plus the small pure helpers for reading and checking a bound.
+// A "bound" is a carried range (min / max). This module owns the pure helpers for
+// reading and checking a bound, plus the throw a breach raises. There is NO reaction
+// config: a breached bound always THROWS. (The `hardening: 'warn' | 'fail'` reaction
+// knob was retired 2026-07-21 — `warn` was dominated by `u` / `fail` / `clamp`; if you
+// do not want enforcement, use `u`. See docs/foundations.md.)
 
-/**
- * The reaction when an operation breaks a hardened bound:
- * - `warn` — warn, drop the broken bound, and proceed
- * - `fail` — throw (disallow the breaking operation)
- *
- * There is no silent "ignore" mode: dropping a bound silently is the same as never bounding the
- * value, so use an unbounded value instead.
- *
- * This is the single config the whole stack shares: `m` / `i` / `f` factory
- * configs, the codex (`createCalipersBundle`) and the compendium
- * (`publishCompendium`) all reference THIS type, never a local copy.
- */
-export type Hardening = 'warn' | 'fail';
-
-/**
- * Built-in default. `fail` preserves `i` / `f`'s existing throw-on-breach
- * behaviour; opt into `warn` per instance or via a bundle `global`.
- */
-export const DEFAULT_HARDENING: Hardening = 'fail';
-
-/**
- * The shared per-unit factory config slice. The `m` / `i` / `f` factories each
- * include it, so the three configs are identical for the hardening field.
- *
- * `H` captures the concrete reaction so a bounded factory can brand its output
- * (only `'fail'` guarantees the bound holds). It defaults to the full union, so
- * a bare `HardeningConfig` is unchanged.
- */
-export type HardeningConfig<H extends Hardening = Hardening> = {
-  hardening?: H;
-};
-
-/** A carried range bound. Empty (`{}`) when the value is unhardened. */
+/** A carried range bound. Empty (`{}`) when the value is unbounded. */
 export type Constraints = {
   min?: number;
   max?: number;
 };
 
-/** Strip `undefined` bounds, so an unhardened value reports `{}`. */
+/** Strip `undefined` bounds, so an unbounded value reports `{}`. */
 export const normalizeConstraints = (c: Constraints): Constraints => {
   const out: Constraints = {};
   if (c.min !== undefined) out.min = c.min;
@@ -67,22 +37,15 @@ export const describeBound = (c: Constraints): string => {
 };
 
 /**
- * React to a broken bound per the mode. The `i` / `f`-side helper: `fail`
- * throws a plain `Error` and `warn` logs. (`m` uses its own
- * coded-error infra for `fail` but the same `Hardening` type.)
- *
- * `onFail` lets the caller route the `fail` throw through its own per-instance
- * error store (so the resolved `stackHints` config can append a `[stack=...]`
- * block); when omitted the throw is a plain `Error`, unchanged.
+ * Throw for a broken bound: a breached bound always throws (there is no reaction
+ * config). `onFail` routes the throw through the caller's per-instance error store
+ * (so the resolved `stackHints` config can append a `[stack=...]` block); when omitted
+ * the throw is a plain `Error`.
  */
-export const reactToBreach = (
-  mode: Hardening,
+export const throwBreach = (
   message: string,
   onFail?: (message: string) => never,
-): void => {
-  if (mode === 'fail') {
-    if (onFail) onFail(message);
-    throw new Error(message);
-  }
-  if (mode === 'warn') console.warn(message);
+): never => {
+  if (onFail) onFail(message);
+  throw new Error(message);
 };

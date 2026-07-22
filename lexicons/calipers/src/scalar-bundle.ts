@@ -10,7 +10,6 @@ import {
   type FloatApi,
   type FloatFactoryConfig,
 } from './float';
-import { type Hardening } from './hardening';
 import {
   createInteger,
   type IntegerApi,
@@ -30,8 +29,6 @@ export interface ScalarBundleConfig {
    * config wins; otherwise it falls back here, then to the built-in factory default.
    */
   global?: {
-    /** Hardening reaction for the integer / float surface. */
-    hardening?: Hardening;
     /** Error-rendering config (e.g. stack hints) shared across integer / float / ratio. */
     errorConfig?: ErrorConfig;
   };
@@ -56,17 +53,16 @@ export type ScalarBundle = IntegerApi & FloatApi & RatioApi;
 export const createScalarBundle = (
   config: ScalarBundleConfig = {},
 ): ScalarBundle => {
-  // cascade a hardening-shaped sub-config: own key -> bundle `global` -> factory
-  // default, for both `hardening` and `errorConfig`. `IntegerFactoryConfig` and
-  // `FloatFactoryConfig` share the same shape, so one helper covers integer and float.
+  // cascade a scalar sub-config: own key -> bundle `global` -> factory default, for
+  // `errorConfig`. `IntegerFactoryConfig` and `FloatFactoryConfig` share the same shape,
+  // so one helper covers integer and float.
   const cascade = (
     own?: IntegerFactoryConfig,
   ): IntegerFactoryConfig => ({
     ...own,
-    hardening: own?.hardening ?? config.global?.hardening,
     errorConfig: own?.errorConfig ?? config.global?.errorConfig,
   });
-  // Ratio has no hardening, so it takes an errorConfig-only forward.
+  // Ratio takes an errorConfig-only forward.
   const cascadeRatio = (
     own?: RatioFactoryConfig,
   ): RatioFactoryConfig => ({

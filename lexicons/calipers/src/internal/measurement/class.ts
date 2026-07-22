@@ -34,7 +34,7 @@ export const makeMeasurementClass = (
     Unit extends string,
   > implements IMeasurement<Unit> {
     // A measurement IS "a scalar + a unit". The embedded scalar (`i` / `f` / `u`) owns the ENTIRE
-    // numeric side: the value, the bound, the hardening reaction, the modifier, and integer-ness. It
+    // numeric side: the value, the bound, the modifier, and integer-ness. It
     // validated its value at its own construction, so the measurement re-checks nothing here; every
     // numeric method DELEGATES to the scalar and re-pairs the result with the unit. `IUnspecified` is
     // the loosest scalar interface (an `i` / `f` is assignable to it), so one field type carries any
@@ -49,7 +49,7 @@ export const makeMeasurementClass = (
     }
 
     // Re-pair a derived scalar with this measurement's unit. The scalar has already validated the
-    // derived value (bound + hardening + modifier + integer-ness), so this only wraps it. Replaces
+    // derived value (bound + modifier + integer-ness), so this only wraps it. Replaces
     // the old bespoke `#clone` bound logic, which now lives entirely in the scalar.
     #withScalar(scalar: IUnspecified): Measurement<Unit> {
       return new Measurement(scalar, this.#unit);

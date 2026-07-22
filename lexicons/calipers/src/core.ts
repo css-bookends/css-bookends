@@ -76,7 +76,7 @@ export interface IMeasurement<Unit extends string = string> {
   /**
    * The range bound this measurement carries (from an ingested hardened
    * `i` / `f`), or `{}` if unhardened. Arithmetic that breaks the bound reacts
-   * per the instance's `hardening` config; an in-bounds derived value keeps it.
+   * per the instance's bound; an in-bounds derived value keeps it.
    */
   constraints: () => Constraints;
   /** Whether the raw value is integral / fractional. */
@@ -238,7 +238,7 @@ export type {
   InRangeBrand,
   SmallerOrEqualToZeroBrand,
 };
-export type { Constraints, Hardening } from './hardening';
+export type { Constraints } from './hardening';
 export {
   createRatio,
   isRatio,

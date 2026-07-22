@@ -1,8 +1,3 @@
-import {
-  DEFAULT_HARDENING,
-  type Hardening,
-  type HardeningConfig,
-} from './hardening';
 import type {
   GreaterOrEqualToZeroBrand,
   InRangeBrand,
@@ -33,8 +28,7 @@ export type IntegerConstraints = ScalarConstraints;
 export type IntegerOptions<
   Min extends number = number,
   Max extends number = number,
-  H extends Hardening = Hardening,
-> = ScalarOptions<Min, Max, H>;
+> = ScalarOptions<Min, Max>;
 
 export interface IInteger {
   css: () => string;
@@ -89,16 +83,13 @@ export type InRangeInteger<
 > = IInteger & InRangeBrand<Min, Max>;
 
 /**
- * The integer type a bounded builder returns, resolved from the captured bound and
- * hardening. A range brand is emitted ONLY when BOTH bounds are known literals AND the
- * reaction is `'fail'` (the only reaction that guarantees the value stays in range; `'warn'`
- * drops a breached edge, so the brand would be a lie). `never` bounds (unbounded) and any
- * non-`'fail'` reaction fall back to a plain `IInteger`.
+ * The integer type a bounded builder returns, resolved from the captured bound. A range brand is
+ * emitted when BOTH bounds are known literals; `never` bounds (unbounded) fall back to a plain
+ * `IInteger`. (A bounded value is always in range or it throws, so the brand is always honest.)
  */
 export type ResolveIntegerBrand<
   Min extends number,
   Max extends number,
-  H extends Hardening,
 > = [
   Min,
 ] extends [
@@ -111,13 +102,7 @@ export type ResolveIntegerBrand<
         never,
       ]
     ? IInteger
-    : [
-          H,
-        ] extends [
-          'fail',
-        ]
-      ? InRangeInteger<Min, Max>
-      : IInteger;
+    : InRangeInteger<Min, Max>;
 
 class IntegerImpl extends ScalarRestricted implements IInteger {
   protected label(): string {
@@ -155,8 +140,8 @@ class IntegerImpl extends ScalarRestricted implements IInteger {
     return new IntegerImpl(value, options) as this;
   }
 
-  // clamp forces the value in-range, so the InRange brand is always honest regardless of the
-  // hardening reaction (System A follows System B here). Defined per-subclass, returning the
+  // clamp forces the value in-range, so the InRange brand is always honest (System A follows
+  // System B here). Defined per-subclass, returning the
   // concrete `InRangeInteger`, so `clone` can preserve the brand (see `ScalarBase.clampToRange`).
   clamp<Min extends number, Max extends number>(
     min: Min,
@@ -186,23 +171,21 @@ export function i(value: number): IInteger;
 export function i<
   Min extends number = never,
   Max extends number = never,
-  H extends Hardening = 'fail',
 >(
   value: number,
-  options: IntegerOptions<Min, Max, H>,
-): ResolveIntegerBrand<Min, Max, H>;
+  options: IntegerOptions<Min, Max>,
+): ResolveIntegerBrand<Min, Max>;
 export function i<
   Min extends number = never,
   Max extends number = never,
-  H extends Hardening = 'fail',
 >(
   value: number,
-  options: IntegerOptions<Min, Max, H> = {},
-): ResolveIntegerBrand<Min, Max, H> {
+  options: IntegerOptions<Min, Max> = {},
+): ResolveIntegerBrand<Min, Max> {
   return new IntegerImpl(
     value,
     options,
-  ) as unknown as ResolveIntegerBrand<Min, Max, H>;
+  ) as unknown as ResolveIntegerBrand<Min, Max>;
 }
 
 export const isInteger = (value: unknown): value is IInteger =>
@@ -267,21 +250,20 @@ export const inRangeInteger = <
 };
 
 /**
- * The integer factory config: the shared hardening slice (identical to m / f)
- * plus the shared `errorConfig` (stack-hint rendering), so a `createInteger`
- * instance builds its own per-instance error store like `createCalipers`.
+ * The integer factory config: the shared `errorConfig` (stack-hint rendering) plus an
+ * optional baked bound, so a `createInteger` instance builds its own per-instance error
+ * store like `createCalipers`.
  */
 export type IntegerFactoryConfig<
   Min extends number = number,
   Max extends number = number,
-  H extends Hardening = Hardening,
-> = HardeningConfig<H> & {
+> = {
   errorConfig?: ErrorConfig;
   /**
    * A bound baked into every value this factory builds (the named-domain pattern,
    * e.g. `createInteger({ min: 100, max: 900 })` for font-weight). Set once here; a
    * per-value bound on top throws. Unit-local (no bundle `global`). The literal
-   * `Min`/`Max` (and `H`) are captured so `i` can brand its output.
+   * `Min`/`Max` are captured so `i` can brand its output.
    */
   min?: Min;
   max?: Max;
@@ -295,31 +277,23 @@ export type IntegerFactoryConfig<
 };
 
 /**
- * The bound integer surface a `createInteger` instance exposes. `FactoryMin`/`FactoryMax`/
- * `FactoryH` are the factory's captured bound and reaction; `i` brands its output with the
- * RESOLVED bound (a per-call bound, else the factory's) under the resolved hardening (a per-call
- * `hardening` overrides the factory's). Set-once makes the per-call and factory bounds mutually
- * exclusive, so the resolved bound is simply whichever one is present.
+ * The bound integer surface a `createInteger` instance exposes. `FactoryMin`/`FactoryMax` are
+ * the factory's captured bound; `i` brands its output with the RESOLVED bound (a per-call bound,
+ * else the factory's). Set-once makes the per-call and factory bounds mutually exclusive, so the
+ * resolved bound is simply whichever one is present.
  */
 export interface IntegerApi<
   FactoryMin extends number = never,
   FactoryMax extends number = never,
-  FactoryH extends Hardening = 'fail',
 > {
   // Two call signatures: with no options the return is fixed to the factory's own resolved
   // brand (no free type params, so a call site's contextual type cannot back-infer a foreign
-  // brand); with options the per-call bound / hardening drive the brand.
+  // brand); with options the per-call bound drives the brand.
   i: {
-    (
+    (value: number): ResolveIntegerBrand<FactoryMin, FactoryMax>;
+    <CallMin extends number = never, CallMax extends number = never>(
       value: number,
-    ): ResolveIntegerBrand<FactoryMin, FactoryMax, FactoryH>;
-    <
-      CallMin extends number = never,
-      CallMax extends number = never,
-      CallH extends Hardening = FactoryH,
-    >(
-      value: number,
-      options: IntegerOptions<CallMin, CallMax, CallH>,
+      options: IntegerOptions<CallMin, CallMax>,
     ): ResolveIntegerBrand<
       [
         CallMin,
@@ -334,27 +308,23 @@ export interface IntegerApi<
         never,
       ]
         ? FactoryMax
-        : CallMax,
-      CallH
+        : CallMax
     >;
   };
   isInteger: (value: unknown) => value is IInteger;
 }
 
 /**
- * The integer FACTORY: bind a config once (the `hardening` reaction and an optional bound) and
- * get the integer surface with that config baked in. Mirrors `createCalipers` (measurements) and
- * `createFloat` (floats) so `m` / `i` / `f` are identical. A per-call `options.hardening` still
- * overrides the baked default.
+ * The integer FACTORY: bind a config once (an optional baked bound + errorConfig) and get the
+ * integer surface with that config baked in. Mirrors `createCalipers` (measurements) and
+ * `createFloat` (floats) so `m` / `i` / `f` are identical.
  */
 export const createInteger = <
   Min extends number = never,
   Max extends number = never,
-  H extends Hardening = 'fail',
 >(
-  config: IntegerFactoryConfig<Min, Max, H> = {},
-): IntegerApi<Min, Max, H> => {
-  const hardening = config.hardening ?? DEFAULT_HARDENING;
+  config: IntegerFactoryConfig<Min, Max> = {},
+): IntegerApi<Min, Max> => {
   const { min, max, modifier, warnOnNonIntegerInput } = config;
   const factoryBounded = min !== undefined || max !== undefined;
   // One per-instance error store, shared by every value this factory binds, so
@@ -375,10 +345,9 @@ export const createInteger = <
   const boundI = <
     CallMin extends number = never,
     CallMax extends number = never,
-    CallH extends Hardening = H,
   >(
     value: number,
-    options: IntegerOptions<CallMin, CallMax, CallH> = {},
+    options: IntegerOptions<CallMin, CallMax> = {},
   ): ResolveIntegerBrand<
     [
       CallMin,
@@ -393,12 +362,10 @@ export const createInteger = <
       never,
     ]
       ? Max
-      : CallMax,
-    CallH
+      : CallMax
   > => {
     guardBound(options);
     return i(value, {
-      hardening,
       errorStore,
       min,
       max,
@@ -419,8 +386,7 @@ export const createInteger = <
         never,
       ]
         ? Max
-        : CallMax,
-      CallH
+        : CallMax
     >;
   };
   return {

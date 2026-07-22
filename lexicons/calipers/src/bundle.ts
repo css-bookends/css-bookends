@@ -16,7 +16,6 @@ import {
   createCalipers,
 } from './factory';
 import { type FloatApi, type FloatFactoryConfig } from './float';
-import { type Hardening } from './hardening';
 import {
   type IntegerApi,
   type IntegerFactoryConfig,
@@ -50,12 +49,6 @@ export interface CalipersBundleConfig<
    * wins; otherwise it falls back here, then to the built-in factory default.
    */
   global?: {
-    /**
-     * Hardening reaction for the SCALAR family (`integer` / `float`; `ratio` has
-     * no bound). `m` and the unit helpers are pure containers and never react to
-     * this: a measurement's reaction rides on the `i` / `f` it ingests.
-     */
-    hardening?: Hardening;
     /** Error-rendering config (e.g. stack hints) shared across every unit. */
     errorConfig?: ErrorConfig;
   };
@@ -119,8 +112,7 @@ export const createCalipersBundle = <
 ): CalipersBundle<P> => {
   // cascade for a measurement-shaped sub-config: own key -> bundle `global` ->
   // built-in factory default. `m` and the unit helpers are pure containers with
-  // NO numeric config, so only `errorConfig` cascades here (hardening rides on the
-  // scalar family; see the `createScalarBundle` call below). `defaultUnit` is
+  // NO numeric config, so only `errorConfig` cascades here. `defaultUnit` is
   // forwarded unchanged from the own config.
   const cascade = (
     own?: CalipersFactoryConfig,

@@ -1,4 +1,4 @@
-import { DEFAULT_HARDENING, reactToBreach } from '../hardening';
+import { throwBreach } from '../hardening';
 import {
   resolveModifier,
   ScalarBase,
@@ -11,8 +11,8 @@ import {
 /**
  * The CHECKED scalar base: `ScalarBase` plus the machinery a BOUNDED value needs. It adds nothing
  * to the value surface; it simply OVERRIDES the construction hooks so the shared pipeline in
- * `ScalarBase` also enforces the stored bound (min / max), applies the modifier, and runs the
- * hardening reaction on a breach. The bound lives in `#config` on the base (read back through
+ * `ScalarBase` also enforces the stored bound (min / max), applies the modifier, and throws on a
+ * breach. The bound lives in `#config` on the base (read back through
  * `constraints()`); this class only decides how construction populates and polices it.
  *
  * `IntegerImpl` / `FloatImpl` / `UnspecifiedImpl` all extend THIS, so every scalar today is
@@ -49,40 +49,33 @@ export abstract class ScalarRestricted extends ScalarBase {
     return finalValue;
   }
 
-  // Range breaches go through the shared hardening reaction. On a 'warn' breach the reaction
-  // returns here and the now-violated edge is DROPPED (its guarantee is broken); 'fail' has already
-  // thrown. The warn-dropped bound is returned for `finalizeConfig` to bake in.
+  // A range breach THROWS (a bounded value is enforced; there is no reaction config). The throw
+  // routes through this instance's error store so `stackHints` can append a stack block. With no
+  // breach the value is in range and the bound is returned unchanged for `finalizeConfig`.
   protected enforceBound(
     value: number,
     options: ScalarOptions,
     label: string,
   ): ScalarConstraints {
     const { min, max, context } = options;
-    const hardening = options.hardening ?? DEFAULT_HARDENING;
-    let effectiveMin = min;
-    let effectiveMax = max;
     if (min !== undefined && value < min) {
-      reactToBreach(
-        hardening,
+      throwBreach(
         `${label}: ${value} is below the minimum ${min}${suffix(context)}`,
         (message) => this.throwScalar(message),
       );
-      effectiveMin = undefined;
     }
     if (max !== undefined && value > max) {
-      reactToBreach(
-        hardening,
+      throwBreach(
         `${label}: ${value} is above the maximum ${max}${suffix(context)}`,
         (message) => this.throwScalar(message),
       );
-      effectiveMax = undefined;
     }
-    return { min: effectiveMin, max: effectiveMax };
+    return { min, max };
   }
 
   // Assemble the frozen, normalized config with a SPREAD, not a hand-listed set: a future field
-  // added to `ScalarOptions` flows in via `...options`; only the fields that need normalization
-  // (the warn-dropped bounds, the defaulted hardening) are overridden by name.
+  // added to `ScalarOptions` flows in via `...options`; only the effective bounds are overridden by
+  // name (they equal the input bounds now, since a breach throws rather than dropping an edge).
   protected finalizeConfig(
     options: ScalarOptions,
     effective: ScalarConstraints,
@@ -91,7 +84,6 @@ export abstract class ScalarRestricted extends ScalarBase {
       ...options,
       min: effective.min,
       max: effective.max,
-      hardening: options.hardening ?? DEFAULT_HARDENING,
     };
   }
 }

@@ -4,7 +4,7 @@ import { ScalarBase, type ScalarConstraints } from './scalarBase';
 
 /**
  * The plumbing-only options a `u` accepts. Unlike `i` / `f`, a `u` carries NO numeric config: no
- * bound (`min` / `max`), no modifier, and no hardening reaction. It takes ONLY what it needs to live
+ * bound (`min` / `max`) and no modifier. It takes ONLY what it needs to live
  * inside a measurement and throw correctly: the per-instance error store, an error `context`, and the
  * outer `wrapperLabel` (so an embedded `u` names its measurement, `m(u): ...`). Narrowing the options
  * to plumbing makes it a TYPE error to hand `u` a bound or a modifier.
@@ -48,8 +48,8 @@ export interface IUnspecified {
 
 /**
  * `u` — the internal "unspecified number" implementation. It extends the BARE `ScalarBase` (NOT the
- * checked `ScalarRestricted` that `i` / `f` extend), so it structurally has NO bound / modifier /
- * hardening machinery: `u` is the deliberately UNSPECIFIED scalar, and hanging numeric config on it
+ * checked `ScalarRestricted` that `i` / `f` extend), so it structurally has NO bound / modifier
+ * machinery: `u` is the deliberately UNSPECIFIED scalar, and hanging numeric config on it
  * would defeat its purpose. The TYPE (`IUnspecified`) is public, but this CLASS and the `u` builder
  * stay INTERNAL (absent from the package's value exports and its `exports` map): `u` is `m`'s neutral
  * wrap for a plain number and `ratio`'s wrap for a bare operand, never something a consumer

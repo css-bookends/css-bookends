@@ -61,7 +61,6 @@ import {
   type CalipersBundleConfig,
   createCalipersBundle,
   type ErrorConfig,
-  type Hardening,
 } from '@css-bookends/css-calipers';
 import * as calipers from '@css-bookends/css-calipers';
 import {
@@ -214,8 +213,6 @@ export interface CompendiumConfig {
    * then the factory default.
    */
   global?: {
-    /** Hardening reaction, forwarded into the calipers primitives. */
-    hardening?: Hardening;
     /** Error-rendering config (e.g. stack hints), forwarded into the calipers primitives. */
     errorConfig?: ErrorConfig;
   };
@@ -347,9 +344,6 @@ export const publishCompendium = (
     ...config.calipers,
     global: {
       ...config.calipers?.global,
-      hardening:
-        config.calipers?.global?.hardening ??
-        config.global?.hardening,
       errorConfig:
         config.calipers?.global?.errorConfig ??
         config.global?.errorConfig,

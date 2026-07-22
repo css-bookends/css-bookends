@@ -1,8 +1,3 @@
-import {
-  DEFAULT_HARDENING,
-  type Hardening,
-  type HardeningConfig,
-} from './hardening';
 import { i, type IInteger } from './integer';
 import type {
   GreaterOrEqualToZeroBrand,
@@ -33,8 +28,7 @@ export type FloatConstraints = ScalarConstraints;
 export type FloatOptions<
   Min extends number = number,
   Max extends number = number,
-  H extends Hardening = Hardening,
-> = ScalarOptions<Min, Max, H>;
+> = ScalarOptions<Min, Max>;
 
 export interface IFloat {
   css: () => string;
@@ -89,16 +83,14 @@ export type InRangeFloat<
 > = IFloat & InRangeBrand<Min, Max>;
 
 /**
- * The float type a bounded builder returns, resolved from the captured bound and hardening.
- * A range brand is emitted ONLY when BOTH bounds are known literals AND the reaction is
- * `'fail'` (the only reaction that keeps the value in range; `'warn'` drops a breached edge, so
- * the brand would be a lie). `never` bounds (unbounded) and any non-`'fail'` reaction fall back
- * to a plain `IFloat`. Mirrors `ResolveIntegerBrand`.
+ * The float type a bounded builder returns, resolved from the captured bound. A range brand is
+ * emitted when BOTH bounds are known literals; `never` bounds (unbounded) fall back to a plain
+ * `IFloat`. (A bounded value is always in range or it throws, so the brand is always honest.)
+ * Mirrors `ResolveIntegerBrand`.
  */
 export type ResolveFloatBrand<
   Min extends number,
   Max extends number,
-  H extends Hardening,
 > = [
   Min,
 ] extends [
@@ -111,13 +103,7 @@ export type ResolveFloatBrand<
         never,
       ]
     ? IFloat
-    : [
-          H,
-        ] extends [
-          'fail',
-        ]
-      ? InRangeFloat<Min, Max>
-      : IFloat;
+    : InRangeFloat<Min, Max>;
 
 class FloatImpl extends ScalarRestricted implements IFloat {
   protected label(): string {
@@ -135,8 +121,8 @@ class FloatImpl extends ScalarRestricted implements IFloat {
     return new FloatImpl(value, options) as this;
   }
 
-  // clamp forces the value in-range, so the InRange brand is always honest regardless of the
-  // hardening reaction (System A follows System B here). Defined per-subclass, returning the
+  // clamp forces the value in-range, so the InRange brand is always honest (System A follows
+  // System B here). Defined per-subclass, returning the
   // concrete `InRangeFloat`, so `clone` can preserve the brand (see `ScalarBase.clampToRange`).
   clamp<Min extends number, Max extends number>(
     min: Min,
@@ -167,23 +153,21 @@ export function f(value: number): IFloat;
 export function f<
   Min extends number = never,
   Max extends number = never,
-  H extends Hardening = 'fail',
 >(
   value: number,
-  options: FloatOptions<Min, Max, H>,
-): ResolveFloatBrand<Min, Max, H>;
+  options: FloatOptions<Min, Max>,
+): ResolveFloatBrand<Min, Max>;
 export function f<
   Min extends number = never,
   Max extends number = never,
-  H extends Hardening = 'fail',
 >(
   value: number,
-  options: FloatOptions<Min, Max, H> = {},
-): ResolveFloatBrand<Min, Max, H> {
+  options: FloatOptions<Min, Max> = {},
+): ResolveFloatBrand<Min, Max> {
   return new FloatImpl(
     value,
     options,
-  ) as unknown as ResolveFloatBrand<Min, Max, H>;
+  ) as unknown as ResolveFloatBrand<Min, Max>;
 }
 
 export const isFloat = (value: unknown): value is IFloat =>
@@ -242,21 +226,20 @@ export const inRangeFloat = <Min extends number, Max extends number>(
 };
 
 /**
- * The float factory config: the shared hardening slice (identical to m / i)
- * plus the shared `errorConfig` (stack-hint rendering), so a `createFloat`
- * instance builds its own per-instance error store like `createCalipers`.
+ * The float factory config: the shared `errorConfig` (stack-hint rendering) plus an
+ * optional baked bound, so a `createFloat` instance builds its own per-instance error
+ * store like `createCalipers`.
  */
 export type FloatFactoryConfig<
   Min extends number = number,
   Max extends number = number,
-  H extends Hardening = Hardening,
-> = HardeningConfig<H> & {
+> = {
   errorConfig?: ErrorConfig;
   /**
    * A bound baked into every value this factory builds (the named-domain pattern,
    * e.g. `createFloat({ min: 0, max: 1 })` for opacity). Set once here; a per-value
    * bound on top throws. Unit-local (no bundle `global`). The literal `Min`/`Max`
-   * (and `H`) are captured so `f` can brand its output.
+   * are captured so `f` can brand its output.
    */
   min?: Min;
   max?: Max;
@@ -268,31 +251,23 @@ export type FloatFactoryConfig<
 };
 
 /**
- * The bound float surface a `createFloat` instance exposes. `FactoryMin`/`FactoryMax`/`FactoryH`
- * are the factory's captured bound and reaction; `f` brands its output with the RESOLVED bound
- * (a per-call bound, else the factory's) under the resolved hardening (a per-call `hardening`
- * overrides the factory's). Set-once makes the per-call and factory bounds mutually exclusive, so
- * the resolved bound is simply whichever one is present. Mirrors `IntegerApi`.
+ * The bound float surface a `createFloat` instance exposes. `FactoryMin`/`FactoryMax` are the
+ * factory's captured bound; `f` brands its output with the RESOLVED bound (a per-call bound, else
+ * the factory's). Set-once makes the per-call and factory bounds mutually exclusive, so the
+ * resolved bound is simply whichever one is present. Mirrors `IntegerApi`.
  */
 export interface FloatApi<
   FactoryMin extends number = never,
   FactoryMax extends number = never,
-  FactoryH extends Hardening = 'fail',
 > {
   // Two call signatures: with no options the return is fixed to the factory's own resolved
   // brand (no free type params, so a call site's contextual type cannot back-infer a foreign
-  // brand); with options the per-call bound / hardening drive the brand.
+  // brand); with options the per-call bound drives the brand.
   f: {
-    (
+    (value: number): ResolveFloatBrand<FactoryMin, FactoryMax>;
+    <CallMin extends number = never, CallMax extends number = never>(
       value: number,
-    ): ResolveFloatBrand<FactoryMin, FactoryMax, FactoryH>;
-    <
-      CallMin extends number = never,
-      CallMax extends number = never,
-      CallH extends Hardening = FactoryH,
-    >(
-      value: number,
-      options: FloatOptions<CallMin, CallMax, CallH>,
+      options: FloatOptions<CallMin, CallMax>,
     ): ResolveFloatBrand<
       [
         CallMin,
@@ -307,27 +282,23 @@ export interface FloatApi<
         never,
       ]
         ? FactoryMax
-        : CallMax,
-      CallH
+        : CallMax
     >;
   };
   isFloat: (value: unknown) => value is IFloat;
 }
 
 /**
- * The float FACTORY: bind a config once (the `hardening` reaction and an optional bound) and get
- * the float surface with that config baked in. Mirrors `createCalipers` (measurements) and
- * `createInteger` (integers) so `m` / `i` / `f` are identical. A per-call `options.hardening`
- * still overrides the baked default.
+ * The float FACTORY: bind a config once (an optional baked bound + errorConfig) and get the float
+ * surface with that config baked in. Mirrors `createCalipers` (measurements) and `createInteger`
+ * (integers) so `m` / `i` / `f` are identical.
  */
 export const createFloat = <
   Min extends number = never,
   Max extends number = never,
-  H extends Hardening = 'fail',
 >(
-  config: FloatFactoryConfig<Min, Max, H> = {},
-): FloatApi<Min, Max, H> => {
-  const hardening = config.hardening ?? DEFAULT_HARDENING;
+  config: FloatFactoryConfig<Min, Max> = {},
+): FloatApi<Min, Max> => {
   const { min, max, modifier } = config;
   const factoryBounded = min !== undefined || max !== undefined;
   // One per-instance error store, shared by every value this factory binds, so
@@ -348,10 +319,9 @@ export const createFloat = <
   const boundF = <
     CallMin extends number = never,
     CallMax extends number = never,
-    CallH extends Hardening = H,
   >(
     value: number,
-    options: FloatOptions<CallMin, CallMax, CallH> = {},
+    options: FloatOptions<CallMin, CallMax> = {},
   ): ResolveFloatBrand<
     [
       CallMin,
@@ -366,12 +336,10 @@ export const createFloat = <
       never,
     ]
       ? Max
-      : CallMax,
-    CallH
+      : CallMax
   > => {
     guardBound(options);
     return f(value, {
-      hardening,
       errorStore,
       min,
       max,
@@ -391,8 +359,7 @@ export const createFloat = <
         never,
       ]
         ? Max
-        : CallMax,
-      CallH
+        : CallMax
     >;
   };
   return {

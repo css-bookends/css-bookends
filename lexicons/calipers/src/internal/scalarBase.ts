@@ -1,4 +1,3 @@
-import { DEFAULT_HARDENING, type Hardening } from '../hardening';
 import { type Scalar, toNumber } from '../scalar';
 import {
   createErrorConfigStore,
@@ -57,15 +56,8 @@ export const resolveModifier = (
 export type ScalarOptions<
   Min extends number = number,
   Max extends number = number,
-  H extends Hardening = Hardening,
 > = ScalarConstraints<Min, Max> & {
   context?: string;
-  /**
-   * Reaction when a bound is breached (at construction or through arithmetic):
-   * the shared `'warn' | 'fail'` config (default `'fail'` = throw). A bundle
-   * `global` can relax it.
-   */
-  hardening?: H;
   /**
    * The per-instance error store this value throws through (carries the resolved
    * `stackHints` config). Threaded by the factory; the free builder leaves it
@@ -98,12 +90,12 @@ export type ScalarOptions<
 
 /**
  * The normalized config a scalar stores as its SINGLE source of truth (`#config`). It is a
- * `ScalarOptions` after the constructor resolves it (the hardening default applied, the warn-dropped
- * bounds baked in), so it is assignable back to `ScalarOptions` for `rebuildWith` / `clone`. New
- * config props are added HERE (and to `ScalarOptions`); the constructor spread carries them into
- * `#config` and `options()` returns the whole bag, so `clone` picks them up with no extra wiring.
+ * `ScalarOptions` after the constructor resolves it (the effective bounds baked in), assignable back
+ * to `ScalarOptions` for `rebuildWith` / `clone`. New config props are added to `ScalarOptions`; the
+ * constructor spread carries them into `#config` and `options()` returns the whole bag, so `clone`
+ * picks them up with no extra wiring.
  */
-export type ScalarConfig = ScalarOptions & { hardening: Hardening };
+export type ScalarConfig = ScalarOptions;
 
 /** The `[context]` suffix appended to a scalar error message, or `''` when there is none. */
 export const suffix = (context?: string): string =>
@@ -115,7 +107,7 @@ const coerce = (value: Scalar): number => toNumber(value);
  * The BARE scalar base: everything a scalar needs that does NOT depend on a bound. It owns the
  * value and config fields, the finiteness check, one-shot arithmetic, introspection, and the error
  * plumbing. The construction pipeline lives here too, but the steps that only a BOUNDED scalar
- * needs (the `min > max` check, the modifier, the bound-breach + hardening reaction) are delegated
+ * needs (the `min > max` check, the modifier, the bound-breach throw) are delegated
  * to protected HOOKS that this class defines as no-ops / passthroughs and `ScalarRestricted`
  * overrides. The hooks take their inputs as PARAMETERS and never read instance fields, so subclass
  * field-init order is irrelevant and no subclass ever touches the private `#config`.
@@ -129,7 +121,7 @@ const coerce = (value: Scalar): number => toNumber(value);
 export abstract class ScalarBase {
   #value: number;
   // The SINGLE source of truth for everything about this value EXCEPT the value itself: bound,
-  // context, hardening, error store, and any config prop added later. `clone` / `rebuildWith`
+  // context, error store, and any config prop added later. `clone` / `rebuildWith`
   // reconstruct from this whole object (via `options()`), so a new prop is carried automatically
   // with no second list to keep in sync. It is frozen after construction; config props must be
   // immutable values (a future mutable field, e.g. a `oneOf` array, must be frozen before it
@@ -182,7 +174,7 @@ export abstract class ScalarBase {
     return value;
   }
 
-  /** React to a bound breach and return the warn-dropped effective bound. Bare base: no bound, so
+  /** Enforce a bound breach (throw) and return the effective bound. Bare base: no bound, so
    *  nothing to enforce and nothing to carry. */
   protected enforceBound(
     _value: number,
@@ -192,26 +184,20 @@ export abstract class ScalarBase {
     return {};
   }
 
-  /** Assemble the frozen, normalized config. Bare base: spread the options and default hardening,
-   *  with no bound normalization (a bare scalar carries whatever bound the options held, if any). */
+  /** Assemble the frozen, normalized config. Bare base: spread the options with no bound
+   *  normalization (a bare scalar carries whatever bound the options held, if any). */
   protected finalizeConfig(
     options: ScalarOptions,
     _effective: ScalarConstraints,
   ): ScalarConfig {
-    return {
-      ...options,
-      hardening: options.hardening ?? DEFAULT_HARDENING,
-    };
+    return { ...options };
   }
 
   constructor(value: number, options: ScalarOptions = {}) {
     // Preliminary config so every throw below renders through the right error store (the only
     // config the construction-time throws need). The frozen, normalized config is assembled at
-    // the end once the warn-drop is known.
-    this.#config = {
-      ...options,
-      hardening: options.hardening ?? DEFAULT_HARDENING,
-    };
+    // the end once the effective bound is known.
+    this.#config = { ...options };
     // The error prefix (this kind's label, wrapped by `wrapperLabel` when a measurement embeds this
     // scalar). Computed AFTER `#config` so `errorPrefix` can read the wrapper.
     const label = this.errorPrefix();
@@ -231,12 +217,12 @@ export abstract class ScalarBase {
     // The kind-specific input invariant, on the MODIFIED value (integers reject a non-integer;
     // floats accept). Always throws on violation; it is a type invariant, not a bound.
     this.validateInput(finalValue, options.context);
-    // Range breaches go through the shared hardening reaction, which drops a warn-breached edge and
-    // returns the effective bound (a bound concern; returns `{}` on the bare base).
+    // Range breaches throw (a breached bound is enforced); enforceBound returns the effective
+    // bound (a bound concern; returns `{}` on the bare base).
     const effective = this.enforceBound(finalValue, options, label);
     this.#value = finalValue;
     // Assemble the frozen, normalized config. The hook spreads the options (so a future field flows
-    // in) and bakes the warn-dropped bounds + defaulted hardening.
+    // in) and bakes the effective bounds.
     this.#config = Object.freeze(
       this.finalizeConfig(options, effective),
     );
@@ -356,7 +342,7 @@ export abstract class ScalarBase {
 
   /**
    * Internal: a copy of this scalar embedded under an outer WRAPPER label, so its errors read
-   * `<wrapper>(<kind>): ...` instead of `<kind>: ...`. Preserves the full config (bound, hardening,
+   * `<wrapper>(<kind>): ...` instead of `<kind>: ...`. Preserves the full config (bound,
    * modifier); re-validates the current value (a no-op for an in-range value). A measurement calls
    * this when it ingests a scalar, passing `'m'`, so an embedded `i` throws `m(i): ...`. Not a public
    * knob (see {@link ScalarOptions.wrapperLabel}).

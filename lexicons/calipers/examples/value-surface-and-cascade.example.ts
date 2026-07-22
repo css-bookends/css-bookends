@@ -3,7 +3,7 @@
  *
  * Not part of the public API surface and not published. It demonstrates the
  * unified value surface across `m()` / `i()` / `f()`, measurement introspection,
- * the config-driven hardening reaction, and the bundle config cascade.
+ * bound enforcement, and the bundle config cascade.
  */
 
 import {
@@ -37,13 +37,14 @@ export const isPercent = m(50, '%').isPercent(); // true
 export const recovered = m(2.5).asScalar().css(); // '2.5'  (fractional -> f)
 export const integral = m(8).isInt(); // true
 
-// --- m carries an ingested hardened bound; reaction is config-driven ------------
+// --- m carries an ingested bound; a breach THROWS (no reaction knob) -------------
 
 const bounded = (v: number) => i(v, { min: 0, max: 10 });
 
 export const carriedBound = m(bounded(8)).constraints(); // { min: 0, max: 10 }
 
-// Default 'fail': breaking the carried bound throws.
+// A bounded value is enforced: breaking the carried bound throws. (Don't want
+// enforcement? Use a plain number / `u`; the planned `clamp` will absorb to the limit.)
 export const breakThrows = (): string => {
   try {
     m(bounded(8)).multiply(2); // 16 breaks [0, 10]
@@ -53,43 +54,38 @@ export const breakThrows = (): string => {
   }
 };
 
-// The reaction rides on the ingested scalar: `m` is a pure container and holds no
-// hardening of its own. Configure the bundle's SCALAR family with a 'warn'
-// reaction (`global.hardening` cascades to i / f), build the bounded `i` from THAT
-// bundle so it carries 'warn', then hand it to m(): the breach warns and proceeds.
-const lenient = createCalipersBundle({
-  global: { hardening: 'warn' },
-});
-export const lenientResult = lenient
-  .m(lenient.i(8, { min: 0, max: 10 }))
-  .multiply(2)
-  .css(); // '16px'
+// --- the config cascade: own key -> global -> factory default (errorConfig) ------
 
-// --- the integer / float factories bake the same reaction ----------------------
-
-const ints = createInteger({ hardening: 'warn' });
-export const relaxedInt = ints
-  .i(8, { min: 0, max: 10 })
-  .multiply(2)
-  .value(); // 16
-
-// --- the bundle cascade: own key -> global -> factory default -------------------
-
-const bundle = createCalipersBundle({
-  global: { hardening: 'warn' }, // applies everywhere...
-  integer: { hardening: 'fail' }, // ...except integers, which throw
-});
-
-export const bundleFloatRelaxed = bundle
-  .f(0.6, { min: 0, max: 1 })
-  .multiply(2)
-  .value(); // 1.2  (warn from global, proceeds)
-
-export const bundleIntStrict = (): string => {
+// `errorConfig` is the shared, CASCADING scalar option: a thrown error renders a
+// `stack=` block iff the resolved `stackHints` is 'on'. Set it on the bundle `global`
+// and it reaches every unit; a per-unit key overrides it.
+const messageOf = (fn: () => unknown): string => {
   try {
-    bundle.i(8, { min: 0, max: 10 }).multiply(2); // integer key = fail
-    return 'no throw';
-  } catch {
-    return 'threw';
+    fn();
+  } catch (error) {
+    return (error as Error).message;
   }
+  return '';
 };
+
+const verbose = createCalipersBundle({
+  global: { errorConfig: { stackHints: 'on' } },
+});
+export const globalReachesScalar = messageOf(() =>
+  verbose.i(8, { min: 0, max: 10 }).multiply(2),
+).includes('stack='); // true — the global errorConfig reached i
+
+// a per-unit key overrides the global
+const mixed = createCalipersBundle({
+  global: { errorConfig: { stackHints: 'on' } }, // applies everywhere...
+  integer: { errorConfig: { stackHints: 'off' } }, // ...except integers
+});
+export const integerKeyWins = messageOf(() =>
+  mixed.i(8, { min: 0, max: 10 }).multiply(2),
+).includes('stack='); // false — the integer key overrode the global
+
+// a standalone factory bakes the same errorConfig
+const ints = createInteger({ errorConfig: { stackHints: 'off' } });
+export const factoryOmitsStack = messageOf(() =>
+  ints.i(8, { min: 0, max: 10 }).multiply(2),
+).includes('stack='); // false
