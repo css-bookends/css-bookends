@@ -8,6 +8,10 @@ output. For the README overview, see ["Errors"](../README.md#errors).
 - Operations are fail-fast: when you call helpers like `add`, `divide`, `clamp`,
   `measurementMin` / `measurementMax`, or the assertion helpers with invalid input (for
   example, mismatched units or non-finite values), CSS-Calipers throws a normal `Error`.
+- A bound breach is the one throw you can turn OFF: an edge that opts into `snap` ABSORBS the
+  breach to its limit **silently** (no throw, no error code) instead of throwing. Only an
+  un-snapped breach throws. See the snap section in
+  [`docs/foundations.md`](../../../docs/foundations.md).
 - Error messages include the operation name (for example,
   `css-calipers.Measurement.divide` or `css-calipers.assertMatchingUnits`), the relevant
   values/units, and any context string you pass in.

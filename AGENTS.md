@@ -142,7 +142,7 @@ in the `smart-factory` + `config-cascade` skills — invoke them before designin
   change the per-book contract.
 - **Everything is config-driven.** A behaviour that could reasonably vary is a config OPTION
   (enumerated + sensible default), never a baked-in branch — "should it do X or Y?" is answered
-  "neither, it's a config" (e.g. `format`, `outOfRange: 'throw' | 'clamp'`, the planned per-edge `clamp`).
+  "neither, it's a config" (e.g. `format`, `outOfRange: 'throw' | 'clamp'`, the per-edge `snap` reaction).
 - **Three-tier cascade.** Each setting resolves: the unit's OWN key → the bundle `global` slot → the
   unit default. Set once in `global` (the only bundle-wide switch), a unit key overrides.
 - **Same shape all the way down — mirror `lexicons/calipers/src/bundle.ts`.** Every grouping (lexicon
@@ -187,9 +187,11 @@ always-available escape. There is NO bound merging and NO in-place bound mutatio
 - **`clone()`** is a zero-arg, config-preserving copy (same value, bound, error config, a
   fresh instance); to change anything, mint fresh. There is no `sealed` and no clone patch: with no
   bound mutation, nothing needs locking.
-- **Terminology (absolute):** the bound is `constraints`; breaching it **throws** — there is no
-  reaction knob (`hardening` retired 2026-07-21). The value and its bound are both immutable. Full
-  model + the two-systems table in `docs/foundations.md`.
+- **Terminology (absolute):** the bound is `constraints`; breaching it **throws** by default, or
+  **absorbs to the limit** on an edge that opts into **`snap`** (a per-edge policy that cascades,
+  silent; a dead blanket `snap` is a compile error). The `hardening: 'warn' | 'fail'` knob is retired
+  (2026-07-21). The value and its bound are both immutable. Full model + the two-systems table and the
+  snap section in `docs/foundations.md`.
 
 ### The two lazy-defaults exports (the zero-config path, absolute)
 

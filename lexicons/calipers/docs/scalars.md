@@ -35,8 +35,8 @@ means.
 the numeric config (set ONCE at construction; to change it, mint a fresh value). `u` extends the BARE
 base (`ScalarBase`) and carries NONE of it, it is finite math only. So the config below is `i` / `f`:
 
-- **Bounds** (`min` / `max`); a broken bound **throws** (there is no reaction knob — the planned
-  `clamp` will add absorb-to-limit). See [`hardening.md`](./hardening.md).
+- **Bounds** (`min` / `max`); a broken bound **throws** by default, or ABSORBS to the limit on an edge
+  that opts into **`snap`** (a per-edge policy that cascades, silent). See [`hardening.md`](./hardening.md).
 - **The modifier** (`'floor'` / `'ceil'` / `'round'` or a function) and the opt-in
   **`warnOnNonIntegerInput`** diagnostic. See [`value-modifier.md`](./value-modifier.md).
 - **The `InRange` compile-time brands** (a runtime bound surfaced as a type-level proof). See

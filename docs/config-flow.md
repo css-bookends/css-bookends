@@ -82,10 +82,12 @@ own unit key  →  this level's global  →  the outer level's global  →  fact
 | `format` | `'object' \| 'string'` | — (per-book key today) | books | `'object'` |
 | constraint bound (`min`, `max`) | a `number` | — (the scalar's own key `integer` / `float`, or per value) | `i`, `f`: a bounded builder brands the value `InRange<min,max>` (System A) and stores the bound (System B). `m` / `r` are containers with no bound of their own: a measurement's bound rides on the `i` / `f` it embeds (`m(i(v, {min,max}))`), surfaced via `.constraints()`; ratio has no bound. Set once at construction, then immutable; mint a fresh scalar to change it | unbounded |
 | input `modifier` | `(n: number) => number` | — (the scalar's own key `integer` / `float`, or per value) | `i`, `f`: transforms the raw value at intake, before validate/store (modify-then-validate). A measurement gets it via the `i` / `f` it embeds. Generic mechanism; specific normalization (e.g. cyclic-angle modulo) lives on a purpose-built scalar or helper | none |
+| `snap` (per-edge + blanket) | per edge via `min`/`max: { snap: boolean }`, or blanket `snap: boolean` | compendium, codex, scalar — POLICY only, the globals carry no bound `value` | `i`, `f`: makes a breach on that edge ABSORB to the limit (silent) instead of throwing; per-edge, cascades most-specific-wins, blanket governs both edges. A dead blanket (both edges override it) is a COMPILE error. `m` gets it via the embedded `i` / `f` | `false` (throws) |
 
 `errorConfig` reaches every error-producing unit and is carried in every level's `global`. A broken
-bound simply THROWS (there is no reaction config); the planned per-edge `clamp` will be the next shared
-scalar option to cascade here. `defaultUnit`, `formats`, `format`, the constraint bound (`min` / `max`),
+bound THROWS by default; the per-edge `snap` policy (above) is the shared scalar option that makes it
+ABSORB to the limit instead, and it cascades through every level's `global` (policy only, never a bound
+`value`). `defaultUnit`, `formats`, `format`, the constraint bound (`min` / `max`),
 and the scalar `modifier` are unit-local or per-value (set through a unit's own key or a per-value
 option, never a shared global).
 

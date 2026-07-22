@@ -29,8 +29,8 @@ spec is `tests/runtime/core/measurement-embed.src.test.ts` (6 red delegation/err
 - [x] **3a. Give `u` a public `clamp()` (embed prep).** Today `i`/`f` expose a public `clamp()`; `u`
   only had the protected `clampToRange`. A measurement delegates `clamp` to WHATEVER scalar it embeds,
   so `u` needs a public `clamp()` to be a full peer. Returns a plain `IUnspecified` (no `InRange`
-  brand); tested on integer AND fractional values / bounds. (Also unblocks the future per-edge `clamp`
-  reaction, whose surface is locked in the pad todo, built AFTER this refactor.) *(done 2026-07-20)*
+  brand); tested on integer AND fractional values / bounds. (Also unblocks the per-edge `snap`
+  reaction, whose surface is locked in the pad todo.) *(done 2026-07-20)*
 - [ ] **3b. `Measurement` holds `#scalar` + `#unit` and delegates.** Embed the scalar; delegate the
   numeric methods (value/valueOf/constraints/isInt/add/subtract/multiply/divide/clamp/round/floor/
   ceil/clone/…); keep the unit methods (unit/category/css/unit-safe add-subtract-clamp-equals-compare);

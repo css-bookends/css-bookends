@@ -134,8 +134,8 @@ A behaviour that could reasonably vary is a CONFIG OPTION, not a hardcoded decis
 design forces a "should it do X or Y?" question, the answer is almost always "neither — it's a
 config" with a sensible default. Examples in play: output shape (`format: 'object' | 'string'`),
 out-of-range handling in books (`outOfRange: 'throw' | 'clamp'`), and whether a bounded scalar
-(`i` / `f`) absorbs an out-of-range result (the planned per-edge `clamp` reaction). (A bounded
-scalar with no `clamp` simply **throws** on breach — that is not a config, it is the one rule.)
+(`i` / `f`) absorbs an out-of-range result (the per-edge `snap` reaction). (A bounded
+scalar with no `snap` simply **throws** on breach, the default that needs no config.)
 
 - Expose the behaviour as an explicit, enumerated, named config value; never bake one branch in.
 - Ship a sensible DEFAULT (the most useful real behaviour), fully overridable.
@@ -234,18 +234,19 @@ there is no `hardenMeasurement`.
 never reacts. Hand `m` a bounded `i` / `f` instead — `m(i(v, { min, max }), 'px')` — and the measurement
 CARRIES that scalar's bound (exposed as a runtime `.constraints()`); ingestion itself is silent (nothing
 is lost, it is kept). When later ARITHMETIC crosses (breaks) the carried bound, the operation **fails
-(throws)**. There is no reaction knob: a bound you set is a bound you enforce. An in-bounds operation
-keeps the constraint; ingesting an unbounded scalar (or a plain number) carries nothing.
+(throws)**, unless that edge opts into **`snap`** (below), which absorbs the breach to the limit instead.
+Absent `snap`, a bound you set is a bound you enforce. An in-bounds operation keeps the constraint;
+ingesting an unbounded scalar (or a plain number) carries nothing.
 
 **Why there is no "just warn" / "just ignore" mode.** Dropping a bound — silently or with a warning — is
 the same as never bounding the value, so if you do not want enforcement, use `u` (the unbounded scalar)
 and carry no bound. And a value that must survive out-of-range in production without crashing is served
 by clamping it to a valid limit, not by shipping the broken value (which CSS ignores anyway). So there
 are three real intents, each with its own tool: don't-enforce → `u`; catch-the-bug → the bound **throws**;
-stay-valid-without-crashing → the planned **`clamp`** opt-in (absorb to the limit). The old
-`hardening: 'warn' | 'fail'` knob is retired (2026-07-21): `warn` was dominated by `u` / `fail` / `clamp`
-in every direction and added no coherent behaviour, and with `fail` the sole reaction the config knob
-itself disappears.
+stay-valid-without-crashing → the **`snap`** opt-in (absorb to the limit; see below). The old
+`hardening: 'warn' | 'fail'` knob is retired (2026-07-21): `warn` was dominated by `u` / `fail` / `snap`
+in every direction and added no coherent behaviour, and with the throw as the default reaction the old
+warn/fail knob itself disappears.
 
 **The input `modifier` (generic normalization hook).** The scalar options take an optional
 `modifier: (n: number) => number`, applied to the raw value at INTAKE, before the bound is checked and
@@ -256,6 +257,69 @@ NOT on `m` or `mDeg` (angles legitimately exceed 360°, as in `rotate(720deg)`).
 opacity does NOT belong here at all — CSS already clamps it, so it is the opacity book's concern, not the
 lexicon's. `m` and the unit helpers carry no `modifier`; a unit helper that later presets one would
 translate it into the scalar it builds (a parked future door, see `docs/measurement-scalar-model.md`).
+
+### Snap: absorb a breach to the limit instead of throwing (locked 2026-07-22)
+
+`snap` is the opt-in that turns a bound breach from a THROW into an absorb: a snapped edge pulls the
+out-of-range value back TO its limit (the bound is kept, the value is pulled in), **silently**. It is the
+"stay valid in production without crashing" tool from the three intents above. Leave an edge un-snapped
+and a breach on that edge still throws. `snap` is a per-EDGE reaction, so `min` and `max` snap
+independently.
+
+**Config surface: a blanket flag plus a per-edge policy.** Both live on the scalar config (`i` / `f`,
+their factories, and every bundle tier), never on `m` (a pure container):
+- `snap?: boolean` is the **blanket**, governing both edges.
+- `min` / `max` is the bound edge. At the factory / instance tier each is `number | { value?: number;
+  snap?: boolean }` (a bare number is value-only; the object co-locates the edge's value and its own
+  `snap` policy). At a GLOBAL tier (a bundle `global`) the edge is `{ snap?: boolean }`, policy only,
+  with no `value` (a bound value is set once, at the factory / instance).
+
+Co-locating `snap` on the edge means a value and its policy are written once (`max: { value: 800, snap:
+false }`), never the value under `max` and the flag again under a separate key.
+
+**The redundancy ban is a COMPILE ERROR.** A blanket `snap` is DEAD when every edge overrides it with its
+own `snap`. The config type forbids that combination so it cannot be written:
+
+```ts
+type Edge       = number | { value?: number; snap?: boolean };
+type EdgeNoSnap = number | { value?: number; snap?: never };   // snap forbidden on this edge
+type BoundConfig =
+  | { snap?: undefined; min?: Edge;       max?: Edge }        // no blanket, edges set freely
+  | { snap: boolean;    min?: EdgeNoSnap; max?: Edge }        // blanket set, min defers to it
+  | { snap: boolean;    min?: Edge;       max?: EdgeNoSnap }; // blanket set, max defers to it
+```
+
+`{ snap: true, min: { snap: false }, max: { snap: false } }` matches no branch, so it is a type error. The
+`snap?: never` on the deferring edge is what forces the rejection (a plain `{ value? }` would let `snap`
+through by width-subtyping). Global tiers use the same union with `Edge = { snap?: boolean }`.
+
+**Cascade: every tier carries blanket AND per-edge; per-edge wins within a tier, the specific tier wins
+across tiers.** `snap` resolves like any cascading option (see the `config-cascade` skill), one line per
+edge E, most-specific first:
+
+```
+instance[E].snap ?? instance.snap
+  ?? factory[E].snap ?? factory.snap
+  ?? scalarFamily.global[E].snap ?? scalarFamily.global.snap
+  ?? codex.global[E].snap ?? codex.global.snap
+  ?? compendium.global[E].snap ?? compendium.global.snap
+  ?? false                                     // default: no snap, the breach throws
+```
+
+The bound `value` resolves on its own (set once at the factory / instance), independent of this policy
+cascade. The tri-state (`true` / `false` / unset) is what lets an inner tier flip just one edge off.
+
+**Pipeline order: `modifier` then `snap`.** The optional intake `modifier` normalizes the raw value first;
+then `snap` catches an out-of-range result and pulls it to the limit, absorbing the breach before the
+bound would throw. So `snap` also guards a `modifier` that itself produces an out-of-range value.
+
+**Branding is unchanged.** A snapped value is guaranteed in-range, exactly as a throw guarantees it by
+rejecting, so a bounded builder ALWAYS brands `InRange<min, max>` (per the two-constraint section below,
+branding is unconditional). `snap` changes the runtime reaction, never the compile-time brand.
+
+**Distinct from the `.clamp(min, max)` method.** The `.clamp()` METHOD is an explicit one-off operation on
+bounds you pass at the call site (it mirrors the CSS `clamp()` function); the `snap` CONFIG is a standing
+policy on the value's OWN carried bound. Different jobs, deliberately different names.
 
 ### The two constraint systems (brands and the runtime bound) (locked 2026-07-16)
 

@@ -34,8 +34,10 @@ purpose is to be neutral, so it carries no typed-input machinery.
 not a stored, re-validating bound.
 
 ### `i` / `f` are the opt-in systems
-All checking lives here: the stored bound (throws on breach), the modifier, integer-ness, and the
-compile-time brands (System A). If you care about any of it, you reach for `i` / `f`.
+All checking lives here: the stored bound (throws on breach, or absorbs to the limit under a `snap`
+policy), the modifier, integer-ness, and the compile-time brands (System A). If you care about any of
+it, you reach for `i` / `f`. A measurement ingests all of it (bound, modifier, snap) via the `i` / `f`
+it embeds; `m` itself carries none.
 
 ### The two-level scalar base
 The class hierarchy encodes the opt-in model so a bound on `u` is impossible, not merely discouraged:

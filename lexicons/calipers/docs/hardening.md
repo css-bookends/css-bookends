@@ -19,9 +19,10 @@ brand that records it.
 > (`NonNegativeMeasurement`, `InRangeMeasurement`) stamped by a runtime check. They are distinct from
 > System B, the stored runtime bound (`min` / `max`, `.constraints()`), which lives on the
 > config-bearing scalars `i` / `f` and **throws when arithmetic breaks it** (a measurement carries a
-> bound only via the `i` / `f` it embeds, `m` itself has no numeric config). There is no reaction knob:
-> the old `hardening: 'warn' | 'fail'` config was retired 2026-07-21 (bound → fail, or `u` for no bound,
-> or the planned `clamp` to absorb). See [`scalars.md`](./scalars.md) and `docs/foundations.md`
+> bound only via the `i` / `f` it embeds, `m` itself has no numeric config). The breach reaction is
+> throw-by-default: the old `hardening: 'warn' | 'fail'` config was retired 2026-07-21 (bound → throw, or
+> `u` for no bound, or the `snap` opt-in to absorb to the limit). See [`scalars.md`](./scalars.md) and
+> `docs/foundations.md`
 > ("The two constraint systems").
 
 ## The pattern

@@ -21,8 +21,8 @@ implement; copy it, never reinvent a per-feature scheme.
   its shared type + config slice live once (`lexicons/calipers/src/internal/errors.ts`) and are imported
   by every unit factory. A new shared option is added to that one shared type, then it is automatically
   identical across the units. The config-bearing SCALARS (`i` / `f`) ALSO share a numeric config shape
-  (the bound `min` / `max`, the modifier, and the planned per-edge `clamp`); `m` / `r` are CONTAINERS
-  that embed a scalar, carry NO numeric config, and DELEGATE all of it (bound, modifier, clamp) to the
+  (the bound `min` / `max`, the modifier, and the per-edge `snap` reaction); `m` / `r` are CONTAINERS
+  that embed a scalar, carry NO numeric config, and DELEGATE all of it (bound, modifier, snap) to the
   scalar they hold, cascading only their own non-numeric fields (`errorConfig`, plus `m`'s
   `unit` / `defaultUnit`).
 - **A bundle exposes `global` PLUS one key per unit.** `CalipersBundleConfig` (codex):
@@ -43,12 +43,13 @@ implement; copy it, never reinvent a per-feature scheme.
   unit option, you ALSO add it to the bundle config + cascade in the SAME change. An option
   that only works standalone is a bug.
 - **Cross-cutting vs unit-local.** `errorConfig` is CROSS-CUTTING: it lives in every `global` and
-  reaches every error-producing unit (the planned per-edge `clamp` will be the next cross-cutting
-  scalar option). The constraint bound (`min` / `max`) is UNIT-LOCAL, like `defaultUnit` / the colour
-  config: set through a unit's own key (or on the value itself), never a shared `global`. Do NOT add a
-  `global` tier for a unit-local option. A broken bound simply THROWS — there is no reaction knob (the
-  `hardening: 'warn' | 'fail'` config was retired 2026-07-21). See `docs/foundations.md` ("The two
-  constraint systems") and `docs/config-flow.md`.
+  reaches every error-producing unit; the per-edge `snap` policy is another cross-cutting scalar option
+  (carried in every `global` as POLICY only, no bound `value`). The constraint bound (`min` / `max`) is
+  UNIT-LOCAL, like `defaultUnit` / the colour config: set through a unit's own key (or on the value
+  itself), never a shared `global`. Do NOT add a `global` tier for a unit-local option. A broken bound
+  THROWS by default, or ABSORBS to the limit on an edge that opts into `snap`; the `hardening: 'warn' |
+  'fail'` config was retired (2026-07-21). See `docs/foundations.md` ("Snap" + "The two constraint
+  systems") and `docs/config-flow.md`.
 - **The publishBook engine has no global tier.** `self-publish/src/publishBook.ts` merges only
   `defaults <- config`. So per-book global resolution happens INSIDE `publishCompendium` (merge
   the global-applicable fields under each book's own config before calling the factory), and a
