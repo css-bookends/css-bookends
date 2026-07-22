@@ -17,10 +17,9 @@ expectAssignable<CalipersInstance>(instance);
 // to bare `m()` at runtime; branding the return type is a separate follow-up).
 expectAssignable<CalipersFactoryConfig>({ defaultUnit: '%' });
 
-// `hardening` is NOT a measurement factory option: `m` is a pure container that
-// carries no numeric config. The hardening reaction rides on the `i` / `f` scalar
-// handed to `m()`, so it is configured through `createInteger` / `createFloat`,
-// never here.
+// `hardening` is not a factory option anywhere: `m` never carried numeric config,
+// and the `hardening: 'warn' | 'fail'` reaction knob on `i` / `f` was retired
+// (2026-07-21). A breached bound throws; there is no reaction to configure.
 expectError(createCalipers({ hardening: 'warn' }));
 
 instance.m(10);

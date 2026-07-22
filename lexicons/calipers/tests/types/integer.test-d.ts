@@ -22,8 +22,9 @@ expectAssignable<IInteger>(i(5, { min: 0, max: 10 }));
 const bounded = i(700, { min: 1, max: 1000 });
 expectAssignable<IInteger>(bounded);
 
-// createInteger bakes a bound; under the default (fail) hardening its `i` brands
-// every value with the factory's exact range (System B surfaced as System A).
+// createInteger bakes a bound; its `i` ALWAYS brands every value with the factory's
+// exact range (System B surfaced as System A) — a bounded value is always in range
+// (it throws otherwise), so the proof always holds.
 const { i: fontWeight } = createInteger({ min: 100, max: 900 });
 expectType<InRangeInteger<100, 900>>(fontWeight(400));
 
@@ -32,18 +33,14 @@ expectType<InRangeInteger<100, 900>>(fontWeight(400).clone());
 // a plain integer's clone stays plain.
 expectType<IInteger>(i(5).clone());
 
-// under `warn` a breach is dropped rather than thrown, so the range cannot be
-// promised: the brand honestly falls back to a plain integer.
-const { i: fontWeightLoose } = createInteger({
-  min: 100,
-  max: 900,
-  hardening: 'warn',
-});
-expectType<IInteger>(fontWeightLoose(400));
+// the `hardening` reaction knob is retired (2026-07-21): a bounded builder cannot
+// opt out of enforcement, so `hardening` is no longer a valid option (any value).
+expectError(createInteger({ min: 100, max: 900, hardening: 'warn' }));
+expectError(createInteger({ min: 100, max: 900, hardening: 'fail' }));
 
-// a per-value bound brands the same way, and a per-call `warn` still drops it.
+// a per-value bound brands the same way; a per-call `hardening` is rejected.
 expectType<InRangeInteger<0, 10>>(i(5, { min: 0, max: 10 }));
-expectType<IInteger>(i(5, { min: 0, max: 10, hardening: 'warn' }));
+expectError(i(5, { min: 0, max: 10, hardening: 'warn' }));
 
 // an unbounded integer is never branded.
 expectType<IInteger>(i(5));

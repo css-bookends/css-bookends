@@ -193,13 +193,15 @@ if (hasCssMethod(maybeHasCss)) {
   expectAssignable<() => string>(maybeHasCss.css);
 }
 
-// `hardening` has left the measurement + unit-group surface of the bundle: neither
-// the `measurement` key nor a unit-group key (e.g. `absolute`) accepts it. The
-// hardening reaction is now purely a scalar concern, configured through the
-// `integer` / `float` keys (and `global`, which cascades to the scalar family).
+// `hardening` is retired (2026-07-21): NO bundle key accepts it — not `measurement`
+// or a unit-group (`absolute`), and no longer the scalar keys (`integer` / `float`)
+// or `global` either. A breached bound throws; there is no reaction to configure.
 expectError(
   createCalipersBundle({ measurement: { hardening: 'warn' } }),
 );
 expectError(
   createCalipersBundle({ absolute: { hardening: 'warn' } }),
 );
+expectError(createCalipersBundle({ integer: { hardening: 'warn' } }));
+expectError(createCalipersBundle({ float: { hardening: 'fail' } }));
+expectError(createCalipersBundle({ global: { hardening: 'warn' } }));

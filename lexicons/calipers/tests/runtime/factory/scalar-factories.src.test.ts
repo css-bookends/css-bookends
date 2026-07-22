@@ -2,8 +2,8 @@
    every create{Integer,Float,Ratio}() call is the subject under test. */
 // Direct behavioral tests for the scalar factories `createInteger` / `createFloat`.
 // They were only reached indirectly through the bundle cascade; the split turns each
-// into its own package, so drive the factory directly here: the configured hardening
-// reaction must reach the bound `i` / `f` helper it returns.
+// into its own package, so drive the factory directly here: the configured bound,
+// `errorConfig`, and modifier must reach the bound `i` / `f` helper it returns.
 import { describe, expect, it } from 'vitest';
 
 import { createFloat } from '../../../src/float';
@@ -11,44 +11,20 @@ import { createInteger } from '../../../src/integer';
 import { createRatio } from '../../../src/ratio';
 
 describe('createInteger (direct factory behavior)', () => {
-  it('binds an i carrying the configured hardening reaction', () => {
-    const failing = createInteger({ hardening: 'fail' });
-    expect(() =>
-      failing.i(8, { min: 0, max: 10 }).multiply(2),
-    ).toThrow(/maximum/);
-
-    const warning = createInteger({ hardening: 'warn' });
-    expect(
-      warning.i(8, { min: 0, max: 10 }).multiply(2).value(),
-    ).toBe(16);
-  });
-
-  it('defaults to fail when no reaction is configured', () => {
+  it('binds an i that throws on a breached bound', () => {
     const c = createInteger();
     expect(() => c.i(8, { min: 0, max: 10 }).multiply(2)).toThrow(
       /maximum/,
-    );
+    ); // 16 > 10
   });
 });
 
 describe('createFloat (direct factory behavior)', () => {
-  it('binds an f carrying the configured hardening reaction', () => {
-    const failing = createFloat({ hardening: 'fail' });
-    expect(() =>
-      failing.f(0.6, { min: 0, max: 1 }).multiply(2),
-    ).toThrow(/maximum/);
-
-    const warning = createFloat({ hardening: 'warn' });
-    expect(
-      warning.f(0.6, { min: 0, max: 1 }).multiply(2).value(),
-    ).toBe(1.2);
-  });
-
-  it('defaults to fail when no reaction is configured', () => {
+  it('binds an f that throws on a breached bound', () => {
     const c = createFloat();
     expect(() => c.f(0.6, { min: 0, max: 1 }).multiply(2)).toThrow(
       /maximum/,
-    );
+    ); // 1.2 > 1
   });
 });
 

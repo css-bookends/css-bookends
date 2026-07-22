@@ -1,14 +1,12 @@
-// The full hardening spectrum: i/f imperative hardening (existing), m's quartet
-// (existing), m CARRYING an ingested hardened scalar (new), and the config-driven
-// reaction (`warn` / `fail`) when arithmetic breaks a carried bound (new).
+// The bound spectrum: i/f imperative bounds, m's quartet, and m CARRYING an
+// ingested bounded scalar. A bound is enforced by FAILING (throwing) when
+// construction or arithmetic breaks it; there is no reaction knob (the old
+// `hardening: 'warn' | 'fail'` config was retired 2026-07-21). If you do not want
+// enforcement, use `u` (no bound); the planned `clamp` will absorb to the limit.
 //
-// Per docs/foundations.md: the hardening reaction is config-driven via the shared
-// `Hardening = 'warn' | 'fail'` type, set on the i() / f() factories (and the
-// codex / compendium bundle `global`); a measurement reacts via the i / f it
-// ingests, since m is a pure container. Default is `fail` (preserves i/f's throw).
-// The i/f + quartet blocks are regression coverage; the carry + config blocks
-// exercise the new m behaviour.
-import { describe, expect, it, vi } from 'vitest';
+// Per docs/foundations.md: the bound lives on the config-bearing scalars i / f; a
+// measurement enforces via the i / f it ingests, since m is a pure container.
+import { describe, expect, it } from 'vitest';
 
 import { createFloat, createInteger, f, i } from '../../../src';
 import {
@@ -17,8 +15,8 @@ import {
   nonNegative,
 } from '../../support/calipers_tests.src';
 
-describe('hardening spectrum', () => {
-  /* ---- i / f imperative hardening (existing behaviour; regression) ---- */
+describe('bound spectrum', () => {
+  /* ---- i / f imperative bounds (regression) ---- */
   describe('i / f bounded builders re-validate through arithmetic', () => {
     it('a bounded integer enforces its bound at construction', () => {
       const { i: fontWeight } = createInteger({ min: 1, max: 1000 });
@@ -54,7 +52,7 @@ describe('hardening spectrum', () => {
     });
   });
 
-  /* ---- m direct hardening via the quartet (existing) ---- */
+  /* ---- m direct bounds via the quartet ---- */
   describe('m quartet (nonNegative / inRange)', () => {
     it('ensure passes in-bounds and throws out-of-bounds', () => {
       expect(nonNegative.ensure(m(4)).css()).toBe('4px');
@@ -64,8 +62,8 @@ describe('hardening spectrum', () => {
     });
   });
 
-  /* ---- NEW: m carries an ingested hardened scalar ---- */
-  describe('m carries an ingested hardened scalar', () => {
+  /* ---- m carries an ingested bounded scalar ---- */
+  describe('m carries an ingested bounded scalar', () => {
     it('keeps the scalar bounds as m.constraints()', () => {
       expect(m(i(8, { min: 0, max: 10 })).constraints()).toEqual({
         min: 0,
@@ -73,74 +71,47 @@ describe('hardening spectrum', () => {
       });
     });
 
-    it('an unhardened scalar carries no constraints', () => {
+    it('an unbounded scalar carries no constraints', () => {
       expect(m(i(8)).constraints()).toEqual({});
     });
   });
 
-  /* ---- m carries the ingested scalar's OWN reaction (m holds no config) ---- */
-  describe('a measurement reacts per the ingested scalar, not m', () => {
-    // `m` is a pure container: it holds no bound or hardening of its own. A bound + its reaction ride
-    // on the `i` / `f` handed to `m()`, so the reaction is the ingested scalar's ("m ingests the
-    // hardening"). A plain-number measurement has no bound and never reacts.
-    it("'warn' warns but proceeds", () => {
-      const spy = vi
-        .spyOn(console, 'warn')
-        .mockImplementation(() => {});
-      expect(
-        m(i(8, { min: 0, max: 10, hardening: 'warn' }))
-          .multiply(2)
-          .css(),
-      ).toBe('16px');
-      expect(spy).toHaveBeenCalled();
-      spy.mockRestore();
+  /* ---- m enforces the ingested scalar's bound (m holds no config) ---- */
+  describe('a measurement enforces per the ingested scalar, not m', () => {
+    // `m` is a pure container: it holds no bound of its own. The bound rides on the `i` / `f` handed
+    // to `m()`, so a breach throws because the ingested scalar says so ("m ingests the scalar's
+    // enforcement"). A plain-number measurement has no bound and never reacts.
+    it('throws on the breaking operation', () => {
+      expect(() => m(i(8, { min: 0, max: 10 })).multiply(2)).toThrow(
+        /above the maximum/,
+      );
     });
 
-    it("'fail' throws on the breaking operation", () => {
-      expect(() =>
-        m(i(8, { min: 0, max: 10, hardening: 'fail' })).multiply(2),
-      ).toThrow(/above the maximum/);
-    });
-
-    it('an in-bounds operation never reacts, regardless of config', () => {
+    it('an in-bounds operation never reacts', () => {
       expect(
-        m(i(8, { min: 0, max: 10, hardening: 'fail' }))
+        m(i(8, { min: 0, max: 10 }))
           .multiply(1)
           .css(),
       ).toBe('8px');
     });
 
-    it('a plain-number or unhardened measurement never reacts', () => {
+    it('a plain-number or unbounded measurement never reacts', () => {
       expect(m(8).multiply(2).css()).toBe('16px');
       expect(m(i(8)).multiply(2).css()).toBe('16px');
     });
   });
 });
 
-describe('construction-time hardening reaction (i / f)', () => {
-  it("'warn' drops the violated edge, keeps the valid one", () => {
-    const spy = vi
-      .spyOn(console, 'warn')
-      .mockImplementation(() => {});
-    const v = i(50, { min: 0, max: 10, hardening: 'warn' });
-    expect(spy).toHaveBeenCalled();
-    expect(v.constraints()).toEqual({ min: 0 });
-    spy.mockRestore();
+describe('construction-time bound enforcement (i / f)', () => {
+  it('an integer throws when the initial value is out of range', () => {
+    expect(() => i(50, { min: 0, max: 10 })).toThrow(
+      /above the maximum/,
+    );
   });
 
-  it("'fail' throws (unchanged)", () => {
-    expect(() =>
-      i(50, { min: 0, max: 10, hardening: 'fail' }),
-    ).toThrow(/above the maximum/);
-  });
-
-  it('float mirrors: warn drops the violated edge', () => {
-    const spy = vi
-      .spyOn(console, 'warn')
-      .mockImplementation(() => {});
-    expect(
-      f(1.5, { min: 0, max: 1, hardening: 'warn' }).constraints(),
-    ).toEqual({ min: 0 });
-    spy.mockRestore();
+  it('a float mirrors: throws when the initial value is out of range', () => {
+    expect(() => f(1.5, { min: 0, max: 1 })).toThrow(
+      /above the maximum/,
+    );
   });
 });

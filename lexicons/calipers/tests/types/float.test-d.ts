@@ -22,8 +22,9 @@ expectAssignable<IFloat>(f(0.5, { min: 0, max: 1 }));
 const opacity = f(0.25, { min: 0, max: 1 });
 expectAssignable<IFloat>(opacity);
 
-// createFloat bakes a bound; under the default (fail) hardening its `f` brands
-// every value with the factory's exact range (System B surfaced as System A).
+// createFloat bakes a bound; its `f` ALWAYS brands every value with the factory's
+// exact range (System B surfaced as System A) — a bounded value is always in range
+// (it throws otherwise), so the proof always holds.
 const { f: alpha } = createFloat({ min: 0, max: 1 });
 expectType<InRangeFloat<0, 1>>(alpha(0.5));
 
@@ -32,18 +33,14 @@ expectType<InRangeFloat<0, 1>>(alpha(0.5).clone());
 // a plain float's clone stays plain.
 expectType<IFloat>(f(0.5).clone());
 
-// under `warn` a breach is dropped rather than thrown, so the range cannot be
-// promised: the brand honestly falls back to a plain float.
-const { f: alphaLoose } = createFloat({
-  min: 0,
-  max: 1,
-  hardening: 'warn',
-});
-expectType<IFloat>(alphaLoose(0.5));
+// the `hardening` reaction knob is retired (2026-07-21): a bounded builder cannot
+// opt out of enforcement, so `hardening` is no longer a valid option (any value).
+expectError(createFloat({ min: 0, max: 1, hardening: 'warn' }));
+expectError(createFloat({ min: 0, max: 1, hardening: 'fail' }));
 
-// a per-value bound brands the same way, and a per-call `warn` still drops it.
+// a per-value bound brands the same way; a per-call `hardening` is rejected.
 expectType<InRangeFloat<0, 1>>(f(0.5, { min: 0, max: 1 }));
-expectType<IFloat>(f(0.5, { min: 0, max: 1, hardening: 'warn' }));
+expectError(f(0.5, { min: 0, max: 1, hardening: 'warn' }));
 
 // an unbounded float is never branded.
 expectType<IFloat>(f(0.5));

@@ -23,57 +23,6 @@ describe('createScalarBundle (scalar family bundle)', () => {
     expect(s.isRatio(s.r(16, 9))).toBe(true);
   });
 
-  describe('hardening cascade -> integer and float', () => {
-    it('the global applies when there is no unit key', () => {
-      const loose = createScalarBundle({
-        global: { hardening: 'warn' },
-      });
-      expect(
-        loose.i(8, { min: 0, max: 10 }).multiply(2).value(),
-      ).toBe(16);
-      expect(
-        loose.f(0.6, { min: 0, max: 1 }).multiply(2).value(),
-      ).toBe(1.2);
-    });
-
-    it('a unit key overrides the global (per unit)', () => {
-      const mixed = createScalarBundle({
-        global: { hardening: 'warn' },
-        integer: { hardening: 'fail' },
-      });
-      // integer key wins -> throws
-      expect(() =>
-        mixed.i(8, { min: 0, max: 10 }).multiply(2),
-      ).toThrow(/maximum/);
-      // float has no key -> falls back to the global -> proceeds
-      expect(
-        mixed.f(0.6, { min: 0, max: 1 }).multiply(2).value(),
-      ).toBe(1.2);
-    });
-
-    it('defaults to fail when neither global nor unit key is set', () => {
-      const s = createScalarBundle();
-      expect(() => s.i(8, { min: 0, max: 10 }).multiply(2)).toThrow(
-        /maximum/,
-      );
-      expect(() => s.f(0.6, { min: 0, max: 1 }).multiply(2)).toThrow(
-        /maximum/,
-      );
-    });
-
-    it('propagates the reaction to a per-call bound on i / f', () => {
-      const loose = createScalarBundle({
-        global: { hardening: 'warn' },
-      });
-      expect(
-        loose.i(8, { min: 0, max: 10 }).multiply(2).value(),
-      ).toBe(16);
-      expect(
-        loose.f(0.6, { min: 0, max: 1 }).multiply(2).value(),
-      ).toBe(1.2);
-    });
-  });
-
   describe('errorConfig cascade -> integer, float AND ratio', () => {
     const captureMessage = (fn: () => void): string => {
       try {

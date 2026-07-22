@@ -1,10 +1,10 @@
 /* eslint-disable no-restricted-syntax -- this whole file tests the codex bundle
    factory; every createCalipersBundle() call here is the subject under test. */
-// The codex config cascade: each unit (m / i / f) resolves a setting as
-// own keyed config -> bundle `global` -> factory default. Worked example: the
-// shared `hardening` reaction. The bundle must expose the CONFIGURED i / f / m,
-// so a bundle-level `global` or per-unit key actually reaches them.
-import { describe, expect, it, vi } from 'vitest';
+// The codex config cascade: each unit resolves a setting as own keyed config ->
+// bundle `global` -> factory default. Worked example: the shared `errorConfig`
+// (see the errorConfig-cascade block below). The bundle must expose the CONFIGURED
+// units, so a bundle-level `global` or per-unit key actually reaches them.
+import { describe, expect, it } from 'vitest';
 
 import {
   type CalipersBundle,
@@ -14,126 +14,6 @@ import {
 import createCalipersBundle from '../../../src/codex';
 
 describe('codex config cascade (own key -> global -> factory default)', () => {
-  // `m` is a pure container: it holds no hardening of its own. A bound + its reaction ride on the
-  // ingested `i` / `f`, whose hardening the SAME cascade configures (see the i / f blocks below), so a
-  // measurement's reaction flows THROUGH the bundle-configured scalar. The worked cascade example now
-  // lives on i / f / r.
-  describe('m (measurement) reacts via its ingested scalar', () => {
-    it("global 'warn' relaxes the breach through m", () => {
-      const spy = vi
-        .spyOn(console, 'warn')
-        .mockImplementation(() => {});
-      const c = createCalipersBundle({
-        global: { hardening: 'warn' },
-      });
-      expect(
-        c
-          .m(c.i(8, { min: 0, max: 10 }))
-          .multiply(2)
-          .css(),
-      ).toBe('16px');
-      expect(spy).toHaveBeenCalled();
-      spy.mockRestore();
-    });
-
-    it("global 'fail' throws through m", () => {
-      const c = createCalipersBundle({
-        global: { hardening: 'fail' },
-      });
-      expect(() =>
-        c.m(c.i(8, { min: 0, max: 10 })).multiply(2),
-      ).toThrow(/above the maximum/);
-    });
-
-    it('factory default (fail) when neither is set', () => {
-      const c = createCalipersBundle();
-      expect(() =>
-        c.m(c.i(8, { min: 0, max: 10 })).multiply(2),
-      ).toThrow(/above the maximum/);
-    });
-
-    it('a plain-number measurement holds no bound, so it never reacts', () => {
-      const c = createCalipersBundle({
-        global: { hardening: 'fail' },
-      });
-      expect(c.m(8).multiply(2).css()).toBe('16px');
-    });
-  });
-
-  describe('i (integer)', () => {
-    it('global relaxes the breach (warn)', () => {
-      const c = createCalipersBundle({
-        global: { hardening: 'warn' },
-      });
-      expect(c.i(8, { min: 0, max: 10 }).multiply(2).value()).toBe(
-        16,
-      );
-    });
-
-    it('unit key wins over global', () => {
-      const c = createCalipersBundle({
-        global: { hardening: 'warn' },
-        integer: { hardening: 'fail' },
-      });
-      expect(() => c.i(8, { min: 0, max: 10 }).multiply(2)).toThrow(
-        /maximum/,
-      );
-    });
-
-    it('factory default (fail) when neither is set', () => {
-      const c = createCalipersBundle();
-      expect(() => c.i(8, { min: 0, max: 10 }).multiply(2)).toThrow(
-        /maximum/,
-      );
-    });
-
-    it('the bundle i threads hardening to a per-call bound', () => {
-      const c = createCalipersBundle({
-        global: { hardening: 'warn' },
-      });
-      expect(c.i(8, { min: 0, max: 10 }).multiply(2).value()).toBe(
-        16,
-      );
-    });
-  });
-
-  describe('f (float)', () => {
-    it('global relaxes the breach (warn)', () => {
-      const c = createCalipersBundle({
-        global: { hardening: 'warn' },
-      });
-      expect(c.f(0.6, { min: 0, max: 1 }).multiply(2).value()).toBe(
-        1.2,
-      );
-    });
-
-    it('unit key wins over global', () => {
-      const c = createCalipersBundle({
-        global: { hardening: 'warn' },
-        float: { hardening: 'fail' },
-      });
-      expect(() => c.f(0.6, { min: 0, max: 1 }).multiply(2)).toThrow(
-        /maximum/,
-      );
-    });
-
-    it('factory default (fail) when neither is set', () => {
-      const c = createCalipersBundle();
-      expect(() => c.f(0.6, { min: 0, max: 1 }).multiply(2)).toThrow(
-        /maximum/,
-      );
-    });
-
-    it('the bundle f threads hardening to a per-call bound', () => {
-      const c = createCalipersBundle({
-        global: { hardening: 'warn' },
-      });
-      expect(c.f(0.6, { min: 0, max: 1 }).multiply(2).value()).toBe(
-        1.2,
-      );
-    });
-  });
-
   // The color quarter of the bundle: `config.color` must forward to `createColor`,
   // so a custom format plugin registered through the bundle actually reaches the
   // bound `color` instance. Previously only existence (`typeof bundle.color`) was
@@ -231,7 +111,7 @@ describe('codex errorConfig cascade (global -> unit key -> factory default)', ()
     return '';
   };
   // m core: divide-by-zero always throws through the instance error store, so it
-  // renders a stack hint iff the resolved errorConfig says so (independent of hardening).
+  // renders a stack hint iff the resolved errorConfig says so.
   const mError = (c: CalipersBundle): string =>
     captureMessage(() => c.m(2, 'px').divide(0));
 
