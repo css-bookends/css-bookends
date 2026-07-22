@@ -1,14 +1,14 @@
 import type { MeasurementOf } from '../core';
 import {
   type CalipersFactoryConfig,
-  createCalipers,
+  createCalipersFactory,
 } from '../factory';
 
-/** Factory for the absolute-length helpers, bound through `createCalipers`. */
-export const createAbsoluteUnits = (
+/** Factory for the absolute-length helpers, bound through `createCalipersFactory`. */
+export const createAbsoluteUnitsFactory = (
   config: CalipersFactoryConfig = {},
 ) => {
-  const core = createCalipers(config);
+  const core = createCalipersFactory(config);
   return {
     mPx: core.makeUnitHelperFromDefinition('mPx'),
     mCm: core.makeUnitHelperFromDefinition('mCm'),
@@ -20,7 +20,7 @@ export const createAbsoluteUnits = (
   };
 };
 
-type AbsoluteHelpers = ReturnType<typeof createAbsoluteUnits>;
+type AbsoluteHelpers = ReturnType<typeof createAbsoluteUnitsFactory>;
 export type PxMeasurement = MeasurementOf<AbsoluteHelpers['mPx']>;
 export type CmMeasurement = MeasurementOf<AbsoluteHelpers['mCm']>;
 export type MmMeasurement = MeasurementOf<AbsoluteHelpers['mMm']>;

@@ -11,7 +11,7 @@ export type CalipersFactoryConfig = {
   errorConfig?: ErrorConfig;
   /**
    * The unit bare `m(value)` uses when no unit is given (default `'px'`), e.g.
-   * `createCalipers({ defaultUnit: '%' }).m(50)` yields `50%`. An explicit
+   * `createCalipersFactory({ defaultUnit: '%' }).m(50)` yields `50%`. An explicit
    * `m(value, unit)` still overrides it, and the fixed-unit helpers (`mVh`,
    * `mRem`, …) are unaffected.
    */
@@ -23,7 +23,7 @@ export type CalipersFactoryConfig = {
 // per-group factories or the codex bundle, not this instance.
 export type CalipersInstance = CoreApi;
 
-export const createCalipers = (
+export const createCalipersFactory = (
   config: CalipersFactoryConfig = {},
 ): CalipersInstance => {
   const errorStore = createErrorConfigStore(config.errorConfig ?? {});

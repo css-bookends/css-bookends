@@ -1,13 +1,13 @@
 /**
  * Example-only file. Not part of the public API surface and not published.
  *
- * The codex BUNDLE (`createCalipersBundle`) binds every Layer-1 lexicon at once,
+ * The codex BUNDLE (`createCalipersBundleFactory`) binds every Layer-1 lexicon at once,
  * colour included, under one keyed config with the cascade. The `color` slot is
- * forwarded to `createColor`, so a custom format registered on the bundle reaches
+ * forwarded to `createColorFactory`, so a custom format registered on the bundle reaches
  * the bound `color` helper: you configure the whole layer in one place and pull
  * `m` / `i` / `f` / `color` off a single instance.
  */
-import { createCalipersBundle } from '@css-bookends/css-calipers';
+import { createCalipersBundleFactory } from '@css-bookends/css-calipers';
 
 import type {
   ColorFormatPlugin,
@@ -27,7 +27,7 @@ const token: ColorFormatPlugin<'token'> = {
     'var(--brand)' as ColorString<'token'>,
 };
 
-const cx = createCalipersBundle({
+const cx = createCalipersBundleFactory({
   color: {
     formats: [
       token,

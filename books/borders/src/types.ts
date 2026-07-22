@@ -6,7 +6,7 @@ import type { Property } from 'csstype';
 
 /* ---------- value primitives ---------- */
 
-/** A border color is always whatever the calipers colour lexicon (`createColor()`) returns. */
+/** A border color is always whatever the calipers colour lexicon (`createColorFactory()`) returns. */
 export type BorderColor = ResolvedColor;
 /** A border width: a measurement, or 0 / null for "no width". */
 export type BorderWidth = IMeasurement | 0 | null;

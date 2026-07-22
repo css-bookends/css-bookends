@@ -39,7 +39,7 @@ around it (the onion principle, Lightning stays intact).
   Lightning CSS core. The composed core's `name` is honest about the composition (for
   example `compose(keyword-to-rgb, lightningcss)`).
 - `composeCoreFromFormats(formats, inner?)` is the registry-aware path. Instead of a
-  baked-in map, it reads each registered custom format off the `createColor` registry
+  baked-in map, it reads each registered custom format off the `createColorFactory` registry
   and applies that format's declared `ColorFormatPlugin.fallback` transform as a
   pre-step before Lightning. Formats with no `fallback` contribute no pre-step; if none
   declare one, the inner core is handed back untouched (the honest no-op composition).

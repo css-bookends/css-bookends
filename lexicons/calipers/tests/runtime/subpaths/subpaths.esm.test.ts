@@ -16,31 +16,31 @@ describe('per-primitive subpaths (ESM dist)', () => {
     expect(typeof esmMeasurements.m).toBe('function');
     expect(esmMeasurements.m(8).css()).toBe('8px');
     expect('color' in esmMeasurements).toBe(false);
-    expect('createColor' in esmMeasurements).toBe(false);
+    expect('createColorFactory' in esmMeasurements).toBe(false);
   });
 
   it('ratio entry exposes `r` and is colour-free', () => {
     expect(typeof esmRatio.r).toBe('function');
     expect('color' in esmRatio).toBe(false);
-    expect('createColor' in esmRatio).toBe(false);
+    expect('createColorFactory' in esmRatio).toBe(false);
   });
 
   it('integer entry exposes `i` and is colour-free', () => {
     expect(typeof esmInteger.i).toBe('function');
     expect('color' in esmInteger).toBe(false);
-    expect('createColor' in esmInteger).toBe(false);
+    expect('createColorFactory' in esmInteger).toBe(false);
   });
 
   it('float entry exposes `f` and is colour-free', () => {
     expect(typeof esmFloat.f).toBe('function');
     expect('color' in esmFloat).toBe(false);
-    expect('createColor' in esmFloat).toBe(false);
+    expect('createColorFactory' in esmFloat).toBe(false);
   });
 
   it('codex entry exposes BOTH `m` and `color`', () => {
     expect(typeof esmCodex.m).toBe('function');
     expect(typeof esmCodex.color).toBe('function');
-    expect(typeof esmCodex.createCalipers).toBe('function');
-    expect(typeof esmCodex.createColor).toBe('function');
+    expect(typeof esmCodex.createCalipersFactory).toBe('function');
+    expect(typeof esmCodex.createColorFactory).toBe('function');
   });
 });

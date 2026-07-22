@@ -35,8 +35,8 @@ describe('every unit helper round-trips its CSS unit + reports its category', ()
 describe('the ./units subpath exposes the group factories', () => {
   it('surfaces create<Group>Units', () => {
     const mod = unitsModule as Record<string, unknown>;
-    expect(typeof mod.createViewportUnits).toBe('function');
-    expect(typeof mod.createAbsoluteUnits).toBe('function');
-    expect(typeof mod.createPercentUnits).toBe('function');
+    expect(typeof mod.createViewportUnitsFactory).toBe('function');
+    expect(typeof mod.createAbsoluteUnitsFactory).toBe('function');
+    expect(typeof mod.createPercentUnitsFactory).toBe('function');
   });
 });

@@ -7,13 +7,13 @@ description: How configurable behaviour flows through CSS-Bookends - every unit 
 
 The rule for any behaviour that can vary across instances. It makes "everything is
 config-driven" (see `docs/foundations.md`) concrete and uniform at both layers. This
-is the cascade `createCalipersBundle` (codex) and `publishCompendium` (compendium)
+is the cascade `createCalipersBundleFactory` (codex) and `publishCompendium` (compendium)
 implement; copy it, never reinvent a per-feature scheme.
 
 ## The rules
 
-- **Every unit has a FACTORY that takes a config.** A calipers lexicon: `createCalipers`
-  (`m`), `createInteger` (`i`), `createFloat` (`f`), `createColor`. A bookends book:
+- **Every unit has a FACTORY that takes a config.** A calipers lexicon: `createCalipersFactory`
+  (`m`), `createIntegerFactory` (`i`), `createFloatFactory` (`f`), `createColorFactory`. A bookends book:
   `publishBook<Name>`. The factory bakes the config into the unit it produces. No bare
   pre-made instance is the configurable path.
 - **Units of a KIND share an IDENTICAL config shape.** Every unit carries the same shared field for a
@@ -28,7 +28,7 @@ implement; copy it, never reinvent a per-feature scheme.
 - **A bundle exposes `global` PLUS one key per unit.** `CalipersBundleConfig` (codex):
   `{ global?, measurement?, integer?, float?, ratio?, color? }`. `CompendiumConfig`:
   `{ global?, <book keys>…, calipers?: CalipersBundleConfig }`. The bundle factory must
-  return the CONFIGURED units (spread `createInteger(...)` / `createFloat(...)` / … into the
+  return the CONFIGURED units (spread `createIntegerFactory(...)` / `createFloatFactory(...)` / … into the
   bundle object), so a `global` or per-unit key actually reaches the unit a consumer calls.
 - **Resolution is `unit key -> bundle global -> factory default`** (most specific wins). In
   the user's words: set in BOTH the global and the unit key -> the unit key wins; only the
@@ -36,7 +36,7 @@ implement; copy it, never reinvent a per-feature scheme.
   `errorConfig: config.integer?.errorConfig ?? config.global?.errorConfig` (then the factory applies
   its built-in default when that is `undefined`).
 - **Bundles NEST; the inner global overrides the outer.** The compendium carries the whole
-  codex config under a `calipers` key and forwards it to `createCalipersBundle`, merging so a
+  codex config under a `calipers` key and forwards it to `createCalipersBundleFactory`, merging so a
   lexicon resolves `own -> codex.global -> compendium.global -> default`. Build the codex
   global as `calipers.global.<opt> ?? compendium.global.<opt>` so codex-specific wins.
 - **Reachability is mandatory.** No unit config the bundle factory cannot reach. If you add a
@@ -56,7 +56,7 @@ implement; copy it, never reinvent a per-feature scheme.
 
 ## Same pattern all the way down (a grouping IS a bundle factory)
 
-Every grouping is the SAME bundle-factory shape, recursively. `createCalipersBundle` in
+Every grouping is the SAME bundle-factory shape, recursively. `createCalipersBundleFactory` in
 `lexicons/calipers/src/bundle.ts` is the ONE canonical implementation — MIRROR it, never
 invent a new shape. A bundle factory always has the same four parts:
 
@@ -66,30 +66,30 @@ invent a new shape. A bundle factory always has the same four parts:
 4. a `<Name>Bundle` return type intersecting the sub-factory APIs.
 
 This RECURSES: a sub-factory can itself be a bundle. The codex composes lexicon factories
-AND family bundles; a **family** bundle (e.g. `createScalarBundle`, grouping `integer` /
+AND family bundles; a **family** bundle (e.g. `createScalarBundleFactory`, grouping `integer` /
 `float` / `ratio`) is ITSELF a bundle factory of the same four parts, and the codex composes
 it by spreading it under the cascade, exactly like any other sub-factory:
 
 ```ts
 // src/scalar-bundle.ts — mirrors src/bundle.ts, one level down
-export const createScalarBundle = (config: ScalarBundleConfig = {}) => {
+export const createScalarBundleFactory = (config: ScalarBundleConfig = {}) => {
   const cascade = (own) => ({ ...own, errorConfig: own?.errorConfig ?? config.global?.errorConfig });
   return {
-    ...createInteger(cascade(config.integer)),
-    ...createFloat(cascade(config.float)),
-    ...createRatio(cascade(config.ratio)), // ratio cascades errorConfig too
+    ...createIntegerFactory(cascade(config.integer)),
+    ...createFloatFactory(cascade(config.float)),
+    ...createRatioFactory(cascade(config.ratio)), // ratio cascades errorConfig too
   };
 };
 
 // src/bundle.ts — the codex composes the family, same as any sub-factory
-...createScalarBundle({
+...createScalarBundleFactory({
   global: config.global,
   integer: config.integer, float: config.float, ratio: config.ratio,
 }),
 ```
 
 The test: when a "should this be its OWN shape?" question comes up, the answer is NO — it is
-`createCalipersBundle` one level in or out. Re-read `src/bundle.ts` and mirror it. A grouping
+`createCalipersBundleFactory` one level in or out. Re-read `src/bundle.ts` and mirror it. A grouping
 that does not take `global` and cascade is wrong.
 
 ## Tests are NOT optional
@@ -110,9 +110,9 @@ Use a real worked option (today: `errorConfig.stackHints`) with an observable ef
 
 ## Reference
 
-`lexicons/calipers/src/bundle.ts` (`createCalipersBundle` = the canonical cascade — MIRROR
+`lexicons/calipers/src/bundle.ts` (`createCalipersBundleFactory` = the canonical cascade — MIRROR
 it for every new grouping; `src/codex.ts` only re-exports it);
-`createInteger` / `createFloat` in `lexicons/calipers/src/integer.ts` / `float.ts`;
+`createIntegerFactory` / `createFloatFactory` in `lexicons/calipers/src/integer.ts` / `float.ts`;
 the shared error-config type in `lexicons/calipers/src/internal/errors.ts`;
 `packages/compendium/src/index.ts` (`publishCompendium`). Companion skills: `doc-test-code`
 (build order), `smart-factory` (the factory itself), `output-shape` (the `format` option).

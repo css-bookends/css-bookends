@@ -7,14 +7,14 @@
  */
 
 import {
-  createCalipersBundle,
-  createInteger,
+  createCalipersBundleFactory,
+  createIntegerFactory,
 } from '@css-bookends/css-calipers';
 
 import { f, i, m } from './calipers_examples.ts';
 
 // The default value-surface helpers above come from the shared binder. The
-// configured `createInteger` / `createCalipersBundle` calls below are the point of
+// configured `createIntegerFactory` / `createCalipersBundleFactory` calls below are the point of
 // the cascade demo, so those stay explicit.
 
 // --- m() accepts a plain number OR a typed scalar (i / f) -----------------------
@@ -68,7 +68,7 @@ const messageOf = (fn: () => unknown): string => {
   return '';
 };
 
-const verbose = createCalipersBundle({
+const verbose = createCalipersBundleFactory({
   global: { errorConfig: { stackHints: 'on' } },
 });
 export const globalReachesScalar = messageOf(() =>
@@ -76,7 +76,7 @@ export const globalReachesScalar = messageOf(() =>
 ).includes('stack='); // true — the global errorConfig reached i
 
 // a per-unit key overrides the global
-const mixed = createCalipersBundle({
+const mixed = createCalipersBundleFactory({
   global: { errorConfig: { stackHints: 'on' } }, // applies everywhere...
   integer: { errorConfig: { stackHints: 'off' } }, // ...except integers
 });
@@ -85,7 +85,9 @@ export const integerKeyWins = messageOf(() =>
 ).includes('stack='); // false — the integer key overrode the global
 
 // a standalone factory bakes the same errorConfig
-const ints = createInteger({ errorConfig: { stackHints: 'off' } });
+const ints = createIntegerFactory({
+  errorConfig: { stackHints: 'off' },
+});
 export const factoryOmitsStack = messageOf(() =>
   ints.i(8, { min: 0, max: 10 }).multiply(2),
 ).includes('stack='); // false

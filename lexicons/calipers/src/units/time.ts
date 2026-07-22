@@ -1,21 +1,21 @@
 import type { MeasurementOf } from '../core';
 import {
   type CalipersFactoryConfig,
-  createCalipers,
+  createCalipersFactory,
 } from '../factory';
 
-/** Factory for the time helpers, bound through `createCalipers`. */
-export const createTimeUnits = (
+/** Factory for the time helpers, bound through `createCalipersFactory`. */
+export const createTimeUnitsFactory = (
   config: CalipersFactoryConfig = {},
 ) => {
-  const core = createCalipers(config);
+  const core = createCalipersFactory(config);
   return {
     mS: core.makeUnitHelperFromDefinition('mS'),
     mMs: core.makeUnitHelperFromDefinition('mMs'),
   };
 };
 
-type TimeHelpers = ReturnType<typeof createTimeUnits>;
+type TimeHelpers = ReturnType<typeof createTimeUnitsFactory>;
 export type SMeasurement = MeasurementOf<TimeHelpers['mS']>;
 export type MsMeasurement = MeasurementOf<TimeHelpers['mMs']>;
 

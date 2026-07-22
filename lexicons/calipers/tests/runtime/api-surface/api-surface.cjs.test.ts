@@ -30,19 +30,19 @@ const cjsUnitsResolution =
 const cjsUnitsGrid = await import('../../../dist/units/grid.js');
 
 const groupFactoryNames = [
-  'createAbsoluteUnits',
-  'createAngleUnits',
-  'createContainerUnits',
-  'createFontRelativeUnits',
-  'createFrequencyUnits',
-  'createGridUnits',
-  'createPercentUnits',
-  'createResolutionUnits',
-  'createTimeUnits',
-  'createViewportUnits',
-  'createViewportDynamicUnits',
-  'createViewportLargeUnits',
-  'createViewportSmallUnits',
+  'createAbsoluteUnitsFactory',
+  'createAngleUnitsFactory',
+  'createContainerUnitsFactory',
+  'createFontRelativeUnitsFactory',
+  'createFrequencyUnitsFactory',
+  'createGridUnitsFactory',
+  'createPercentUnitsFactory',
+  'createResolutionUnitsFactory',
+  'createTimeUnitsFactory',
+  'createViewportUnitsFactory',
+  'createViewportDynamicUnitsFactory',
+  'createViewportLargeUnitsFactory',
+  'createViewportSmallUnitsFactory',
 ] as const;
 
 describe('API surface (CJS)', () => {
@@ -63,39 +63,45 @@ describe('API surface (CJS)', () => {
   });
 
   it('exposes the group factory via each unit family subpath', () => {
-    expect(typeof cjsUnitsPercent.createPercentUnits).toBe(
+    expect(typeof cjsUnitsPercent.createPercentUnitsFactory).toBe(
       'function',
     );
-    expect(typeof cjsUnitsAbsolute.createAbsoluteUnits).toBe(
-      'function',
-    );
-    expect(typeof cjsUnitsFontRelative.createFontRelativeUnits).toBe(
-      'function',
-    );
-    expect(typeof cjsUnitsViewport.createViewportUnits).toBe(
+    expect(typeof cjsUnitsAbsolute.createAbsoluteUnitsFactory).toBe(
       'function',
     );
     expect(
-      typeof cjsUnitsViewportSmall.createViewportSmallUnits,
+      typeof cjsUnitsFontRelative.createFontRelativeUnitsFactory,
+    ).toBe('function');
+    expect(typeof cjsUnitsViewport.createViewportUnitsFactory).toBe(
+      'function',
+    );
+    expect(
+      typeof cjsUnitsViewportSmall.createViewportSmallUnitsFactory,
     ).toBe('function');
     expect(
-      typeof cjsUnitsViewportLarge.createViewportLargeUnits,
+      typeof cjsUnitsViewportLarge.createViewportLargeUnitsFactory,
     ).toBe('function');
     expect(
-      typeof cjsUnitsViewportDynamic.createViewportDynamicUnits,
+      typeof cjsUnitsViewportDynamic.createViewportDynamicUnitsFactory,
     ).toBe('function');
-    expect(typeof cjsUnitsContainer.createContainerUnits).toBe(
+    expect(typeof cjsUnitsContainer.createContainerUnitsFactory).toBe(
       'function',
     );
-    expect(typeof cjsUnitsAngle.createAngleUnits).toBe('function');
-    expect(typeof cjsUnitsTime.createTimeUnits).toBe('function');
-    expect(typeof cjsUnitsFrequency.createFrequencyUnits).toBe(
+    expect(typeof cjsUnitsAngle.createAngleUnitsFactory).toBe(
       'function',
     );
-    expect(typeof cjsUnitsResolution.createResolutionUnits).toBe(
+    expect(typeof cjsUnitsTime.createTimeUnitsFactory).toBe(
       'function',
     );
-    expect(typeof cjsUnitsGrid.createGridUnits).toBe('function');
+    expect(typeof cjsUnitsFrequency.createFrequencyUnitsFactory).toBe(
+      'function',
+    );
+    expect(
+      typeof cjsUnitsResolution.createResolutionUnitsFactory,
+    ).toBe('function');
+    expect(typeof cjsUnitsGrid.createGridUnitsFactory).toBe(
+      'function',
+    );
   });
 
   it('exposes the full root runtime export map', () => {
@@ -146,18 +152,18 @@ describe('API surface (CJS)', () => {
       'nonNegativeFloat',
       'nonPositiveFloat',
       'inRangeFloat',
-      'createInteger',
-      'createFloat',
-      'createRatio',
-      'createScalarBundle',
-      'createCalipersBundle',
+      'createIntegerFactory',
+      'createFloatFactory',
+      'createRatioFactory',
+      'createScalarBundleFactory',
+      'createCalipersBundleFactory',
       ...groupFactoryNames,
       'getErrorConfig',
       'setErrorConfig',
       // colour value surface (re-exported from ./color)
       'color',
       'colorFormats',
-      'createColor',
+      'createColorFactory',
       'defaultColorConfig',
       'defaultFormatPriority',
       'defineColorSpace',

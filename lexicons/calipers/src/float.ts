@@ -227,8 +227,8 @@ export const inRangeFloat = <Min extends number, Max extends number>(
 
 /**
  * The float factory config: the shared `errorConfig` (stack-hint rendering) plus an
- * optional baked bound, so a `createFloat` instance builds its own per-instance error
- * store like `createCalipers`.
+ * optional baked bound, so a `createFloatFactory` instance builds its own per-instance error
+ * store like `createCalipersFactory`.
  */
 export type FloatFactoryConfig<
   Min extends number = number,
@@ -237,7 +237,7 @@ export type FloatFactoryConfig<
   errorConfig?: ErrorConfig;
   /**
    * A bound baked into every value this factory builds (the named-domain pattern,
-   * e.g. `createFloat({ min: 0, max: 1 })` for opacity). Set once here; a per-value
+   * e.g. `createFloatFactory({ min: 0, max: 1 })` for opacity). Set once here; a per-value
    * bound on top throws. Unit-local (no bundle `global`). The literal `Min`/`Max`
    * are captured so `f` can brand its output.
    */
@@ -251,7 +251,7 @@ export type FloatFactoryConfig<
 };
 
 /**
- * The bound float surface a `createFloat` instance exposes. `FactoryMin`/`FactoryMax` are the
+ * The bound float surface a `createFloatFactory` instance exposes. `FactoryMin`/`FactoryMax` are the
  * factory's captured bound; `f` brands its output with the RESOLVED bound (a per-call bound, else
  * the factory's). Set-once makes the per-call and factory bounds mutually exclusive, so the
  * resolved bound is simply whichever one is present. Mirrors `IntegerApi`.
@@ -290,10 +290,10 @@ export interface FloatApi<
 
 /**
  * The float FACTORY: bind a config once (an optional baked bound + errorConfig) and get the float
- * surface with that config baked in. Mirrors `createCalipers` (measurements) and `createInteger`
+ * surface with that config baked in. Mirrors `createCalipersFactory` (measurements) and `createIntegerFactory`
  * (integers) so `m` / `i` / `f` are identical.
  */
-export const createFloat = <
+export const createFloatFactory = <
   Min extends number = never,
   Max extends number = never,
 >(

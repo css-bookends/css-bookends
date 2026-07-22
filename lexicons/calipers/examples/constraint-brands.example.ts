@@ -8,7 +8,7 @@
  * re-proven). This is the "JS validates what TS can't, then TS enforces it" promise in one type.
  */
 
-import { createInteger } from '@css-bookends/css-calipers';
+import { createIntegerFactory } from '@css-bookends/css-calipers';
 
 import { i, type InRangeInteger } from './calipers_examples.ts';
 
@@ -18,7 +18,7 @@ declare function needsUnitInterval(
 ): void;
 
 // A factory bound mints the brand: every `level(v)` is InRangeInteger<0, 10>.
-const { i: level } = createInteger({ min: 0, max: 10 });
+const { i: level } = createIntegerFactory({ min: 0, max: 10 });
 export const provenFromFactory = (): void =>
   needsUnitInterval(level(5));
 

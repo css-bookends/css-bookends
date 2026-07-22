@@ -1,12 +1,15 @@
 /* eslint-disable no-restricted-syntax -- this whole file tests factory-instance isolation;
-   every createInteger / createCalipersBundle call here is the subject under test. */
-// Independent factory instances: multiple createInteger / bundle instances with DIFFERENT configs
+   every createIntegerFactory / createCalipersBundleFactory call here is the subject under test. */
+// Independent factory instances: multiple createIntegerFactory / bundle instances with DIFFERENT configs
 // coexist with NO shared global state (the factory-first property). Two instances configured
 // differently side by side never interfere. Exercises isolation at the factory tier and the bundle
 // tier via `errorConfig` (stackHints), and at the per-value tier via the bound.
 import { describe, expect, it } from 'vitest';
 
-import { createCalipersBundle, createInteger } from '../../../src';
+import {
+  createCalipersBundleFactory,
+  createIntegerFactory,
+} from '../../../src';
 
 const bounded = { min: 0, max: 10 };
 
@@ -21,11 +24,11 @@ const messageOf = (fn: () => unknown): string => {
 };
 
 describe('independent factory instances (no global state)', () => {
-  it('two createInteger instances with different errorConfig never interfere', () => {
-    const verbose = createInteger({
+  it('two createIntegerFactory instances with different errorConfig never interfere', () => {
+    const verbose = createIntegerFactory({
       errorConfig: { stackHints: 'on' },
     });
-    const quiet = createInteger({
+    const quiet = createIntegerFactory({
       errorConfig: { stackHints: 'off' },
     });
     // both breach the bound (16 > 10) and throw; only `verbose` renders the stack hint
@@ -42,17 +45,17 @@ describe('independent factory instances (no global state)', () => {
   });
 
   it('per-value bounds are independent within one factory', () => {
-    const { i } = createInteger();
+    const { i } = createIntegerFactory();
     // same factory, same starting value, different per-value bounds -> independent outcomes
     expect(() => i(8, { min: 0, max: 10 }).multiply(2)).toThrow(); // 16 > 10
     expect(i(8, { min: 0, max: 100 }).multiply(2).value()).toBe(16); // 16 <= 100
   });
 
   it('two bundles forward their integer errorConfig independently', () => {
-    const verbose = createCalipersBundle({
+    const verbose = createCalipersBundleFactory({
       integer: { errorConfig: { stackHints: 'on' } },
     });
-    const quiet = createCalipersBundle();
+    const quiet = createCalipersBundleFactory();
     expect(
       messageOf(() => verbose.i(8, bounded).multiply(2)),
     ).toContain('stack=');

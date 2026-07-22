@@ -1,14 +1,14 @@
 import type { MeasurementOf } from '../core';
 import {
   type CalipersFactoryConfig,
-  createCalipers,
+  createCalipersFactory,
 } from '../factory';
 
-/** Factory for the resolution helpers, bound through `createCalipers`. */
-export const createResolutionUnits = (
+/** Factory for the resolution helpers, bound through `createCalipersFactory`. */
+export const createResolutionUnitsFactory = (
   config: CalipersFactoryConfig = {},
 ) => {
-  const core = createCalipers(config);
+  const core = createCalipersFactory(config);
   return {
     mDpi: core.makeUnitHelperFromDefinition('mDpi'),
     mDpcm: core.makeUnitHelperFromDefinition('mDpcm'),
@@ -16,7 +16,9 @@ export const createResolutionUnits = (
   };
 };
 
-type ResolutionHelpers = ReturnType<typeof createResolutionUnits>;
+type ResolutionHelpers = ReturnType<
+  typeof createResolutionUnitsFactory
+>;
 export type DpiMeasurement = MeasurementOf<ResolutionHelpers['mDpi']>;
 export type DpcmMeasurement = MeasurementOf<
   ResolutionHelpers['mDpcm']

@@ -1,14 +1,14 @@
 import type { MeasurementOf } from '../core';
 import {
   type CalipersFactoryConfig,
-  createCalipers,
+  createCalipersFactory,
 } from '../factory';
 
-/** Factory for the small-viewport helpers, bound through `createCalipers`. */
-export const createViewportSmallUnits = (
+/** Factory for the small-viewport helpers, bound through `createCalipersFactory`. */
+export const createViewportSmallUnitsFactory = (
   config: CalipersFactoryConfig = {},
 ) => {
-  const core = createCalipers(config);
+  const core = createCalipersFactory(config);
   return {
     mSvw: core.makeUnitHelperFromDefinition('mSvw'),
     mSvh: core.makeUnitHelperFromDefinition('mSvh'),
@@ -20,7 +20,7 @@ export const createViewportSmallUnits = (
 };
 
 type ViewportSmallHelpers = ReturnType<
-  typeof createViewportSmallUnits
+  typeof createViewportSmallUnitsFactory
 >;
 export type SvwMeasurement = MeasurementOf<
   ViewportSmallHelpers['mSvw']

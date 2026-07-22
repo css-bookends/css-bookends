@@ -1,6 +1,6 @@
 import {
   type ColorFormatPlugin,
-  createColor,
+  createColorFactory,
 } from '@css-bookends/css-calipers';
 import { describe, expect, it } from 'vitest';
 
@@ -15,7 +15,7 @@ import {
 /**
  * The registry-aware onion proof. Where `compose-core.test.ts` rings a HARD-CODED
  * keyword pre-step around Lightning CSS, this proves the un-hard-coded path: gilding
- * reads the `createColor` registry and runs each registered custom format's OWN
+ * reads the `createColorFactory` registry and runs each registered custom format's OWN
  * declared `fallback` transform in front of the (fully intact) inner Lightning CSS core.
  *
  * The fallback is NOT baked into gilding: adding the format (with its fallback) to the
@@ -80,8 +80,8 @@ describe('composeCoreFromFormats - the registry-driven onion ring', () => {
   ];
 
   it('runs BOTH layers: the REGISTRY-driven fallback AND the inner Lightning CSS core', () => {
-    // The registry is built by createColor, NOT a hard-coded map in gilding.
-    const myColor = createColor({
+    // The registry is built by createColorFactory, NOT a hard-coded map in gilding.
+    const myColor = createColorFactory({
       formats: [
         zooFn,
       ],
@@ -127,7 +127,7 @@ describe('composeCoreFromFormats - the registry-driven onion ring', () => {
   it('is registry-driven: a format with NO fallback contributes no rewrite', () => {
     // muteFn declares no `fallback`, so its custom token must reach Lightning untouched
     // (and Lightning, not understanding it, leaves it as an unknown value).
-    const onlyMute = createColor({
+    const onlyMute = createColorFactory({
       formats: [
         muteFn,
       ],
@@ -160,7 +160,7 @@ describe('composeCoreFromFormats - the registry-driven onion ring', () => {
   it('rewrites only formats that declare a fallback when several are registered', () => {
     // zooFn HAS a fallback, muteFn does NOT. The mixed registry must rewrite only the
     // zoo token, proving the rewrite is sourced per-format from the registry.
-    const mixed = createColor({
+    const mixed = createColorFactory({
       formats: [
         zooFn,
         muteFn,
@@ -192,7 +192,7 @@ describe('composeCoreFromFormats - the registry-driven onion ring', () => {
   });
 
   it('names itself honestly from the registry fallbacks it found', () => {
-    const myColor = createColor({
+    const myColor = createColorFactory({
       formats: [
         zooFn,
       ],

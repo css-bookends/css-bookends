@@ -9,7 +9,7 @@ no longer exported from the package root, the `/measurements` subpath, or the
 now exposes the per-group FACTORY instead.
 
 Migration: get unit helpers by calling a group factory, e.g.
-`const { mPx } = createAbsoluteUnits()`, `const { mVh } = createViewportUnits()`,
-or the whole surface at once with `const { mPx, mVh, ... } = createCalipersBundle()`.
-The percent guard and assert come from `createPercentUnits()` (or the bundle). The
+`const { mPx } = createAbsoluteUnitsFactory()`, `const { mVh } = createViewportUnitsFactory()`,
+or the whole surface at once with `const { mPx, mVh, ... } = createCalipersBundleFactory()`.
+The percent guard and assert come from `createPercentUnitsFactory()` (or the bundle). The
 per-unit measurement TYPES (`PxMeasurement`, `DegMeasurement`, ...) are unchanged.

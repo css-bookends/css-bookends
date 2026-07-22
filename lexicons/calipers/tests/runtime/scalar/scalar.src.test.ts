@@ -1,17 +1,17 @@
-/* eslint-disable no-restricted-syntax -- this whole file tests createScalarBundle;
+/* eslint-disable no-restricted-syntax -- this whole file tests createScalarBundleFactory;
    every create*() call is the subject under test. */
-// createScalarBundle is the SCALAR FAMILY bundle: it groups the integer / float /
+// createScalarBundleFactory is the SCALAR FAMILY bundle: it groups the integer / float /
 // ratio unit factories under one `{ global?, integer?, float?, ratio? }` config with
 // the SAME cascade as the codex (own key -> bundle global -> factory default),
 // mirroring `src/bundle.ts` one level down. The codex composes it. This is the
 // "same pattern all the way down" family bundle; see the `config-cascade` skill.
 import { describe, expect, it } from 'vitest';
 
-import { createScalarBundle } from '../../../src/scalar-bundle';
+import { createScalarBundleFactory } from '../../../src/scalar-bundle';
 
-describe('createScalarBundle (scalar family bundle)', () => {
+describe('createScalarBundleFactory (scalar family bundle)', () => {
   it('returns the whole scalar surface (integer + float + ratio)', () => {
-    const s = createScalarBundle();
+    const s = createScalarBundleFactory();
     // integer
     expect(s.i(3).value()).toBe(3);
     expect(s.isInteger(s.i(3))).toBe(true);
@@ -34,25 +34,25 @@ describe('createScalarBundle (scalar family bundle)', () => {
     };
     // discriminating throws: i / f breach their max; r hits a zero denominator.
     const iError = (
-      s: ReturnType<typeof createScalarBundle>,
+      s: ReturnType<typeof createScalarBundleFactory>,
     ): string =>
       captureMessage(() => s.i(8, { min: 0, max: 10 }).multiply(2));
     const fError = (
-      s: ReturnType<typeof createScalarBundle>,
+      s: ReturnType<typeof createScalarBundleFactory>,
     ): string =>
       captureMessage(() => s.f(0.6, { min: 0, max: 1 }).multiply(2));
     const rError = (
-      s: ReturnType<typeof createScalarBundle>,
+      s: ReturnType<typeof createScalarBundleFactory>,
     ): string => captureMessage(() => s.r(1, 0));
 
     it('the global reaches integer, float and ratio when there is no unit key', () => {
-      const on = createScalarBundle({
+      const on = createScalarBundleFactory({
         global: { errorConfig: { stackHints: 'on' } },
       });
       expect(iError(on)).toContain('stack=');
       expect(fError(on)).toContain('stack=');
       expect(rError(on)).toContain('stack=');
-      const off = createScalarBundle({
+      const off = createScalarBundleFactory({
         global: { errorConfig: { stackHints: 'off' } },
       });
       expect(iError(off)).not.toContain('stack=');
@@ -61,7 +61,7 @@ describe('createScalarBundle (scalar family bundle)', () => {
     });
 
     it('a unit key overrides the global (per unit)', () => {
-      const mixed = createScalarBundle({
+      const mixed = createScalarBundleFactory({
         global: { errorConfig: { stackHints: 'on' } },
         integer: { errorConfig: { stackHints: 'off' } },
       });
@@ -72,7 +72,7 @@ describe('createScalarBundle (scalar family bundle)', () => {
     });
 
     it('defaults to auto (no override -> no stack) when neither is set', () => {
-      const s = createScalarBundle();
+      const s = createScalarBundleFactory();
       expect(iError(s)).not.toContain('stack=');
       expect(fError(s)).not.toContain('stack=');
       expect(rError(s)).not.toContain('stack=');

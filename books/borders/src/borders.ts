@@ -1,5 +1,5 @@
 import {
-  createColor,
+  createColorFactory,
   type IMeasurement,
   m,
   type ResolvedColor,
@@ -26,7 +26,7 @@ import type {
 } from './types';
 
 // The book binds its own color factory for built-in defaults (e.g. the default black).
-const color = createColor({ formats: [] });
+const color = createColorFactory({ formats: [] });
 
 /* The book's built-in defaults. A project overrides these via publishBookBorders({ config }). */
 export const defaultConfig: BordersConfig = {

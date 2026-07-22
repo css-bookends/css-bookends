@@ -1,17 +1,17 @@
 import type { MeasurementOf } from '../core';
 import {
   type CalipersFactoryConfig,
-  createCalipers,
+  createCalipersFactory,
 } from '../factory';
 
 /**
  * Factory for the percent helper plus its guard/assert, bound through
- * `createCalipers`.
+ * `createCalipersFactory`.
  */
-export const createPercentUnits = (
+export const createPercentUnitsFactory = (
   config: CalipersFactoryConfig = {},
 ) => {
-  const core = createCalipers(config);
+  const core = createCalipersFactory(config);
   const percent = core.makeUnitHelperFromDefinition('mPercent');
   return {
     mPercent: percent,
@@ -20,7 +20,7 @@ export const createPercentUnits = (
   };
 };
 
-type PercentHelpers = ReturnType<typeof createPercentUnits>;
+type PercentHelpers = ReturnType<typeof createPercentUnitsFactory>;
 export type PercentMeasurement = MeasurementOf<
   PercentHelpers['mPercent']
 >;

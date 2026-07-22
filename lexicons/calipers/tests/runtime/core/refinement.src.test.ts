@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createCalipers } from '../../../src/factory';
+import { createCalipersFactory } from '../../../src/factory';
 import {
   inRange,
   m,
@@ -204,9 +204,9 @@ describe('makeMeasurementRefinement (custom constraints)', () => {
   });
 });
 
-describe('createCalipers() instances expose the refinements', () => {
+describe('createCalipersFactory() instances expose the refinements', () => {
   // eslint-disable-next-line no-restricted-syntax -- the factory instance IS this block's subject
-  const calipers = createCalipers();
+  const calipers = createCalipersFactory();
 
   it('provides nonNegative / nonPositive / inRange / makeMeasurementRefinement', () => {
     expect(typeof calipers.nonNegative.ensure).toBe('function');

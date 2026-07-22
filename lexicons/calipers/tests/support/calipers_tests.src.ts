@@ -4,7 +4,7 @@
 // =============================================================================
 //  TEST-ONLY FIXTURE. DO NOT IMPORT THIS INTO A PROJECT OR ANY NON-TEST CODE.
 //  It exists ONLY to bind the codex once for the test suite (the bind-once pattern,
-//  dogfooded). A real consumer binds `createCalipersBundle()` in their OWN module and
+//  dogfooded). A real consumer binds `createCalipersBundleFactory()` in their OWN module and
 //  never touches this file. It lives under `tests/support/` and is named `*_tests.*`
 //  precisely so it cannot be mistaken for a public export. It is not part of the
 //  published package surface.
@@ -19,11 +19,11 @@
 // unit-group-factories, codex, hardening) still build their own instances on purpose.
 // `bundle` is exported ONLY for the units round-trip map and the CoreApi harness.
 import {
-  createCalipersBundle,
+  createCalipersBundleFactory,
   type UnitAssertion,
 } from '../../src/codex';
 
-export const bundle = createCalipersBundle();
+export const bundle = createCalipersBundleFactory();
 
 export const {
   // measurement core + builders / guards / refinements / error accessors

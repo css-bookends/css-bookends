@@ -1,4 +1,4 @@
-import { createCalipersBundle } from '@css-bookends/css-calipers';
+import { createCalipersBundleFactory } from '@css-bookends/css-calipers';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -6,7 +6,7 @@ import {
   backdropFilterValue,
 } from '../../src/backdropFilter';
 
-const { m, mPercent } = createCalipersBundle();
+const { m, mPercent } = createCalipersBundleFactory();
 
 describe('backdropFilter.helper', () => {
   it('builds filter strings from multiple intents', () => {

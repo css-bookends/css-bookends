@@ -3,21 +3,21 @@
 // if it lived in the leaf `./scalar` operand module (which integer / float / ratio all
 // value-import for `toNumber`). It combines the three scalar unit factories under one
 // keyed config with the SAME cascade as the codex: own unit key -> bundle `global` ->
-// factory default. Mirrors `createCalipersBundle` one level down; see the
+// factory default. Mirrors `createCalipersBundleFactory` one level down; see the
 // `config-cascade` skill, "Same pattern all the way down".
 import {
-  createFloat,
+  createFloatFactory,
   type FloatApi,
   type FloatFactoryConfig,
 } from './float';
 import {
-  createInteger,
+  createIntegerFactory,
   type IntegerApi,
   type IntegerFactoryConfig,
 } from './integer';
 import { type ErrorConfig } from './internal/errors';
 import {
-  createRatio,
+  createRatioFactory,
   type RatioApi,
   type RatioFactoryConfig,
 } from './ratio';
@@ -32,11 +32,11 @@ export interface ScalarBundleConfig {
     /** Error-rendering config (e.g. stack hints) shared across integer / float / ratio. */
     errorConfig?: ErrorConfig;
   };
-  /** forwarded to `createInteger` (the integer surface). */
+  /** forwarded to `createIntegerFactory` (the integer surface). */
   integer?: IntegerFactoryConfig;
-  /** forwarded to `createFloat` (the float surface). */
+  /** forwarded to `createFloatFactory` (the float surface). */
   float?: FloatFactoryConfig;
-  /** forwarded to `createRatio` (the ratio surface; config-free today). */
+  /** forwarded to `createRatioFactory` (the ratio surface; config-free today). */
   ratio?: RatioFactoryConfig;
 }
 
@@ -46,11 +46,11 @@ export type ScalarBundle = IntegerApi & FloatApi & RatioApi;
 /**
  * The SCALAR family factory: combine the integer / float / ratio sub-factories under
  * one keyed config, returning every scalar helper bound in one object. Mirrors
- * `createCalipersBundle` one level down; the codex composes THIS instead of spreading
- * the three scalar factories itself. A bare `createScalarBundle()` binds everything at
+ * `createCalipersBundleFactory` one level down; the codex composes THIS instead of spreading
+ * the three scalar factories itself. A bare `createScalarBundleFactory()` binds everything at
  * defaults. Each setting resolves own unit key -> bundle `global` -> factory default.
  */
-export const createScalarBundle = (
+export const createScalarBundleFactory = (
   config: ScalarBundleConfig = {},
 ): ScalarBundle => {
   // cascade a scalar sub-config: own key -> bundle `global` -> factory default, for
@@ -70,10 +70,10 @@ export const createScalarBundle = (
     errorConfig: own?.errorConfig ?? config.global?.errorConfig,
   });
   return {
-    ...createInteger(cascade(config.integer)),
-    ...createFloat(cascade(config.float)),
-    ...createRatio(cascadeRatio(config.ratio)),
+    ...createIntegerFactory(cascade(config.integer)),
+    ...createFloatFactory(cascade(config.float)),
+    ...createRatioFactory(cascadeRatio(config.ratio)),
   };
 };
 
-export default createScalarBundle;
+export default createScalarBundleFactory;

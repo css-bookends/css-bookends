@@ -1,7 +1,6 @@
 // Shared matchers, defined once so the two selectors / three import groups below
 // cannot drift apart.
-const ZERO_ARG_FACTORY =
-  '^create([A-Za-z]*Bundle|Calipers|Color|Integer|Float|Ratio|[A-Za-z]*Units)$';
+const ZERO_ARG_FACTORY = '^create[A-Za-z]*Factory$';
 // Every place a calipers value/type could be imported BARE (the bind-once sources).
 const CALIPERS_SOURCES = [
   '@css-bookends/css-calipers',
@@ -40,15 +39,15 @@ module.exports = [
       'no-restricted-syntax': [
         'error',
         {
-          // direct call: createCalipersBundle() / createScalarBundle() / createRatio()
-          // `[A-Za-z]*Bundle` catches every family/master bundle (same pattern all the
-          // way down), so a new family factory needs no rule edit.
+          // direct call: createCalipersBundleFactory() / createScalarBundleFactory() / createRatioFactory()
+          // Every factory now ends in `Factory`, so `create[A-Za-z]*Factory` catches them all
+          // (family/master bundles included) and a new factory needs no rule edit.
           selector: `CallExpression[callee.name=/${ZERO_ARG_FACTORY}/][arguments.length=0]`,
           message:
             'Zero-arg factory call: import the bound helper from a binder (calipers_examples.ts / calipers_tests.src|dist.ts) instead of binding inline. Calls with config are fine.',
         },
         {
-          // member call: mod.createCalipersBundle() / Units.createViewportUnits()
+          // member call: mod.createCalipersBundleFactory() / Units.createViewportUnitsFactory()
           selector: `CallExpression[callee.type="MemberExpression"][callee.property.name=/${ZERO_ARG_FACTORY}/][arguments.length=0]`,
           message:
             'Zero-arg factory call via a namespace/member: import the bound helper from a binder instead of binding inline. Calls with config are fine.',

@@ -6,7 +6,7 @@ import {
   type ColorConfig,
   type ColorFormatPlugin,
   type ColorString,
-  createColor,
+  createColorFactory,
   defineColorSpace,
 } from '../../../src/color';
 import { color, mDeg } from '../../support/calipers_tests.src';
@@ -233,14 +233,14 @@ describe('custom format — a whimsical "zoo" colour format proves the foundatio
 });
 
 /*
- * The full round trip: `zoo` registered as a PLUGIN through `createColor` extends the
+ * The full round trip: `zoo` registered as a PLUGIN through `createColorFactory` extends the
  * pipeline at BOTH edges. An animal name enters via the plugin's `parse`, normalizes to
  * the canonical OKLCH store, and renders back out through the plugin's `render`. The
  * registration is scoped to the instance: the module-level `color` (no zoo) does not
  * accept an animal name.
  */
 describe('custom format — zoo as a full INPUT + OUTPUT plugin (round trip)', () => {
-  const myColor = createColor({
+  const myColor = createColorFactory({
     formats: [
       zoo,
     ],
@@ -285,15 +285,15 @@ describe('custom format — zoo as a full INPUT + OUTPUT plugin (round trip)', (
 });
 
 /*
- * #26 + #27: a custom-format `createColor` instance is the SAME colour lexicon at
+ * #26 + #27: a custom-format `createColorFactory` instance is the SAME colour lexicon at
  * the edges, so it must carry the WHOLE colour surface, not just `.formatAs` / `.zoo`
  * / `.css()`. A custom-parsed input normalizes to the canonical OKLCH store, so every
  * modify (`darken`, `mix`, `setHue`, `alpha`, `transparentAs`) and every built-in
  * selector (`.rgba()`, `.hex()`, `.oklch()`, ...) must work on the instance result,
  * exactly as on the module-level `color`.
  */
-describe('custom format — a createColor instance carries the full colour surface', () => {
-  const myColor = createColor({
+describe('custom format — a createColorFactory instance carries the full colour surface', () => {
+  const myColor = createColorFactory({
     formats: [
       zoo,
     ],
@@ -341,7 +341,7 @@ describe('custom format — a createColor instance carries the full colour surfa
     // alpha 0 with the `white` transparency policy substitutes an alpha-0 white,
     // which the default priority renders through rgba as `rgba(255, 255, 255, 0)`.
     // This was only ever proven on the module-level `color`; here it runs on a
-    // createColor instance built from a custom-parsed input.
+    // createColorFactory instance built from a custom-parsed input.
     const rendered = myColor('flamingo')
       .alpha(0)
       .transparentAs('white')

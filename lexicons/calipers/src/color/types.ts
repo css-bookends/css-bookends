@@ -176,7 +176,7 @@ export type OutputFormat = CssFormat | ColorSpaceDescriptor<string>;
 
 /**
  * A custom colour-format PLUGIN: a full output descriptor (render + fidelity +
- * browser bits) that ALSO bridges the INPUT edge. Registered through `createColor`,
+ * browser bits) that ALSO bridges the INPUT edge. Registered through `createColorFactory`,
  * a plugin extends the pipeline at both edges while storage stays canonical OKLCH.
  *
  * `parse` recognizes and converts this format's INPUT into a culori `Color`; the
@@ -192,7 +192,7 @@ export interface ColorFormatPlugin<
    * A browser-compatibility hook (output-edge). When this format's `render` emits a
    * token a downstream post-processor (Lightning CSS, via gilding) cannot understand,
    * the format declares HERE how to rewrite its own output into safe CSS. The gilding
-   * finisher reads this off the `createColor` registry and runs it as a pre-step in
+   * finisher reads this off the `createColorFactory` registry and runs it as a pre-step in
    * front of its core (the onion), instead of hard-coding a keyword map.
    *
    * Optional, so existing plugins are unaffected. Deliberately a plain string->string
@@ -240,7 +240,7 @@ export type BlendMode =
   | 'difference'
   | 'exclusion';
 
-/** The colour config (factory-settable via `createColor`). */
+/** The colour config (factory-settable via `createColorFactory`). */
 export interface ColorConfig {
   /**
    * What `.css()` renders with no argument: a single format, or a priority list that

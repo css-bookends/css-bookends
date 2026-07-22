@@ -62,7 +62,7 @@ all `0.x`, each declaring `css-calipers` via `workspace:*`.
   calipers' factory is coupled to it:
   - Delete `packages/calipers/src/internal/createMediaQueriesApi.ts` and strip
     the media-queries wiring out of `packages/calipers/src/factory.ts` (drop the
-    `.mediaQueries` namespace from `createCalipers()`).
+    `.mediaQueries` namespace from `createCalipersFactory()`).
   - Remove the `./mediaQueries` export, the media-queries build/test scripts, the
     `tests/runtime/mediaQueries/**` and media-queries type tests, and the media
     queries section of the calipers README.

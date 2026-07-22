@@ -90,7 +90,7 @@ color('#3366cc80', { strictness: 'silent' }).rgb().css(); // 'rgb(51, 102, 204)'
 
 **Transparency.** A fully transparent colour renders as the `transparent` keyword by default; configurable with `{ transparent: 'keyword' | 'white' | 'black' | 'preserve' }` or per render with `.transparentAs(mode)`. See `examples/transparency.example.ts`.
 
-**Custom formats.** `createColor({ formats })` binds custom format plugins. A plugin bridges the input and output edges (storage stays canonical OKLCH) and gets a typed named selector; author one with `defineColorSpace`, and an optional `fallback` hook rewrites its output into browser-safe CSS. See `examples/custom-format.example.ts` (its "zoo" format is a deliberately silly extensibility demo, not a real format), `examples/plugin-fallback.example.ts`, and `docs/adding-a-color-format.md`.
+**Custom formats.** `createColorFactory({ formats })` binds custom format plugins. A plugin bridges the input and output edges (storage stays canonical OKLCH) and gets a typed named selector; author one with `defineColorSpace`, and an optional `fallback` hook rewrites its output into browser-safe CSS. See `examples/custom-format.example.ts` (its "zoo" format is a deliberately silly extensibility demo, not a real format), `examples/plugin-fallback.example.ts`, and `docs/adding-a-color-format.md`.
 
 ## Measurements
 
@@ -114,7 +114,7 @@ calipers currently also ships per-property value helpers (`opacity`, `zIndex`, `
 
 ## Factories
 
-The bare exports (`m`, `color`, the refinements, ...) are each a default instance of a factory at its defaults, so the default and a custom instance share one construction path. `createCalipers({ errorConfig? })` returns a measurement instance, and `createColor({ formats })` a colour instance with custom format plugins registered. See `examples/factory-wrapper.example.ts`.
+The bare exports (`m`, `color`, the refinements, ...) are each a default instance of a factory at its defaults, so the default and a custom instance share one construction path. `createCalipersFactory({ errorConfig? })` returns a measurement instance, and `createColorFactory({ formats })` a colour instance with custom format plugins registered. See `examples/factory-wrapper.example.ts`.
 
 ## Documentation
 

@@ -1,7 +1,7 @@
 import { expectAssignable, expectError, expectType } from 'tsd';
 
 import {
-  createFloat,
+  createFloatFactory,
   type IFloat,
   type InRangeFloat,
 } from '../../dist/index';
@@ -22,10 +22,10 @@ expectAssignable<IFloat>(f(0.5, { min: 0, max: 1 }));
 const opacity = f(0.25, { min: 0, max: 1 });
 expectAssignable<IFloat>(opacity);
 
-// createFloat bakes a bound; its `f` ALWAYS brands every value with the factory's
+// createFloatFactory bakes a bound; its `f` ALWAYS brands every value with the factory's
 // exact range (System B surfaced as System A) — a bounded value is always in range
 // (it throws otherwise), so the proof always holds.
-const { f: alpha } = createFloat({ min: 0, max: 1 });
+const { f: alpha } = createFloatFactory({ min: 0, max: 1 });
 expectType<InRangeFloat<0, 1>>(alpha(0.5));
 
 // clone() preserves the receiver's brand (same value + bound, so the proof still holds).
@@ -35,8 +35,12 @@ expectType<IFloat>(f(0.5).clone());
 
 // the `hardening` reaction knob is retired (2026-07-21): a bounded builder cannot
 // opt out of enforcement, so `hardening` is no longer a valid option (any value).
-expectError(createFloat({ min: 0, max: 1, hardening: 'warn' }));
-expectError(createFloat({ min: 0, max: 1, hardening: 'fail' }));
+expectError(
+  createFloatFactory({ min: 0, max: 1, hardening: 'warn' }),
+);
+expectError(
+  createFloatFactory({ min: 0, max: 1, hardening: 'fail' }),
+);
 
 // a per-value bound brands the same way; a per-call `hardening` is rejected.
 expectType<InRangeFloat<0, 1>>(f(0.5, { min: 0, max: 1 }));

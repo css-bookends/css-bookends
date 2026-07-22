@@ -80,7 +80,7 @@ Each helper is created by a factory that takes its config / defaults and returns
 the ready-to-use helper. Behavior is configured at factory time, not baked into
 module-level exports.
 
-Precedent: `css-calipers` already works this way via `createCalipers({ errorConfig })`.
+Precedent: `css-calipers` already works this way via `createCalipersFactory({ errorConfig })`.
 This model generalizes that to every helper.
 
 ## 2. The compendium factory (the composition root)

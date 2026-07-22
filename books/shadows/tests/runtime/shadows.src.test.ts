@@ -1,4 +1,4 @@
-import { createColor, m } from '@css-bookends/css-calipers';
+import { createColorFactory, m } from '@css-bookends/css-calipers';
 import { describe, expect, it } from 'vitest';
 
 import {
@@ -9,7 +9,7 @@ import {
   shadowTotalY,
 } from '../../src/shadows';
 
-const color = createColor({ formats: [] });
+const color = createColorFactory({ formats: [] });
 
 describe('shadow.helper', () => {
   it('formats single and multiple box shadows', () => {

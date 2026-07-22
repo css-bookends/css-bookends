@@ -1,23 +1,23 @@
 export * from './core';
 // The master factory + its config, surfaced on the ROOT (cycle-free via
 // `./bundle`) so classic-resolution consumers (e.g. the compendium) reach it
-// without a subpath, exactly like `createColor`. The `/codex` entry also
+// without a subpath, exactly like `createColorFactory`. The `/codex` entry also
 // re-exports it (via `export * from './index'`).
 export {
   type CalipersBundle,
   type CalipersBundleConfig,
-  createCalipersBundle,
+  createCalipersBundleFactory,
 } from './bundle';
 // The scalar FAMILY bundle (integer / float / ratio), the same pattern one level down.
 // The codex composes it; a consumer who wants only the scalars can bind it directly.
 export {
-  createScalarBundle,
+  createScalarBundleFactory,
   type ScalarBundle,
   type ScalarBundleConfig,
 } from './scalar-bundle';
 // The bare default-instance helpers (`m`, refinements, unit-helper builders,
 // error-config accessors) come from the single construction path in `./default`,
-// which assembles them via `createCalipers()` at its defaults.
+// which assembles them via `createCalipersFactory()` at its defaults.
 export * from './default';
 // The "unspecified number" TYPE is public so `ratio` (and later `m`) can hand one back honestly for
 // a bare number, without stamping a guessed integer / float type on it. The `u` builder / class stay
@@ -40,8 +40,8 @@ export {
   type ColorSpaceDescriptor,
   type Store as ColorStore,
   type ColorString,
-  createColor,
   type CreateColorConfig,
+  createColorFactory,
   type CssColor,
   type CssFormat,
   type CurrentColor,

@@ -77,7 +77,7 @@ that lands on the scalar is a parked open question (below).
 - `MeasurementCreateOptions` loses `min` / `max` / `modifier`; `buildMeasurement` builds a plain `u`
   with only error plumbing. The `m`-level set-once guard (`CALIPERS_E_CONSTRAINT` on a direct bound)
   disappears; there are no numeric options left to conflict.
-- Hardening leaves `createCalipers` / `createCoreApi` (the `hardening` param) and the bundle:
+- Hardening leaves `createCalipersFactory` / `createCoreApi` (the `hardening` param) and the bundle:
   `CalipersBundleConfig.measurement` loses `hardening`, and `global.hardening` no longer reaches
   measurements. *(Update 2026-07-21: `hardening` is now retired ENTIRELY, see todo §3; it no longer
   governs `integer` / `float` / `ratio` either. A breached bound throws; there is no reaction knob.)*

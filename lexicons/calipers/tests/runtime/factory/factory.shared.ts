@@ -1,9 +1,9 @@
 /* eslint-disable no-restricted-syntax -- this shared harness exercises the passed-in
-   factory (factory.createCalipers()); those calls are the whole subject under test. */
+   factory (factory.createCalipersFactory()); those calls are the whole subject under test. */
 import { describe, expect, it } from 'vitest';
 
 type FactoryApi = {
-  createCalipers: (config?: {
+  createCalipersFactory: (config?: {
     errorConfig?: { stackHints?: 'auto' | 'on' | 'off' };
     defaultUnit?: string;
   }) => {
@@ -30,10 +30,10 @@ export const runFactoryTests = (
 ): void => {
   describe(`CSS-Calipers factory (${label})`, () => {
     it('creates instances with independent error config', () => {
-      const first = api.createCalipers({
+      const first = api.createCalipersFactory({
         errorConfig: { stackHints: 'on' },
       });
-      const second = api.createCalipers({
+      const second = api.createCalipersFactory({
         errorConfig: { stackHints: 'off' },
       });
 
@@ -46,7 +46,7 @@ export const runFactoryTests = (
     });
 
     it('exposes the measurement core, not the unit helpers', () => {
-      const instance = api.createCalipers();
+      const instance = api.createCalipersFactory();
       expect(instance.m(1).css()).toBe('1px');
       // the bound unit helpers and the `units` namespace are NOT on this
       // instance; they come from the per-group factories or the codex bundle.
@@ -55,19 +55,19 @@ export const runFactoryTests = (
     });
 
     it('applies a configured defaultUnit to bare m()', () => {
-      const percent = api.createCalipers({ defaultUnit: '%' });
+      const percent = api.createCalipersFactory({ defaultUnit: '%' });
       expect(percent.m(50).css()).toBe('50%');
       // an explicit unit still overrides the configured default
       expect(percent.m(50, 'px').css()).toBe('50px');
       // and the default stays px when unconfigured
-      expect(api.createCalipers().m(50).css()).toBe('50px');
+      expect(api.createCalipersFactory().m(50).css()).toBe('50px');
     });
 
     it('scopes stack hint behavior per instance', () => {
-      const withHints = api.createCalipers({
+      const withHints = api.createCalipersFactory({
         errorConfig: { stackHints: 'on' },
       });
-      const withoutHints = api.createCalipers({
+      const withoutHints = api.createCalipersFactory({
         errorConfig: { stackHints: 'off' },
       });
 

@@ -1,14 +1,14 @@
 import type { MeasurementOf } from '../core';
 import {
   type CalipersFactoryConfig,
-  createCalipers,
+  createCalipersFactory,
 } from '../factory';
 
-/** Factory for the angle helpers, bound through `createCalipers`. */
-export const createAngleUnits = (
+/** Factory for the angle helpers, bound through `createCalipersFactory`. */
+export const createAngleUnitsFactory = (
   config: CalipersFactoryConfig = {},
 ) => {
-  const core = createCalipers(config);
+  const core = createCalipersFactory(config);
   return {
     mDeg: core.makeUnitHelperFromDefinition('mDeg'),
     mRad: core.makeUnitHelperFromDefinition('mRad'),
@@ -17,7 +17,7 @@ export const createAngleUnits = (
   };
 };
 
-type AngleHelpers = ReturnType<typeof createAngleUnits>;
+type AngleHelpers = ReturnType<typeof createAngleUnitsFactory>;
 export type DegMeasurement = MeasurementOf<AngleHelpers['mDeg']>;
 export type RadMeasurement = MeasurementOf<AngleHelpers['mRad']>;
 export type GradMeasurement = MeasurementOf<AngleHelpers['mGrad']>;

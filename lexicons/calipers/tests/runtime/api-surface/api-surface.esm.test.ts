@@ -30,19 +30,19 @@ const esmUnitsResolution =
 const esmUnitsGrid = await import('../../../dist/units/grid.mjs');
 
 const groupFactoryNames = [
-  'createAbsoluteUnits',
-  'createAngleUnits',
-  'createContainerUnits',
-  'createFontRelativeUnits',
-  'createFrequencyUnits',
-  'createGridUnits',
-  'createPercentUnits',
-  'createResolutionUnits',
-  'createTimeUnits',
-  'createViewportUnits',
-  'createViewportDynamicUnits',
-  'createViewportLargeUnits',
-  'createViewportSmallUnits',
+  'createAbsoluteUnitsFactory',
+  'createAngleUnitsFactory',
+  'createContainerUnitsFactory',
+  'createFontRelativeUnitsFactory',
+  'createFrequencyUnitsFactory',
+  'createGridUnitsFactory',
+  'createPercentUnitsFactory',
+  'createResolutionUnitsFactory',
+  'createTimeUnitsFactory',
+  'createViewportUnitsFactory',
+  'createViewportDynamicUnitsFactory',
+  'createViewportLargeUnitsFactory',
+  'createViewportSmallUnitsFactory',
 ] as const;
 
 describe('API surface (ESM)', () => {
@@ -63,39 +63,45 @@ describe('API surface (ESM)', () => {
   });
 
   it('exposes the group factory via each unit family subpath', () => {
-    expect(typeof esmUnitsPercent.createPercentUnits).toBe(
+    expect(typeof esmUnitsPercent.createPercentUnitsFactory).toBe(
       'function',
     );
-    expect(typeof esmUnitsAbsolute.createAbsoluteUnits).toBe(
-      'function',
-    );
-    expect(typeof esmUnitsFontRelative.createFontRelativeUnits).toBe(
-      'function',
-    );
-    expect(typeof esmUnitsViewport.createViewportUnits).toBe(
+    expect(typeof esmUnitsAbsolute.createAbsoluteUnitsFactory).toBe(
       'function',
     );
     expect(
-      typeof esmUnitsViewportSmall.createViewportSmallUnits,
+      typeof esmUnitsFontRelative.createFontRelativeUnitsFactory,
+    ).toBe('function');
+    expect(typeof esmUnitsViewport.createViewportUnitsFactory).toBe(
+      'function',
+    );
+    expect(
+      typeof esmUnitsViewportSmall.createViewportSmallUnitsFactory,
     ).toBe('function');
     expect(
-      typeof esmUnitsViewportLarge.createViewportLargeUnits,
+      typeof esmUnitsViewportLarge.createViewportLargeUnitsFactory,
     ).toBe('function');
     expect(
-      typeof esmUnitsViewportDynamic.createViewportDynamicUnits,
+      typeof esmUnitsViewportDynamic.createViewportDynamicUnitsFactory,
     ).toBe('function');
-    expect(typeof esmUnitsContainer.createContainerUnits).toBe(
+    expect(typeof esmUnitsContainer.createContainerUnitsFactory).toBe(
       'function',
     );
-    expect(typeof esmUnitsAngle.createAngleUnits).toBe('function');
-    expect(typeof esmUnitsTime.createTimeUnits).toBe('function');
-    expect(typeof esmUnitsFrequency.createFrequencyUnits).toBe(
+    expect(typeof esmUnitsAngle.createAngleUnitsFactory).toBe(
       'function',
     );
-    expect(typeof esmUnitsResolution.createResolutionUnits).toBe(
+    expect(typeof esmUnitsTime.createTimeUnitsFactory).toBe(
       'function',
     );
-    expect(typeof esmUnitsGrid.createGridUnits).toBe('function');
+    expect(typeof esmUnitsFrequency.createFrequencyUnitsFactory).toBe(
+      'function',
+    );
+    expect(
+      typeof esmUnitsResolution.createResolutionUnitsFactory,
+    ).toBe('function');
+    expect(typeof esmUnitsGrid.createGridUnitsFactory).toBe(
+      'function',
+    );
   });
 
   it('exposes the full root runtime export map', () => {
@@ -143,18 +149,18 @@ describe('API surface (ESM)', () => {
       'nonNegativeFloat',
       'nonPositiveFloat',
       'inRangeFloat',
-      'createInteger',
-      'createFloat',
-      'createRatio',
-      'createScalarBundle',
-      'createCalipersBundle',
+      'createIntegerFactory',
+      'createFloatFactory',
+      'createRatioFactory',
+      'createScalarBundleFactory',
+      'createCalipersBundleFactory',
       ...groupFactoryNames,
       'getErrorConfig',
       'setErrorConfig',
       // colour value surface (re-exported from ./color)
       'color',
       'colorFormats',
-      'createColor',
+      'createColorFactory',
       'defaultColorConfig',
       'defaultFormatPriority',
       'defineColorSpace',

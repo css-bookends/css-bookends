@@ -39,15 +39,15 @@ export interface ColorFormatPlugin<F extends string = string>
 `gamut`) the escalation reads and the fallback bits (`supportsProbe`, `gamutDependent`,
 `srgbFloor`) the future gilding seam reads.
 
-## Factory: createColor({ formats })
+## Factory: createColorFactory({ formats })
 
 ```ts
-const myColor = createColor({ formats: [zoo] });
+const myColor = createColorFactory({ formats: [zoo] });
 ```
 
 Returns a `color()`-shaped function bound to a per-instance registry
 (`{ ...colorFormats, ...plugins }`) and a plugin-aware input parser. The module-level
-`color` is `createColor({ formats: [] })` at defaults (the "default = factory at
+`color` is `createColorFactory({ formats: [] })` at defaults (the "default = factory at
 defaults" pattern the calipers core already uses).
 
 Wiring:
@@ -81,7 +81,7 @@ const zoo: ColorFormatPlugin<'zoo'> = {
   // output: quantize the stored colour to the nearest animal, emit its CSS word.
   render: (c) => nearestAnimalCss(c),
 };
-const myColor = createColor({ formats: [zoo] });
+const myColor = createColorFactory({ formats: [zoo] });
 ```
 
 Round-trip assertions:
@@ -104,7 +104,7 @@ This is now built. A format declares its browser-compat rewrite via the optional
 `src/color/types.ts`). The gilding finisher's `composeCoreFromFormats` (in
 `packages/gilding/src/cores/compose.ts`, tested in
 `packages/gilding/tests/compose-core-from-formats.test.ts`) reads each registered
-format's `fallback` off the `createColor` registry and runs it as a pre-step in front
+format's `fallback` off the `createColorFactory` registry and runs it as a pre-step in front
 of its inner Lightning CSS core (the onion: Lightning stays intact). Formats with no
 `fallback` contribute no pre-step. Calipers itself never reads `fallback`; it is purely
 additive and takes on no gilding dependency.

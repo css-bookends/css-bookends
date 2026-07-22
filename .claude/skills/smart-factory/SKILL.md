@@ -7,7 +7,7 @@ description: How a CSS-Bookends book's factory should behave - bound via `publis
 
 A book is obtained ONLY through its `publishBook<Name>` factory: the override seam and
 the home of smart defaults. Modeled by `publishBookBorders` (the gold-standard book).
-(Colour is a Layer-1 LEXICON via `createColor`, NOT a book; it shows the same
+(Colour is a Layer-1 LEXICON via `createColorFactory`, NOT a book; it shows the same
 smart-default / library-agnostic / strictness patterns, referenced below as a lexicon.)
 This is the how-to for the "consume from a factory" rule in `AGENTS.md`.
 
@@ -45,7 +45,7 @@ This is the how-to for the "consume from a factory" rule in `AGENTS.md`.
   config OPTION (explicit enumerated value + sensible default), never a hardcoded decision. When a
   design forces "should it do X or Y?", make it a config. See `docs/foundations.md` + `doc-test-code`.
 - **Bounded builders + seal (numeric lexicons).** A numeric lexicon factory carries a constraint
-  bound (`createInteger({ min, max })`), and the bounded builder MINTS a branded value
+  bound (`createIntegerFactory({ min, max })`), and the bounded builder MINTS a branded value
   (`InRange<min,max>`, System A) plus stores the bound (System B). `sealed` (`sealedMin` /
   `sealedMax` / `sealedRange`) locks a bound edge against `clone`; it is CONTROL, not prevention
   (mint-fresh from the number always escapes; enforcement is an opt-in in-package ESLint edge rule).
@@ -54,7 +54,7 @@ This is the how-to for the "consume from a factory" rule in `AGENTS.md`.
   (object = property-keyed style object, string = bare value; default `'object'`). The output
   step switches on it. See `output-shape`.
 - **Three-tier config cascade (bundle level).** The BUNDLE factories (`publishCompendium`,
-  `createCalipersBundle`) take `{ global?, <unitKey>? }`: a `global` slot of shared options plus
+  `createCalipersBundleFactory`) take `{ global?, <unitKey>? }`: a `global` slot of shared options plus
   one optional key per unit. Each unit resolves every setting as `own keyed config -> bundle
   global (where applicable) -> built-in default`. So a value set once in `global` (e.g.
   `format: 'string'`) applies to all units unless a unit overrides it. A standalone
@@ -63,5 +63,5 @@ This is the how-to for the "consume from a factory" rule in `AGENTS.md`.
 ## Reference
 
 `publishBookBorders` (`books/borders`) for the book pattern; the colour LEXICON
-`createColor` + `defaultColorConfig` / `defaultFormatPriority` in
+`createColorFactory` + `defaultColorConfig` / `defaultFormatPriority` in
 `lexicons/calipers/src/color/`; the factory rule in `AGENTS.md`.

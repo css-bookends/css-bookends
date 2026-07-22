@@ -29,7 +29,7 @@ job (a Layer-1 unit is a **lexicon**; "primitive" is the retired synonym):
 2. **css-bookends (Layer 2), the helpers (books) that consume the lexicons.** EVERY
    helper is a book (per-property: opacity, zIndex, ...; composed: borders, shadows,
    margin, ...). A per-property book is the property-WRITING helper; the VALUE it works
-   with (a bounded LEXICON value, e.g. font-weight `createInteger({ min: 100, max: 900 })`)
+   with (a bounded LEXICON value, e.g. font-weight `createIntegerFactory({ min: 100, max: 900 })`)
    is a Layer-1 lexicon per THE RULE, not the book. Value = lexicon, writing-helper = book.
    The compendium is the full bundle of every active book; gilding is the
    output-edge finisher. Books consume calipers; calipers never depends on a book. (The
@@ -151,7 +151,7 @@ in the `smart-factory` + `config-cascade` skills — invoke them before designin
   itself be a bundle. Never design a bundle shape from memory; "should this be a new shape?" is always
   "no, mirror the bundle." (Detail: `config-cascade` skill.)
 - **A book self-instantiates its dependencies; it never REQUIRES their config.** It creates its own
-  calipers instance (`createCalipers` / `createColor`) internally with the config it needs; it never
+  calipers instance (`createCalipersFactory` / `createColorFactory`) internally with the config it needs; it never
   threads a calipers config through the consumer or hard-depends on a shared instance. (The
   compendium's `calipers` slot configures the calipers LAYER you use directly, not a book's internals.)
 - **Never reach past the factory** to import the underlying value-helper as the consumer entry.
@@ -159,8 +159,8 @@ in the `smart-factory` + `config-cascade` skills — invoke them before designin
   only when demoing that the inline path works is the explicit POINT, and it says so). Default tests
   import helpers from the bound codex in `tests/support/`; only factory-subject / built-artifact tests
   construct their own instances.
-- **Exception: `css-calipers`.** A lexicon is consumed via its `create*` factory (`createCalipers` →
-  `m()`, `createColor` → `color()`); `m()` / `color()` are those factories bound at defaults.
+- **Exception: `css-calipers`.** A lexicon is consumed via its `create*` factory (`createCalipersFactory` →
+  `m()`, `createColorFactory` → `color()`); `m()` / `color()` are those factories bound at defaults.
 - **Exception: composed books (closed, documented namespace class).** `shadows`, `positioning`,
   `supports-fallback`, `backdrop-filter`, `transforms` expose NO `publishBook<Name>` factory — their
   surface is a namespace of pure functions, and they ship no bound instance / no default export. The
@@ -179,7 +179,7 @@ embeds (its bound surfaces through `.constraints()`). `u` is the bare scalar and
 - **System B, the runtime bound** (stored `min`/`max`, `.constraints()`): carried through arithmetic,
   enforced by **failing on breach**. Real data on the value.
 
-Surface: **bounded builders mint branded values** (`createInteger({ min, max })` -> `InRange<min,max>`).
+Surface: **bounded builders mint branded values** (`createIntegerFactory({ min, max })` -> `InRange<min,max>`).
 A bound is set ONCE at construction (a factory config OR per-value options, never both -> throws), then
 it is immutable; to change a bound you MINT A FRESH value (`i(v.value(), { min, max })`), the
 always-available escape. There is NO bound merging and NO in-place bound mutation.
@@ -199,7 +199,7 @@ bound-at-defaults surface, so a consumer who does not want to configure anything
 helpers already bound and never calls a factory:
 
 - **css-calipers: `codex`** (the calipers BUNDLE). DEFAULT-exports the master factory
-  `createCalipersBundle`, whose config is the same `{ global?, <unitKey>? }` shape as
+  `createCalipersBundleFactory`, whose config is the same `{ global?, <unitKey>? }` shape as
   `publishCompendium` (a `global` slot plus one optional key per lexicon: `measurement`,
   `ratio`, `integer`, `float`, `color`), with the three-tier cascade. It binds the whole
   calipers surface in one object and also named-exports the full helper set bound at defaults
@@ -258,7 +258,7 @@ render method per package.
 Examples:
 
 ```ts
-// (color is the calipers colour LEXICON via `createColor()`, NOT a book)
+// (color is the calipers colour LEXICON via `createColorFactory()`, NOT a book)
 borders(spec).css();                       // configured variant per factory config
 color('#3366cc').css();                    // configured format (default colorFormats.rgba)
 color('#3366cc').hex().css();              // one-off override (selector) -> '#3366cc'

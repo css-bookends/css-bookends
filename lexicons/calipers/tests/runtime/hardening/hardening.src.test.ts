@@ -8,7 +8,12 @@
 // measurement enforces via the i / f it ingests, since m is a pure container.
 import { describe, expect, it } from 'vitest';
 
-import { createFloat, createInteger, f, i } from '../../../src';
+import {
+  createFloatFactory,
+  createIntegerFactory,
+  f,
+  i,
+} from '../../../src';
 import {
   inRange,
   m,
@@ -19,14 +24,20 @@ describe('bound spectrum', () => {
   /* ---- i / f imperative bounds (regression) ---- */
   describe('i / f bounded builders re-validate through arithmetic', () => {
     it('a bounded integer enforces its bound at construction', () => {
-      const { i: fontWeight } = createInteger({ min: 1, max: 1000 });
+      const { i: fontWeight } = createIntegerFactory({
+        min: 1,
+        max: 1000,
+      });
       expect(fontWeight(700).value()).toBe(700);
       expect(() => fontWeight(0)).toThrow(/below the minimum/);
       expect(() => fontWeight(1200)).toThrow(/above the maximum/);
     });
 
     it('a bounded integer re-validates through arithmetic (throws on breach)', () => {
-      const { i: bounded } = createInteger({ min: 0, max: 10 });
+      const { i: bounded } = createIntegerFactory({
+        min: 0,
+        max: 10,
+      });
       expect(bounded(4).multiply(2).value()).toBe(8); // in bounds
       expect(() => bounded(8).multiply(2)).toThrow(
         /above the maximum/,
@@ -45,7 +56,7 @@ describe('bound spectrum', () => {
     });
 
     it('a bounded float re-validates through arithmetic', () => {
-      const { f: alpha } = createFloat({ min: 0, max: 1 });
+      const { f: alpha } = createFloatFactory({ min: 0, max: 1 });
       expect(() => alpha(0.6).multiply(2)).toThrow(
         /above the maximum/,
       ); // 1.2 > 1

@@ -8,7 +8,7 @@
 // example (those are the allowlisted exceptions in eslint.config.js). Mirrors
 // `examples/bind-once/calipers.ts`; see that mini-project + the factory-first
 // pattern doc for the full rationale.
-import { createCalipersBundle } from '@css-bookends/css-calipers';
+import { createCalipersBundleFactory } from '@css-bookends/css-calipers';
 
 export const {
   assertMatchingUnits,
@@ -24,7 +24,7 @@ export const {
   nonNegative,
   nonPositive,
   r,
-} = createCalipersBundle();
+} = createCalipersBundleFactory();
 
 // Calipers TYPES re-exported so consumers import them from the binder too (a package
 // or path move is then a one-file edit). Types are erased at build, so this is a

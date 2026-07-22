@@ -1,14 +1,14 @@
 import type { MeasurementOf } from '../core';
 import {
   type CalipersFactoryConfig,
-  createCalipers,
+  createCalipersFactory,
 } from '../factory';
 
-/** Factory for the font-relative helpers, bound through `createCalipers`. */
-export const createFontRelativeUnits = (
+/** Factory for the font-relative helpers, bound through `createCalipersFactory`. */
+export const createFontRelativeUnitsFactory = (
   config: CalipersFactoryConfig = {},
 ) => {
-  const core = createCalipers(config);
+  const core = createCalipersFactory(config);
   return {
     mEm: core.makeUnitHelperFromDefinition('mEm'),
     mRem: core.makeUnitHelperFromDefinition('mRem'),
@@ -25,7 +25,9 @@ export const createFontRelativeUnits = (
   };
 };
 
-type FontRelativeHelpers = ReturnType<typeof createFontRelativeUnits>;
+type FontRelativeHelpers = ReturnType<
+  typeof createFontRelativeUnitsFactory
+>;
 export type EmMeasurement = MeasurementOf<FontRelativeHelpers['mEm']>;
 export type RemMeasurement = MeasurementOf<
   FontRelativeHelpers['mRem']

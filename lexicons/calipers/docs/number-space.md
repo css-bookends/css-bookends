@@ -58,8 +58,8 @@ from these scalars (a ratio of two bounded integers is itself bounded).
   integer-ness for `i`) and the optional range. Operations re-validate against the
   same constraints, so a hardened value stays hardened (or throws) through arithmetic.
 - **Bounded builders:** `i(v, { min?, max? })` / `f(v, { min?, max? })` (per value), or
-  `createInteger({ min?, max? })` / `createFloat({ min?, max? })` (a named-domain factory,
-  `const { i: fontWeight } = createInteger({ min: 100, max: 900 })`), carry a range bound. This is
+  `createIntegerFactory({ min?, max? })` / `createFloatFactory({ min?, max? })` (a named-domain factory,
+  `const { i: fontWeight } = createIntegerFactory({ min: 100, max: 900 })`), carry a range bound. This is
   where a real CSS value is defined once and reused, e.g. a `0..1` float.
 - **Composition:** `r()` accepts `number | IInteger | IFloat` and respects a passed
   primitive's already-validated value.

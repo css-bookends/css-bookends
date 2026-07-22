@@ -1,5 +1,5 @@
 /* eslint-disable no-restricted-syntax -- this whole file drives the CoreApi harness
-   from the BUILT cjs artifact (cjsModule.createCalipersBundle()); the artifact bind
+   from the BUILT cjs artifact (cjsModule.createCalipersBundleFactory()); the artifact bind
    is the subject under test. */
 // Core tests against the built CommonJS artifact (dist, cjs output), driven
 // through the codex bundle (the stable full CoreApi surface). The harness type is
@@ -10,6 +10,7 @@ import { runCoreTests } from './core.shared';
 // Dynamic import works with CommonJS output and will fail fast if the artifact
 // does not exist or its exports are wrong.
 const cjsModule = await import('../../../dist/index.js');
-const api = cjsModule.createCalipersBundle() as unknown as CoreApi;
+const api =
+  cjsModule.createCalipersBundleFactory() as unknown as CoreApi;
 
 runCoreTests('cjs', api);

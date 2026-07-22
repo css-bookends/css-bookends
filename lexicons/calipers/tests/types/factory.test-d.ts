@@ -3,14 +3,14 @@ import { expectAssignable, expectError } from 'tsd';
 import {
   type CalipersFactoryConfig,
   type CalipersInstance,
-  createCalipers,
+  createCalipersFactory,
 } from '../../dist/factory';
 
 const config: CalipersFactoryConfig = {
   errorConfig: { stackHints: 'on' },
 };
 
-const instance = createCalipers(config);
+const instance = createCalipersFactory(config);
 expectAssignable<CalipersInstance>(instance);
 
 // `defaultUnit` is an accepted factory option (the configured unit is applied
@@ -20,7 +20,7 @@ expectAssignable<CalipersFactoryConfig>({ defaultUnit: '%' });
 // `hardening` is not a factory option anywhere: `m` never carried numeric config,
 // and the `hardening: 'warn' | 'fail'` reaction knob on `i` / `f` was retired
 // (2026-07-21). A breached bound throws; there is no reaction to configure.
-expectError(createCalipers({ hardening: 'warn' }));
+expectError(createCalipersFactory({ hardening: 'warn' }));
 
 instance.m(10);
 // unit helpers and the `units` namespace are no longer on the core instance;

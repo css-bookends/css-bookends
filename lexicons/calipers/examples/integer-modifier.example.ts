@@ -9,7 +9,7 @@
  * so a float takes whatever the modifier returns, bounded only by min/max.
  */
 
-import { createInteger } from '@css-bookends/css-calipers';
+import { createIntegerFactory } from '@css-bookends/css-calipers';
 
 import { f, i } from './calipers_examples.ts';
 
@@ -45,7 +45,7 @@ export const noModifierThrows = (): string => {
 };
 
 // --- a whole domain can bake the modifier on its factory -------------------------
-const { i: fontWeight } = createInteger({
+const { i: fontWeight } = createIntegerFactory({
   min: 100,
   max: 900,
   modifier: snapTo100,

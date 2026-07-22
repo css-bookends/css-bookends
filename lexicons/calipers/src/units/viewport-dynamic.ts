@@ -1,14 +1,14 @@
 import type { MeasurementOf } from '../core';
 import {
   type CalipersFactoryConfig,
-  createCalipers,
+  createCalipersFactory,
 } from '../factory';
 
-/** Factory for the dynamic-viewport helpers, bound through `createCalipers`. */
-export const createViewportDynamicUnits = (
+/** Factory for the dynamic-viewport helpers, bound through `createCalipersFactory`. */
+export const createViewportDynamicUnitsFactory = (
   config: CalipersFactoryConfig = {},
 ) => {
-  const core = createCalipers(config);
+  const core = createCalipersFactory(config);
   return {
     mDvw: core.makeUnitHelperFromDefinition('mDvw'),
     mDvh: core.makeUnitHelperFromDefinition('mDvh'),
@@ -20,7 +20,7 @@ export const createViewportDynamicUnits = (
 };
 
 type ViewportDynamicHelpers = ReturnType<
-  typeof createViewportDynamicUnits
+  typeof createViewportDynamicUnitsFactory
 >;
 export type DvwMeasurement = MeasurementOf<
   ViewportDynamicHelpers['mDvw']

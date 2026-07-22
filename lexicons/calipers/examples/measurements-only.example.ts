@@ -8,17 +8,17 @@
  */
 /* eslint-disable no-restricted-syntax -- this example demonstrates the colour-free
    /measurements + /units subpaths; the create* calls are the point of the example. */
-import { createCalipers } from '@css-bookends/css-calipers/measurements';
+import { createCalipersFactory } from '@css-bookends/css-calipers/measurements';
 import {
-  createFontRelativeUnits,
-  createViewportUnits,
+  createFontRelativeUnitsFactory,
+  createViewportUnitsFactory,
 } from '@css-bookends/css-calipers/units';
 
 // Colour-free: the measurement core + the unit-group factories, no bundle (which
 // would pull in the colour lexicon and culori).
-const { m } = createCalipers();
-const { mRem } = createFontRelativeUnits();
-const { mVw } = createViewportUnits();
+const { m } = createCalipersFactory();
+const { mRem } = createFontRelativeUnitsFactory();
+const { mVw } = createViewportUnitsFactory();
 
 export const px = m(8).css(); // '8px'
 export const rem = mRem(1.5).css(); // '1.5rem'

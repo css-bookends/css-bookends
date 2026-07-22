@@ -5,7 +5,7 @@ import { expectAssignable, expectError } from 'tsd';
 
 import {
   type CqwMeasurement,
-  createCalipersBundle,
+  createCalipersBundleFactory,
   type DegMeasurement,
   type DpiMeasurement,
   type DvwMeasurement,
@@ -130,11 +130,11 @@ expectAssignable<IMeasurement<'dpi'>>(mDpi(96));
 expectAssignable<IMeasurement<'fr'>>(mFr(1));
 
 // The ./units aggregator exposes the group FACTORIES, which return the helpers.
-const vpUnits = Units.createViewportUnits();
+const vpUnits = Units.createViewportUnitsFactory();
 expectAssignable<IMeasurement<'vw'>>(vpUnits.mVw(5));
-const absUnits = Units.createAbsoluteUnits();
+const absUnits = Units.createAbsoluteUnitsFactory();
 expectAssignable<IMeasurement<'px'>>(absUnits.mPx(2));
-const timeUnits = Units.createTimeUnits();
+const timeUnits = Units.createTimeUnitsFactory();
 expectAssignable<TimeMeasurement>(timeUnits.mS(2));
 expectAssignable<TimeMeasurement>(timeUnits.mMs(250));
 
@@ -197,11 +197,17 @@ if (hasCssMethod(maybeHasCss)) {
 // or a unit-group (`absolute`), and no longer the scalar keys (`integer` / `float`)
 // or `global` either. A breached bound throws; there is no reaction to configure.
 expectError(
-  createCalipersBundle({ measurement: { hardening: 'warn' } }),
+  createCalipersBundleFactory({ measurement: { hardening: 'warn' } }),
 );
 expectError(
-  createCalipersBundle({ absolute: { hardening: 'warn' } }),
+  createCalipersBundleFactory({ absolute: { hardening: 'warn' } }),
 );
-expectError(createCalipersBundle({ integer: { hardening: 'warn' } }));
-expectError(createCalipersBundle({ float: { hardening: 'fail' } }));
-expectError(createCalipersBundle({ global: { hardening: 'warn' } }));
+expectError(
+  createCalipersBundleFactory({ integer: { hardening: 'warn' } }),
+);
+expectError(
+  createCalipersBundleFactory({ float: { hardening: 'fail' } }),
+);
+expectError(
+  createCalipersBundleFactory({ global: { hardening: 'warn' } }),
+);

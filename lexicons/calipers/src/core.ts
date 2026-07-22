@@ -1,5 +1,5 @@
 import {
-  createFloat,
+  createFloatFactory,
   f,
   type FloatApi,
   type FloatConstraints,
@@ -10,7 +10,7 @@ import {
 } from './float';
 import { type Constraints } from './hardening';
 import {
-  createInteger,
+  createIntegerFactory,
   i,
   type IInteger,
   type IntegerApi,
@@ -26,7 +26,7 @@ import type {
 } from './internal/brands';
 import { type ErrorCode, type ErrorConfig } from './internal/errors';
 import {
-  createRatio,
+  createRatioFactory,
   type IRatio,
   isRatio,
   normalizeRatio,
@@ -225,7 +225,7 @@ export type UnitAssertion<T extends UnitHelper> = (
 
 // The package's bare, default-instance helpers (`m`, the refinements, the
 // unit-helper builders, the error-config accessors, ...) are NOT assembled here.
-// They live in `./default`, which builds them via the public `createCalipers()`
+// They live in `./default`, which builds them via the public `createCalipersFactory()`
 // factory at its defaults, so there is a single construction path and the default
 // cannot drift from a custom instance. This module owns only the class/types and
 // the `createCoreApi`-level type surface; it must stay free of any default-instance
@@ -240,7 +240,7 @@ export type {
 };
 export type { Constraints } from './hardening';
 export {
-  createRatio,
+  createRatioFactory,
   isRatio,
   normalizeRatio,
   parseRatio,
@@ -257,7 +257,14 @@ export type {
   RatioParts,
   RatioValue,
 };
-export { createFloat, createInteger, f, i, isFloat, isInteger };
+export {
+  createFloatFactory,
+  createIntegerFactory,
+  f,
+  i,
+  isFloat,
+  isInteger,
+};
 export type {
   FloatApi,
   FloatConstraints,

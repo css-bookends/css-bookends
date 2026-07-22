@@ -1,14 +1,14 @@
 import type { MeasurementOf } from '../core';
 import {
   type CalipersFactoryConfig,
-  createCalipers,
+  createCalipersFactory,
 } from '../factory';
 
-/** Factory for the viewport helpers, bound through `createCalipers`. */
-export const createViewportUnits = (
+/** Factory for the viewport helpers, bound through `createCalipersFactory`. */
+export const createViewportUnitsFactory = (
   config: CalipersFactoryConfig = {},
 ) => {
-  const core = createCalipers(config);
+  const core = createCalipersFactory(config);
   return {
     mVw: core.makeUnitHelperFromDefinition('mVw'),
     mVh: core.makeUnitHelperFromDefinition('mVh'),
@@ -19,7 +19,7 @@ export const createViewportUnits = (
   };
 };
 
-type ViewportHelpers = ReturnType<typeof createViewportUnits>;
+type ViewportHelpers = ReturnType<typeof createViewportUnitsFactory>;
 export type VwMeasurement = MeasurementOf<ViewportHelpers['mVw']>;
 export type VhMeasurement = MeasurementOf<ViewportHelpers['mVh']>;
 export type ViMeasurement = MeasurementOf<ViewportHelpers['mVi']>;

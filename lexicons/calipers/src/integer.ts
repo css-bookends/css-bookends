@@ -251,8 +251,8 @@ export const inRangeInteger = <
 
 /**
  * The integer factory config: the shared `errorConfig` (stack-hint rendering) plus an
- * optional baked bound, so a `createInteger` instance builds its own per-instance error
- * store like `createCalipers`.
+ * optional baked bound, so a `createIntegerFactory` instance builds its own per-instance error
+ * store like `createCalipersFactory`.
  */
 export type IntegerFactoryConfig<
   Min extends number = number,
@@ -261,7 +261,7 @@ export type IntegerFactoryConfig<
   errorConfig?: ErrorConfig;
   /**
    * A bound baked into every value this factory builds (the named-domain pattern,
-   * e.g. `createInteger({ min: 100, max: 900 })` for font-weight). Set once here; a
+   * e.g. `createIntegerFactory({ min: 100, max: 900 })` for font-weight). Set once here; a
    * per-value bound on top throws. Unit-local (no bundle `global`). The literal
    * `Min`/`Max` are captured so `i` can brand its output.
    */
@@ -277,7 +277,7 @@ export type IntegerFactoryConfig<
 };
 
 /**
- * The bound integer surface a `createInteger` instance exposes. `FactoryMin`/`FactoryMax` are
+ * The bound integer surface a `createIntegerFactory` instance exposes. `FactoryMin`/`FactoryMax` are
  * the factory's captured bound; `i` brands its output with the RESOLVED bound (a per-call bound,
  * else the factory's). Set-once makes the per-call and factory bounds mutually exclusive, so the
  * resolved bound is simply whichever one is present.
@@ -316,10 +316,10 @@ export interface IntegerApi<
 
 /**
  * The integer FACTORY: bind a config once (an optional baked bound + errorConfig) and get the
- * integer surface with that config baked in. Mirrors `createCalipers` (measurements) and
- * `createFloat` (floats) so `m` / `i` / `f` are identical.
+ * integer surface with that config baked in. Mirrors `createCalipersFactory` (measurements) and
+ * `createFloatFactory` (floats) so `m` / `i` / `f` are identical.
  */
-export const createInteger = <
+export const createIntegerFactory = <
   Min extends number = never,
   Max extends number = never,
 >(

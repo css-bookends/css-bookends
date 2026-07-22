@@ -94,20 +94,20 @@ process-global error config: the cascade is the only path in (see
 [`docs/config-flow.md`](../../../docs/config-flow.md)).
 
 ```ts
-import { createCalipers } from "@css-bookends/css-calipers";
+import { createCalipersFactory } from "@css-bookends/css-calipers";
 
 // Force stack hints on for THIS instance (useful in dev or tests).
-const strict = createCalipers({ errorConfig: { stackHints: "on" } });
+const strict = createCalipersFactory({ errorConfig: { stackHints: "on" } });
 
 // Disable them for THIS instance (e.g. production).
-const quiet = createCalipers({ errorConfig: { stackHints: "off" } });
+const quiet = createCalipersFactory({ errorConfig: { stackHints: "off" } });
 ```
 
 `stackHints` also flows through the bundle cascade: set it once via
-`createCalipersBundle({ global: { errorConfig: { stackHints: "off" } } })` and every unit
+`createCalipersBundleFactory({ global: { errorConfig: { stackHints: "off" } } })` and every unit
 inherits it, while a unit's own `errorConfig` key overrides.
 
 The bare package exports `getErrorConfig` / `setErrorConfig` are the DEFAULT INSTANCE's
 accessors: they read/mutate that one instance's store, not a global. A custom
-`createCalipers(...)` instance carries its own independent config, so two instances never
+`createCalipersFactory(...)` instance carries its own independent config, so two instances never
 collide.

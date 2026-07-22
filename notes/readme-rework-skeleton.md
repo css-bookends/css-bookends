@@ -128,7 +128,7 @@ link to `docs/errors.md`.
 Target: 2 sentences + link. (Optional: 1 fenced error sample.)
 
 ### Factory entrypoint (optional)
-`createCalipers` for instance-scoped config. Keep as-is.
+`createCalipersFactory` for instance-scoped config. Keep as-is.
 Target: 1 sentence + 1 code block + link to the example.
 
 ### Philosophy / boundaries

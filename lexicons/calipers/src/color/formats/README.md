@@ -77,9 +77,9 @@ preference order, not dead weight.
 The list is `ColorConfig.output`, set through the colour lexicon factory:
 
 ```ts
-import { createColor, colorFormats } from '@css-bookends/css-calipers';
+import { createColorFactory, colorFormats } from '@css-bookends/css-calipers';
 
-const color = createColor({
+const color = createColorFactory({
   formats: [],
   output: [colorFormats.oklch, colorFormats.rgb],
 });

@@ -9,14 +9,17 @@
  */
 
 import {
-  createFloat,
-  createInteger,
+  createFloatFactory,
+  createIntegerFactory,
 } from '@css-bookends/css-calipers';
 
 import { m } from './calipers_examples.ts';
 
 // font-weight: an integer token constrained to the usable <font-weight> range.
-const { i: fontWeight } = createInteger({ min: 100, max: 900 });
+const { i: fontWeight } = createIntegerFactory({
+  min: 100,
+  max: 900,
+});
 export const regular = fontWeight(400).css(); // '400'
 export const bold = fontWeight(700).css(); // '700'
 export const fontWeightOutOfRange = (): string => {
@@ -29,7 +32,7 @@ export const fontWeightOutOfRange = (): string => {
 };
 
 // opacity: a float token constrained to [0, 1].
-const { f: opacity } = createFloat({ min: 0, max: 1 });
+const { f: opacity } = createFloatFactory({ min: 0, max: 1 });
 export const halfOpaque = opacity(0.5).css(); // '0.5'
 export const opacityOutOfRange = (): string => {
   try {
@@ -41,11 +44,11 @@ export const opacityOutOfRange = (): string => {
 };
 
 // z-index: an integer token with a stacking scale (a design-system layer budget).
-const { i: zIndex } = createInteger({ min: 0, max: 9999 });
+const { i: zIndex } = createIntegerFactory({ min: 0, max: 9999 });
 export const modalLayer = zIndex(1000).css(); // '1000'
 
 // a bounded MEASUREMENT token: a radius scale checked at construction. The bound rides on the integer
 // scalar (m is a pure container); m only attaches the px unit.
-const { i: radiusScale } = createInteger({ min: 0, max: 24 });
+const { i: radiusScale } = createIntegerFactory({ min: 0, max: 24 });
 export const radius = m(radiusScale(8), 'px').css(); // '8px'
 export const radiusBound = m(radiusScale(8), 'px').constraints(); // { min: 0, max: 24 }

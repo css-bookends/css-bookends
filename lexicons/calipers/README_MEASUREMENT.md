@@ -282,9 +282,9 @@ If you want instance-scoped configuration and a single re-export surface, use
 the factory entrypoint. The instance includes core helpers and unit helpers.
 
 ```
-import { createCalipers } from "@css-bookends/css-calipers/factory";
+import { createCalipersFactory } from "@css-bookends/css-calipers/factory";
 
-const calipers = createCalipers({
+const calipers = createCalipersFactory({
   errorConfig: { stackHints: "on" },
 });
 

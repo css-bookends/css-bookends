@@ -1,7 +1,7 @@
 import { expectAssignable, expectError, expectType } from 'tsd';
 
 import {
-  createInteger,
+  createIntegerFactory,
   type IInteger,
   type InRangeInteger,
 } from '../../dist/index';
@@ -22,10 +22,13 @@ expectAssignable<IInteger>(i(5, { min: 0, max: 10 }));
 const bounded = i(700, { min: 1, max: 1000 });
 expectAssignable<IInteger>(bounded);
 
-// createInteger bakes a bound; its `i` ALWAYS brands every value with the factory's
+// createIntegerFactory bakes a bound; its `i` ALWAYS brands every value with the factory's
 // exact range (System B surfaced as System A) — a bounded value is always in range
 // (it throws otherwise), so the proof always holds.
-const { i: fontWeight } = createInteger({ min: 100, max: 900 });
+const { i: fontWeight } = createIntegerFactory({
+  min: 100,
+  max: 900,
+});
 expectType<InRangeInteger<100, 900>>(fontWeight(400));
 
 // clone() preserves the receiver's brand (same value + bound, so the proof still holds).
@@ -35,8 +38,12 @@ expectType<IInteger>(i(5).clone());
 
 // the `hardening` reaction knob is retired (2026-07-21): a bounded builder cannot
 // opt out of enforcement, so `hardening` is no longer a valid option (any value).
-expectError(createInteger({ min: 100, max: 900, hardening: 'warn' }));
-expectError(createInteger({ min: 100, max: 900, hardening: 'fail' }));
+expectError(
+  createIntegerFactory({ min: 100, max: 900, hardening: 'warn' }),
+);
+expectError(
+  createIntegerFactory({ min: 100, max: 900, hardening: 'fail' }),
+);
 
 // a per-value bound brands the same way; a per-call `hardening` is rejected.
 expectType<InRangeInteger<0, 10>>(i(5, { min: 0, max: 10 }));

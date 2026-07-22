@@ -1,21 +1,22 @@
 /* eslint-disable no-restricted-syntax -- this example demonstrates building your own
    binder and wrapping the factories; the create* calls are the point of the example. */
-import { createCalipersBundle } from '@css-bookends/css-calipers/codex';
-import { createCalipers } from '@css-bookends/css-calipers/factory';
+import { createCalipersBundleFactory } from '@css-bookends/css-calipers/codex';
+import { createCalipersFactory } from '@css-bookends/css-calipers/factory';
 
 /**
  * Example wrapper module.
  * Use the factory once, then re-export from here across your app.
  * This keeps a single import path and makes refactors cheaper.
  */
-const calipers = createCalipers({
+const calipers = createCalipersFactory({
   errorConfig: { stackHints: 'on' },
 });
 
-// The measurement core (m + builders) comes from `createCalipers`; the bound unit
+// The measurement core (m + builders) comes from `createCalipersFactory`; the bound unit
 // helpers come from the codex bundle.
 export const { assertMatchingUnits, assertCondition } = calipers;
-export const { mPx, mPercent, mEm, mVw } = createCalipersBundle();
+export const { mPx, mPercent, mEm, mVw } =
+  createCalipersBundleFactory();
 
 /**
  * Benefit: you can make custom changes in one place without touching call sites.

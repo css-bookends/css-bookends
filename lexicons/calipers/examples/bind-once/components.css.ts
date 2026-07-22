@@ -1,6 +1,6 @@
 // A consumer stylesheet. RECOMMENDED: import the bound helpers from ./calipers, so
 // nothing here reaches into css-calipers directly.
-import { createCalipers } from '@css-bookends/css-calipers/factory';
+import { createCalipersFactory } from '@css-bookends/css-calipers/factory';
 
 import { color, f, i, m, mPercent, r } from './calipers';
 
@@ -23,7 +23,7 @@ export const thumbnail = {
 // A factory called inline with a config override (a rem-first `m`), instead of
 // binding it once in ./calipers. It scatters config across files. Not best
 // practice, but you're free to author your project your way.
-const remM = createCalipers({ defaultUnit: 'rem' }).m;
+const remM = createCalipersFactory({ defaultUnit: 'rem' }).m;
 export const hero = {
   fontSize: remM(2).css(), // '2rem'
 };

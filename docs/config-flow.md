@@ -1,7 +1,7 @@
 # Config flow: how settings cascade from the compendium down to a standalone lexicon
 
 This maps every level a config setting passes through, from the top bundle
-(`publishCompendium`) down to a single standalone factory (`createInteger`) and its
+(`publishCompendium`) down to a single standalone factory (`createIntegerFactory`) and its
 per-instance error store. It is the concrete companion to the `config-cascade` skill (the
 rules) and `foundations.md` (the unit/bundle map).
 
@@ -18,20 +18,20 @@ publishCompendium(cfg)                        cfg = { global?, calipers?, color?
 │
 ├── books  (opacity, borders, margin, …)       each: own <book> key → compendium.global → book default
 │
-└── calipers?  ─►  createCalipersBundle(cfg)   cfg = { global?, measurement?, integer?, float?,
+└── calipers?  ─►  createCalipersBundleFactory(cfg)   cfg = { global?, measurement?, integer?, float?,
     │   global = { errorConfig }                        ratio?, color?, <13 unit-group> }
     │   (codex.global merges UNDER compendium.global:    ← CALIPERS level
     │    calipers.global.X ?? compendium.global.X)
     │
-    ├── createCalipers(measurement)  ─► m      { errorConfig, defaultUnit }   (container: numeric config rides on the embedded scalar)
+    ├── createCalipersFactory(measurement)  ─► m      { errorConfig, defaultUnit }   (container: numeric config rides on the embedded scalar)
     ├── create*Units × 13  (unit-group keys) ─► mPx, mVh, mPercent, …   { errorConfig }   (containers)
-    ├── createColor(color)            ─► color  { formats, output, strictness, transparent, omitOpaqueAlpha }
-    └── createScalarBundle({ global, integer, float, ratio })          ← SCALAR FAMILY level
+    ├── createColorFactory(color)            ─► color  { formats, output, strictness, transparent, omitOpaqueAlpha }
+    └── createScalarBundleFactory({ global, integer, float, ratio })          ← SCALAR FAMILY level
         │   global = { errorConfig }  (merges under codex.global)
         │
-        ├── createInteger(integer)    ─► i      { errorConfig, min?, max? }
-        ├── createFloat(float)        ─► f      { errorConfig, min?, max? }
-        └── createRatio(ratio)        ─► r      { errorConfig }   (config-free container: two scalars; divide-by-zero throws; no bound)
+        ├── createIntegerFactory(integer)    ─► i      { errorConfig, min?, max? }
+        ├── createFloatFactory(float)        ─► f      { errorConfig, min?, max? }
+        └── createRatioFactory(ratio)        ─► r      { errorConfig }   (config-free container: two scalars; divide-by-zero throws; no bound)
 
   every factory above builds ONE per-instance error store from its resolved `errorConfig`
   (createErrorConfigStore → createErrorHelpers); the scalars (`i` / `f`) bake their bound (`min` / `max`)
@@ -47,12 +47,12 @@ and forwards the relevant slice to the next level down.
 | Level | Package / module | Factory | `global` carries | Forwards down via |
 | --- | --- | --- | --- | --- |
 | Bookends bundle | `@css-bookends/compendium` | `publishCompendium` | `errorConfig` | the `calipers?` key → codex |
-| Calipers bundle (codex) | `@css-bookends/css-calipers` | `createCalipersBundle` | `errorConfig` | the `cascade()` helper → each lexicon + unit-group factory, and the `global` slice → scalar family |
-| Scalar family | `css-calipers` `src/scalar-bundle.ts` | `createScalarBundle` | `errorConfig` | its `cascade()` → `createInteger` / `createFloat` / `createRatio` |
-| Standalone lexicons | `@css-bookends/{measurement,integer,float,ratio}` + colour | `createCalipers`, `createInteger`, `createFloat`, `createRatio`, `createColor` | — (leaf factories) | build a per-instance error store; the scalars (`i` / `f`) bake their bound into a throw-on-breach helper |
+| Calipers bundle (codex) | `@css-bookends/css-calipers` | `createCalipersBundleFactory` | `errorConfig` | the `cascade()` helper → each lexicon + unit-group factory, and the `global` slice → scalar family |
+| Scalar family | `css-calipers` `src/scalar-bundle.ts` | `createScalarBundleFactory` | `errorConfig` | its `cascade()` → `createIntegerFactory` / `createFloatFactory` / `createRatioFactory` |
+| Standalone lexicons | `@css-bookends/{measurement,integer,float,ratio}` + colour | `createCalipersFactory`, `createIntegerFactory`, `createFloatFactory`, `createRatioFactory`, `createColorFactory` | — (leaf factories) | build a per-instance error store; the scalars (`i` / `f`) bake their bound into a throw-on-breach helper |
 
 The lexicon packages are thin slice re-exports of `css-calipers/src`, so a consumer can install
-just `@css-bookends/integer` and call `createInteger({ … })` with the exact same config shape it
+just `@css-bookends/integer` and call `createIntegerFactory({ … })` with the exact same config shape it
 has inside the codex. Nothing at any level ships a pre-bound instance; the factory is the only way in.
 
 ## Resolution order (the cascade)
@@ -63,8 +63,8 @@ For any one setting, most specific wins:
 own unit key  →  this level's global  →  the outer level's global  →  factory built-in default
 ```
 
-- **own unit key** — e.g. `createCalipersBundle({ integer: { errorConfig: { stackHints: 'on' } } })`.
-- **this level's global** — e.g. `createCalipersBundle({ global: { errorConfig: { stackHints: 'off' } } })`
+- **own unit key** — e.g. `createCalipersBundleFactory({ integer: { errorConfig: { stackHints: 'on' } } })`.
+- **this level's global** — e.g. `createCalipersBundleFactory({ global: { errorConfig: { stackHints: 'off' } } })`
   applies to every unit that has no own key.
 - **outer level's global** — the compendium's `global` is merged UNDER the codex's `global` when
   the compendium forwards through `calipers`, built as `calipers.global.X ?? compendium.global.X`
@@ -107,8 +107,8 @@ const bookends = publishCompendium({
 The same idea on a standalone install, `errorConfig` cascading through the scalar family:
 
 ```ts
-import { createScalarBundle } from '@css-bookends/css-calipers';
-const { i, f, r } = createScalarBundle({
+import { createScalarBundleFactory } from '@css-bookends/css-calipers';
+const { i, f, r } = createScalarBundleFactory({
   global: { errorConfig: { stackHints: 'off' } },
   integer: { errorConfig: { stackHints: 'on' } },  // integer overrides the family global
 });

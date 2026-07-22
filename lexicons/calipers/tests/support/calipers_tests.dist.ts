@@ -4,7 +4,7 @@
 // =============================================================================
 //  TEST-ONLY FIXTURE. DO NOT IMPORT THIS INTO A PROJECT OR ANY NON-TEST CODE.
 //  It exists ONLY to bind the codex once for the test suite (the bind-once pattern,
-//  dogfooded). A real consumer binds `createCalipersBundle()` in their OWN module and
+//  dogfooded). A real consumer binds `createCalipersBundleFactory()` in their OWN module and
 //  never touches this file. It lives under `tests/support/` and is named `*_tests.*`
 //  precisely so it cannot be mistaken for a public export. It is not part of the
 //  published package surface.
@@ -16,11 +16,11 @@
 // imports from `../../dist/*`. The source tier lives in `calipers_tests.src.ts`; see
 // `two-tier-testing`. `bundle` is exported ONLY for whole-object needs.
 import {
-  createCalipersBundle,
+  createCalipersBundleFactory,
   type UnitAssertion,
 } from '../../dist/codex';
 
-export const bundle = createCalipersBundle();
+export const bundle = createCalipersBundleFactory();
 
 export const {
   // measurement core + builders / guards / refinements / error accessors

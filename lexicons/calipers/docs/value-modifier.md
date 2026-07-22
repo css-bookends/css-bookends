@@ -71,7 +71,7 @@ independent.
 ## Where it lives
 
 The modifier is available per value (`i(v, { modifier })`) and baked on the factory
-(`createInteger({ modifier })`), so a whole named domain can carry it; a per-call modifier overrides
+(`createIntegerFactory({ modifier })`), so a whole named domain can carry it; a per-call modifier overrides
 the factory's. It is stored in the value's single frozen config, so it survives clone and every
 arithmetic step.
 

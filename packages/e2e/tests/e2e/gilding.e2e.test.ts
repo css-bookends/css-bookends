@@ -1,7 +1,7 @@
 import {
   color,
   type ColorFormatPlugin,
-  createColor,
+  createColorFactory,
 } from '@css-bookends/css-calipers';
 import {
   composeCore,
@@ -65,7 +65,7 @@ describe('gilding e2e - the whole pipeline, real packages', () => {
    *
    * Define a zoo colour format carrying a `.fallback` (string -> string) that rewrites
    * its non-standard `zoo-color(<animal>)` token into a browser-safe value. Register it
-   * with `createColor({ formats: [zoo] })`, build a core from the registry via
+   * with `createColorFactory({ formats: [zoo] })`, build a core from the registry via
    * `composeCoreFromFormats(instance.formats)`, and gild a CSS string containing the zoo
    * token. The zoo token must be OVERWRITTEN by the fallback in the FINAL CSS, proving
    * the registry-driven fallback seam runs through the whole pipeline.
@@ -92,8 +92,8 @@ describe('gilding e2e - the whole pipeline, real packages', () => {
         ),
     };
 
-    // the registry is built by createColor, NOT a hard-coded map in gilding.
-    const zooColor = createColor({
+    // the registry is built by createColorFactory, NOT a hard-coded map in gilding.
+    const zooColor = createColorFactory({
       formats: [
         zooFn,
       ],

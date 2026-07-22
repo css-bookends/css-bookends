@@ -59,7 +59,7 @@ import {
 } from '@css-bookends/counter-set';
 import {
   type CalipersBundleConfig,
-  createCalipersBundle,
+  createCalipersBundleFactory,
   type ErrorConfig,
 } from '@css-bookends/css-calipers';
 import * as calipers from '@css-bookends/css-calipers';
@@ -217,7 +217,7 @@ export interface CompendiumConfig {
     errorConfig?: ErrorConfig;
   };
   /**
-   * The whole calipers (codex) config, forwarded to `createCalipersBundle`.
+   * The whole calipers (codex) config, forwarded to `createCalipersBundleFactory`.
    * A primitive resolves own (`calipers.<unit>`) -> `calipers.global`
    * (codex global) -> `compendium.global` -> factory default.
    */
@@ -340,7 +340,7 @@ export const publishCompendium = (
   // reaches the primitives (own calipers.<unit> -> codex.global ->
   // compendium.global -> default), overriding the default m / i / f. The raw
   // `...calipers` above still provides the broader namespace (r, helpers, types).
-  ...createCalipersBundle({
+  ...createCalipersBundleFactory({
     ...config.calipers,
     global: {
       ...config.calipers?.global,

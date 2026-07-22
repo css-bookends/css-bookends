@@ -2,7 +2,7 @@
 // `i()`, `f()`. Parse a `ColorInput` into an OKLCH store, then resolve it to an
 // immutable, navigable `ResolvedColor` (modify via `.darken()` / `.mix()` / ...,
 // render via `.css()`). This module carries ZERO self-publish coupling; colour is
-// a config-driven calipers lexicon, configured through the `createColor` factory.
+// a config-driven calipers lexicon, configured through the `createColorFactory` factory.
 import type {
   Color,
   Hsl,
@@ -720,7 +720,7 @@ export const resolve = <F extends FormatName = FormatName>(
 /**
  * The default output priority: the simplest faithful format first. With no argument
  * `.css()` escalates down this ladder to the first format that holds the color (see
- * `formats/README.md`). Overridable via the colour lexicon factory `createColor({ output })`.
+ * `formats/README.md`). Overridable via the colour lexicon factory `createColorFactory({ output })`.
  *
  * Pared to one format per distinct output space, most popular first (see
  * `docs/color-format-popularity.md`). Every other built-in format is a redundant
@@ -746,12 +746,12 @@ export const defaultColorConfig: ColorConfig = {
 };
 
 /* ============================================================================
- * FACTORY: createColor({ formats }) — extend the pipeline at the INPUT and OUTPUT
+ * FACTORY: createColorFactory({ formats }) — extend the pipeline at the INPUT and OUTPUT
  * edges with custom format plugins, while storage stays canonical OKLCH.
  *
  * The instance binds a per-instance registry (`{ ...colorFormats, ...plugins }`) and a
  * plugin-aware input parser. Built-in parse precedence is intact: a plugin only claims
- * strings the built-ins reject. The module-level `color` is `createColor({ formats: [] })`
+ * strings the built-ins reject. The module-level `color` is `createColorFactory({ formats: [] })`
  * at defaults (the "default = factory at defaults" pattern), so its behaviour is
  * identical to a bare factory instance with no plugins.
  * ==========================================================================*/
@@ -808,7 +808,7 @@ export interface CreateColorConfig<
  * the plugins are valid `output` descriptors and resolve through `asDescriptor`. The
  * returned result exposes a typed lazy selector per plugin format.
  */
-export const createColor = <
+export const createColorFactory = <
   const P extends ReadonlyArray<ColorFormatPlugin>,
 >(
   config: CreateColorConfig<P>,
@@ -854,11 +854,11 @@ export const createColor = <
  * `f()`. Parses + normalizes `input` to OKLCH and resolves it with the default
  * config (override per call via `config`). Mirrors how `m()` wraps a measurement.
  *
- * It is `createColor({ formats: [] })` at defaults: the module-level instance is just
+ * It is `createColorFactory({ formats: [] })` at defaults: the module-level instance is just
  * the factory with no custom plugins, so the default and the factory share one
  * construction path. Typed as the bare `(input, config?) => ResolvedColor` surface.
  */
 export const color: (
   input: ColorInput,
   config?: Partial<ColorConfig>,
-) => ResolvedColor = createColor({ formats: [] });
+) => ResolvedColor = createColorFactory({ formats: [] });

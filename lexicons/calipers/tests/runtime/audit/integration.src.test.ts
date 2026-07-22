@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { createCalipers } from '../../../src/factory';
+import { createCalipersFactory } from '../../../src/factory';
 import {
   inRange,
   m,
@@ -75,7 +75,7 @@ describe('measurement + refinement + arithmetic in one flow', () => {
 describe('the factory instance integrates the same way as the bare defaults', () => {
   it('a custom instance hardens and computes identically', () => {
     // eslint-disable-next-line no-restricted-syntax -- the factory instance IS this block's subject
-    const c = createCalipers();
+    const c = createCalipersFactory();
     const safe = c.m(-3, 'em').absolute();
     expect(c.nonNegative.is(safe)).toBe(true);
     expect(safe.multiply(4).css()).toBe('12em');
@@ -83,7 +83,9 @@ describe('the factory instance integrates the same way as the bare defaults', ()
   });
 
   it('an instance with error config still throws on bad arithmetic', () => {
-    const c = createCalipers({ errorConfig: { stackHints: 'off' } });
+    const c = createCalipersFactory({
+      errorConfig: { stackHints: 'off' },
+    });
     expect(() => c.m(1, 'px').divide(0)).toThrow(
       /cannot divide .* by zero/,
     );

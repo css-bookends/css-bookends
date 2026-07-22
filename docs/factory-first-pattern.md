@@ -2,8 +2,8 @@
 
 This project has one rule and one recommendation about how you get a value.
 
-- **The rule:** every value comes from a factory. You call `createCalipers()`,
-  `createRatio()`, `createCalipersBundle()`, `publishBookColor()`,
+- **The rule:** every value comes from a factory. You call `createCalipersFactory()`,
+  `createRatioFactory()`, `createCalipersBundleFactory()`, `publishBookColor()`,
   `publishCompendium()`, and so on, and use what they return, rather than
   importing a pre-bound instance.
 - **The recommendation:** call the factory once in your own module, even at its
@@ -51,7 +51,7 @@ factory inline). It looks like pointless indirection at first.
 
 ### The objection
 
-"Why write `export const { m } = createCalipers()` in my own file instead of just
+"Why write `export const { m } = createCalipersFactory()` in my own file instead of just
 importing `m`?"
 
 ### Why it pays off
@@ -81,9 +81,9 @@ reshape a helper in one place.
 
 ## Where this applies
 
-Both layers obey the same rule. In calipers the factories are `createCalipers`,
-`createRatio`, `createInteger`, `createFloat`, `createColor`, the per-group unit
-factories, and the `createCalipersBundle` codex. In bookends they are the
+Both layers obey the same rule. In calipers the factories are `createCalipersFactory`,
+`createRatioFactory`, `createIntegerFactory`, `createFloatFactory`, `createColorFactory`, the per-group unit
+factories, and the `createCalipersBundleFactory` codex. In bookends they are the
 `publishBook<Name>` factories and the `publishCompendium` bundle. Learn the
 pattern once; it is the same everywhere.
 

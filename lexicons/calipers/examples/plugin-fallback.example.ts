@@ -8,7 +8,7 @@
  * IMPORTANT: the `fallback` hook is a browser-compatibility seam that calipers itself
  * NEVER reads. Calipers' parse / render / escalation logic must not touch it. It exists
  * for the gilding finisher: gilding's `composeCoreFromFormats` reads this off the
- * `createColor` registry and runs it as a pre-step in front of its core, so a format
+ * `createColorFactory` registry and runs it as a pre-step in front of its core, so a format
  * that emits a token a downstream post-processor (Lightning CSS, via gilding) cannot
  * understand can describe how to downgrade itself. The field is deliberately additive:
  * a plugin without it is unaffected, and calipers takes on no gilding dependency.

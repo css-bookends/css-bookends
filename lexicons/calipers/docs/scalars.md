@@ -52,7 +52,7 @@ Two reasons, both about honesty:
 
 1. **Config-neutrality.** A plain number must never silently inherit an `f`/`i` lexicon's config. If a
    bare number were wrapped in `f`, and that `f` carried a modifier (say a bundle set
-   `createCalipersBundle({ float: { modifier: 'floor' } })`, or a future `f` default), then a plain
+   `createCalipersBundleFactory({ float: { modifier: 'floor' } })`, or a future `f` default), then a plain
    `m(5)` would get a transformation the author never asked for. `u` is deliberately NOT `f`: it is
    config-neutral, carrying ONLY what it is explicitly handed, so a bare number stays untouched.
    (Measurements embedding `u` is the pending step; this is what `u` is FOR.)

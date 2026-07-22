@@ -86,7 +86,7 @@ Symbolic keyword categories (emit-only, no fixed value, pass through untouched):
 
 Output formats (the `.css()` terminal and the named selectors): `rgba`, `rgb`,
 `hex`, `hexAlpha`, `hsl`, `hwb`, `lab`, `lch`, `oklab`, `oklch`, `displayP3`.
-Custom formats are pluggable via `defineColorSpace` / `createColor`. Where csstype
+Custom formats are pluggable via `defineColorSpace` / `createColorFactory`. Where csstype
 gives `Property.Color` a bare `string & {}`, `color()` parses, validates, and
 escalates to the simplest faithful output format.
 

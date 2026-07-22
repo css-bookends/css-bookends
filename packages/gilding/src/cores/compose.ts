@@ -57,7 +57,7 @@ export const composeCore = <Opts = unknown>(
  * or a longer identifier). This is deliberately narrow and is NOT a general CSS colour
  * parser: it is just enough to demonstrate the seam.
  *
- * POC NOTE: the real version would read the createColor registry to resolve keywords to
+ * POC NOTE: the real version would read the createColorFactory registry to resolve keywords to
  * their RGB values, rather than this hard-coded map.
  */
 const KEYWORD_TO_RGB: Readonly<Record<string, string>> = {
@@ -83,7 +83,7 @@ export const keywordToRgb: PreStep = (css) => {
 keywordToRgb.preStepName = 'keyword-to-rgb';
 
 /**
- * The minimal shape gilding needs from the `createColor` registry: a record of
+ * The minimal shape gilding needs from the `createColorFactory` registry: a record of
  * format-name -> descriptor, where a descriptor MAY carry a `fallback` browser-compat
  * transform. Typed STRUCTURALLY on purpose: gilding takes no hard dependency on
  * calipers, it just reads `.fallback` off whatever descriptors the registry holds.
@@ -97,7 +97,7 @@ export interface FallbackBearingFormat {
   readonly fallback?: (css: string) => string;
 }
 
-/** A registry map: format-name -> descriptor, as `createColor(...).formats` returns. */
+/** A registry map: format-name -> descriptor, as `createColorFactory(...).formats` returns. */
 export type FormatRegistry = Readonly<
   Record<string, FallbackBearingFormat>
 >;
@@ -105,7 +105,7 @@ export type FormatRegistry = Readonly<
 /**
  * Registry-aware composing core (the un-hard-coded path). Instead of a baked-in
  * keyword map, this reads each registered custom format's OWN declared `fallback`
- * transform off the `createColor` registry, turns each into a `PreStep`, and composes
+ * transform off the `createColorFactory` registry, turns each into a `PreStep`, and composes
  * them (via the existing `composeCore`) in front of the inner Lightning CSS core. The
  * inner core stays fully intact (the onion); the registry's fallbacks are just a ring
  * around it.

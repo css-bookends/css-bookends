@@ -6,7 +6,7 @@
  * EXTENSIBILITY of the system: that any custom format, even a nonsensical animal-name
  * one, can plug into the colour pipeline end to end. Do not copy it as a real format.
  *
- * What it actually demonstrates: a custom colour FORMAT registered via `createColor` +
+ * What it actually demonstrates: a custom colour FORMAT registered via `createColorFactory` +
  * `defineColorSpace`. A plugin extends the pipeline at BOTH edges (input bridge +
  * output render) while storage stays canonical OKLCH. You "think" in animal names
  * (flamingo, blackPanther, whiteFox), each anchored to a real CSS colour: the input
@@ -15,7 +15,7 @@
  * the literal `flamingo`.
  */
 
-import { createColor } from '@css-bookends/css-calipers';
+import { createColorFactory } from '@css-bookends/css-calipers';
 import { type Color, converter, parse as parseCulori } from 'culori';
 
 import type {
@@ -118,7 +118,7 @@ const zoo: ColorFormatPlugin<'zoo'> = {
 
 // Bind an instance to the plugin. The instance parser tries the built-ins first,
 // then the plugin; the plugin is a valid output descriptor too.
-const myColor = createColor({
+const myColor = createColorFactory({
   formats: [
     zoo,
   ],

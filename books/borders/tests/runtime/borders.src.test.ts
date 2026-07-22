@@ -1,9 +1,9 @@
-import { createColor, m } from '@css-bookends/css-calipers';
+import { createColorFactory, m } from '@css-bookends/css-calipers';
 import { describe, expect, it } from 'vitest';
 
 import { publishBookBorders } from '../../src';
 
-const color = createColor({ formats: [] });
+const color = createColorFactory({ formats: [] });
 const borders = publishBookBorders();
 const red = color('red');
 

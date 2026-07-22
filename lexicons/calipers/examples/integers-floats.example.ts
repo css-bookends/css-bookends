@@ -6,7 +6,7 @@
  * `m()`. Each carries optional range constraints that re-validate through arithmetic,
  * so a hardened value stays hardened (or throws). `clamp(min, max)` snaps instead of
  * throwing; a per-value bound (`i(v, { min, max })`) or a factory bound
- * (`createInteger({ min, max })`) sets range constraints.
+ * (`createIntegerFactory({ min, max })`) sets range constraints.
  */
 
 import { f, i } from './calipers_examples.ts';

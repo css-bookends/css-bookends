@@ -68,12 +68,12 @@ config). Learn the four names once, because the two layers are the same machine:
 
 |                          | **unit** — the atom, its own package + factory              | **bundle** — every unit of the layer + a `global` config cascade |
 | ------------------------ | ----------------------------------------------------------- | ---------------------------------------------------------------- |
-| **Layer 1 — calipers**   | **lexicon** — a typed CSS input value (`m`, `i`, `f`, `r`, `color`) | **codex** — `css-calipers` (`createCalipersBundle`)      |
+| **Layer 1 — calipers**   | **lexicon** — a typed CSS input value (`m`, `i`, `f`, `r`, `color`) | **codex** — `css-calipers` (`createCalipersBundleFactory`)      |
 | **Layer 2 — bookends**   | **book** — a helper for one CSS concern (opacity, borders, …)      | **compendium** — `publishCompendium`                     |
 
 A **lexicon is to the codex what a book is to the compendium.** Both bundles take
 `{ global?, <unitKey>? }` and resolve each setting **own key → `global` → factory default**;
-`createCalipersBundle`'s own docstring says it mirrors `publishCompendium`. ("Primitive" is the
+`createCalipersBundleFactory`'s own docstring says it mirrors `publishCompendium`. ("Primitive" is the
 older synonym for "lexicon"; prefer **lexicon**.) For the full end-to-end path a setting takes
 through every level (compendium → codex → scalar family → standalone lexicon), see
 `docs/config-flow.md`.
@@ -139,7 +139,7 @@ scalar with no `clamp` simply **throws** on breach — that is not a config, it 
 
 - Expose the behaviour as an explicit, enumerated, named config value; never bake one branch in.
 - Ship a sensible DEFAULT (the most useful real behaviour), fully overridable.
-- The option MUST be reachable from the bundle factory (`createCalipersBundle` / `publishCompendium`)
+- The option MUST be reachable from the bundle factory (`createCalipersBundleFactory` / `publishCompendium`)
   under the matching key, with the cascade (own -> bundle global -> default). No unit config the
   bundle factory cannot reach. (See the `doc-test-code` skill's config rule.)
 
@@ -219,12 +219,12 @@ The conformance rules that follow:
   rules are not their job. Ordinary in-range variation (an opacity moving 1 -> 0.4) is never an
   error.
 - **Bounds are OPT-IN.** `m()`'s refinement quartet, and a bound on `i`/`f` (`i(v, {min,max})` /
-  `createInteger({min,max})`), let a consumer add strict bounds when they want them; it is never forced.
+  `createIntegerFactory({min,max})`), let a consumer add strict bounds when they want them; it is never forced.
 
 ### The runtime bound fails on breach (locked 2026-06-29; `warn` retired 2026-07-21)
 
 All numeric checking lives on the SCALARS. The config-bearing scalars `i` / `f` carry the bound
-(`i(v, {min,max})` / `createInteger({min,max})`, runtime bounds re-validated through arithmetic,
+(`i(v, {min,max})` / `createIntegerFactory({min,max})`, runtime bounds re-validated through arithmetic,
 exposed via `.constraints()`) and the modifier. A measurement ALSO keeps its refinement quartet
 (`nonNegative` / `nonPositive` / `inRange`) for stamping a compile-time brand on a measurement directly
 (System A, below). `m` itself carries NO numeric config: its options are only `{ unit, context }`, and
@@ -274,7 +274,7 @@ stamp a measurement brand through its refinement quartet, System A). `u` is the 
 system. So the runtime bound lives where the numeric config does, on the scalar, and composes up
 through the container. The surface that follows:
 
-- **Bounded builders mint branded values.** `createInteger({ min, max })` produces an `i` whose
+- **Bounded builders mint branded values.** `createIntegerFactory({ min, max })` produces an `i` whose
   values are typed `InRange<min, max>`: the constructor runs the real check in JS, and the type
   carries the proof. A refinement (`inRange(a, b).ensure(x)`) tightens a value downstream,
   additively. `m` carries no bound of its own; hand it a bounded scalar, `m(i(v, { min, max }), 'px')`,
@@ -307,12 +307,12 @@ baseline for every value.
 ### Colour is a Layer-1 calipers lexicon (locked 2026-06-27)
 
 The colour VALUE (parse/store/resolve, `colorFormats`, types) lives in `@css-bookends/css-calipers`.
-Colour is a LEXICON, not a Layer-2 book: its factory `createColor` is the config-driven entry,
+Colour is a LEXICON, not a Layer-2 book: its factory `createColorFactory` is the config-driven entry,
 carrying the FULL colour config (`formats`, the default `output` format, `strictness`, `transparent`,
 `omitOpaqueAlpha`) and inheriting it through the cascade (compendium `calipers.color` → codex `color`
-key → `createColor` → `defaultColorConfig`). The old `@css-bookends/color` / `publishBookColor` BOOK
-wrapper is REMOVED — it added nothing once `createColor` carries the config; a book that needs colour
-self-instantiates it via `createColor(...)`.
+key → `createColorFactory` → `defaultColorConfig`). The old `@css-bookends/color` / `publishBookColor` BOOK
+wrapper is REMOVED — it added nothing once `createColorFactory` carries the config; a book that needs colour
+self-instantiates it via `createColorFactory(...)`.
 
 ---
 

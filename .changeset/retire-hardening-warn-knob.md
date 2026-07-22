@@ -4,7 +4,7 @@
 ---
 
 **Breaking:** the `hardening: 'warn' | 'fail'` reaction knob is retired. It is gone
-from `i` / `f`, the `createInteger` / `createFloat` factories, the per-value options,
+from `i` / `f`, the `createIntegerFactory` / `createFloatFactory` factories, the per-value options,
 and the scalar-family / codex / compendium bundle `global` and per-unit keys. A value
 bounded with `min` / `max` now ALWAYS throws when construction or arithmetic breaks the
 bound, there is no reaction to configure.

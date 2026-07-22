@@ -1,5 +1,5 @@
 /* eslint-disable no-restricted-syntax -- this whole file tests the codex bundle
-   factory; every createCalipersBundle() call here is the subject under test. */
+   factory; every createCalipersBundleFactory() call here is the subject under test. */
 // The codex config cascade: each unit resolves a setting as own keyed config ->
 // bundle `global` -> factory default. Worked example: the shared `errorConfig`
 // (see the errorConfig-cascade block below). The bundle must expose the CONFIGURED
@@ -11,14 +11,14 @@ import {
   type ColorFormatPlugin,
   type ColorString,
 } from '../../../src';
-import createCalipersBundle from '../../../src/codex';
+import createCalipersBundleFactory from '../../../src/codex';
 
 describe('codex config cascade (own key -> global -> factory default)', () => {
-  // The color quarter of the bundle: `config.color` must forward to `createColor`,
+  // The color quarter of the bundle: `config.color` must forward to `createColorFactory`,
   // so a custom format plugin registered through the bundle actually reaches the
   // bound `color` instance. Previously only existence (`typeof bundle.color`) was
   // checked, leaving the forwarding path untested through the split.
-  describe('color (bundle color slot forwards to createColor)', () => {
+  describe('color (bundle color slot forwards to createColorFactory)', () => {
     const marker: ColorFormatPlugin<'marker'> = {
       format: 'marker',
       hasAlpha: true,
@@ -30,12 +30,12 @@ describe('codex config cascade (own key -> global -> factory default)', () => {
     };
 
     it('binds a default color instance when no color config is given', () => {
-      const c = createCalipersBundle();
+      const c = createCalipersBundleFactory();
       expect(c.color('#3366cc').hex().css()).toBe('#3366cc');
     });
 
     it('forwards a custom format plugin to the bundle color instance', () => {
-      const c = createCalipersBundle({
+      const c = createCalipersBundleFactory({
         color: {
           formats: [
             marker,
@@ -55,12 +55,12 @@ describe('codex config cascade (own key -> global -> factory default)', () => {
   // Ratio is now aggregated into the bundle (previously absent).
   describe('r (ratio)', () => {
     it('is bound in the bundle', () => {
-      const c = createCalipersBundle();
+      const c = createCalipersBundleFactory();
       expect(c.r(16, 9).css()).toBe('16/9');
     });
 
     it('accepts a ratio key', () => {
-      const c = createCalipersBundle({ ratio: {} });
+      const c = createCalipersBundleFactory({ ratio: {} });
       expect(c.r(16, 9).css()).toBe('16/9');
     });
   });
@@ -77,7 +77,7 @@ describe('codex config cascade (own key -> global -> factory default)', () => {
     };
 
     it('exposes every unit-group helper', () => {
-      const c = createCalipersBundle();
+      const c = createCalipersBundleFactory();
       expect(c.mVh(20).css()).toBe('20vh');
       expect(c.mPx(2).css()).toBe('2px');
       expect(c.mPercent(50).css()).toBe('50%');
@@ -85,10 +85,10 @@ describe('codex config cascade (own key -> global -> factory default)', () => {
     });
 
     it('a group key threads its config to the group helpers', () => {
-      const withHints = createCalipersBundle({
+      const withHints = createCalipersBundleFactory({
         viewport: { errorConfig: { stackHints: 'on' } },
       });
-      const withoutHints = createCalipersBundle({
+      const withoutHints = createCalipersBundleFactory({
         viewport: { errorConfig: { stackHints: 'off' } },
       });
       expect(
@@ -116,18 +116,18 @@ describe('codex errorConfig cascade (global -> unit key -> factory default)', ()
     captureMessage(() => c.m(2, 'px').divide(0));
 
   it('global.errorConfig applies to m when there is no unit key', () => {
-    const on = createCalipersBundle({
+    const on = createCalipersBundleFactory({
       global: { errorConfig: { stackHints: 'on' } },
     });
     expect(mError(on)).toContain('stack=');
-    const off = createCalipersBundle({
+    const off = createCalipersBundleFactory({
       global: { errorConfig: { stackHints: 'off' } },
     });
     expect(mError(off)).not.toContain('stack=');
   });
 
   it('the measurements key overrides global.errorConfig', () => {
-    const c = createCalipersBundle({
+    const c = createCalipersBundleFactory({
       global: { errorConfig: { stackHints: 'on' } },
       measurement: { errorConfig: { stackHints: 'off' } },
     });
@@ -137,7 +137,7 @@ describe('codex errorConfig cascade (global -> unit key -> factory default)', ()
   it('global.errorConfig reaches the unit-group helpers too', () => {
     // `mVh(NaN)` passes a stack-hint override, so 'auto' already shows a stack;
     // 'off' is the discriminating oracle (it suppresses despite the override).
-    const off = createCalipersBundle({
+    const off = createCalipersBundleFactory({
       global: { errorConfig: { stackHints: 'off' } },
     });
     expect(captureMessage(() => off.mVh(Number.NaN))).not.toContain(
@@ -146,10 +146,12 @@ describe('codex errorConfig cascade (global -> unit key -> factory default)', ()
   });
 
   it('factory default (auto, no override -> no stack) when neither is set', () => {
-    expect(mError(createCalipersBundle())).not.toContain('stack=');
+    expect(mError(createCalipersBundleFactory())).not.toContain(
+      'stack=',
+    );
   });
 
-  // The scalar family (i / f / r) is composed through createScalarBundle; the
+  // The scalar family (i / f / r) is composed through createScalarBundleFactory; the
   // codex `global.errorConfig` must reach it, same as it reaches m + unit groups.
   const iError = (c: CalipersBundle): string =>
     captureMessage(() => c.i(8, { min: 0, max: 10 }).multiply(2));
@@ -159,13 +161,13 @@ describe('codex errorConfig cascade (global -> unit key -> factory default)', ()
     captureMessage(() => c.r(1, 0));
 
   it('global.errorConfig reaches i, f and r (the scalar family)', () => {
-    const on = createCalipersBundle({
+    const on = createCalipersBundleFactory({
       global: { errorConfig: { stackHints: 'on' } },
     });
     expect(iError(on)).toContain('stack=');
     expect(fError(on)).toContain('stack=');
     expect(rError(on)).toContain('stack=');
-    const off = createCalipersBundle({
+    const off = createCalipersBundleFactory({
       global: { errorConfig: { stackHints: 'off' } },
     });
     expect(iError(off)).not.toContain('stack=');
@@ -174,7 +176,7 @@ describe('codex errorConfig cascade (global -> unit key -> factory default)', ()
   });
 
   it('a scalar unit key overrides global.errorConfig', () => {
-    const c = createCalipersBundle({
+    const c = createCalipersBundleFactory({
       global: { errorConfig: { stackHints: 'on' } },
       integer: { errorConfig: { stackHints: 'off' } },
     });
@@ -185,7 +187,7 @@ describe('codex errorConfig cascade (global -> unit key -> factory default)', ()
   });
 
   it('a scalar unit key forwards a factory bound to that unit (min / max)', () => {
-    const c = createCalipersBundle({
+    const c = createCalipersBundleFactory({
       integer: { min: 100, max: 900 },
     });
     expect(c.i(400).constraints()).toEqual({ min: 100, max: 900 });

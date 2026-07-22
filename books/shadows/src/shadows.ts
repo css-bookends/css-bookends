@@ -1,12 +1,12 @@
 import {
-  createColor,
+  createColorFactory,
   type IMeasurement,
   m,
   type ResolvedColor,
 } from '@css-bookends/css-calipers';
 import type * as CSS_TYPES from 'csstype';
 
-const color = createColor({ formats: [] });
+const color = createColorFactory({ formats: [] });
 
 // Neutral built-in defaults (inherited from the portfolio drop-shadow tokens;
 // review them, see notes.md). Callers override any field per call.

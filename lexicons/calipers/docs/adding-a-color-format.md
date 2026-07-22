@@ -14,7 +14,7 @@ the storage step. A plugin instead bridges the EDGES of the pipeline. It enters 
 core at INPUT through `parse` (your format's string becomes a culori colour, which
 `storeColor` normalizes to OKLCH) and leaves the core at OUTPUT through `render`
 (OKLCH out to your format's CSS string). You wire the plugin in through the
-`createColor` factory, which binds a per-instance registry and a plugin-aware parser.
+`createColorFactory` factory, which binds a per-instance registry and a plugin-aware parser.
 
 ## Step 1: author the plugin
 
@@ -67,12 +67,12 @@ Two readers consume these fields, which is why they are split:
 
 ## Step 2: register it
 
-Register one or more plugins through the `createColor` factory. It returns a
+Register one or more plugins through the `createColorFactory` factory. It returns a
 `color()`-shaped function bound to a per-instance registry (built-ins plus your
 plugins) and a plugin-aware parser.
 
 ```ts
-const myColor = createColor({ formats: [zoo] });
+const myColor = createColorFactory({ formats: [zoo] });
 ```
 
 The worked `zoo` plugin, verbatim-consistent with the custom-format test:
@@ -85,7 +85,7 @@ import {
   type ColorConfig,
   type ColorFormatPlugin,
   type ColorString,
-  createColor,
+  createColorFactory,
 } from '../../../src/color';
 
 // The same rgb conversion primitive the built-in `rgb` descriptor uses.
@@ -139,7 +139,7 @@ const zoo: ColorFormatPlugin<'zoo'> = {
   },
 };
 
-const myColor = createColor({ formats: [zoo] });
+const myColor = createColorFactory({ formats: [zoo] });
 ```
 
 For an output-only format (no input bridge), author the descriptor with
@@ -169,7 +169,7 @@ Three ways to use a registered format:
    ```
 
 Registration is scoped per instance. The module-level `color` (which is
-`createColor({ formats: [] })`) does not see custom formats, so `color('flamingo')`
+`createColorFactory({ formats: [] })`) does not see custom formats, so `color('flamingo')`
 throws `color: unparseable color string "flamingo"`. The instance registry is exposed
 on `myColor.formats` (built-ins plus your plugins), e.g. `myColor.formats.zoo === zoo`
 and `myColor.formats.hex === colorFormats.hex`.
