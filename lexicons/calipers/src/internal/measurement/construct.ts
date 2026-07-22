@@ -95,7 +95,7 @@ export const makeConstruct = (
       // where `embedUnder` lives); the guard is a defensive narrow.
       const embedded =
         value instanceof ScalarBase
-          ? value.embedUnder('m')
+          ? value.embedUnder('m', contextLabel)
           : (value as unknown as IUnspecified);
       return createMeasurement(embedded, normalizedUnit);
     }

@@ -342,15 +342,25 @@ export abstract class ScalarBase {
 
   /**
    * Internal: a copy of this scalar embedded under an outer WRAPPER label, so its errors read
-   * `<wrapper>(<kind>): ...` instead of `<kind>: ...`. Preserves the full config (bound,
-   * modifier); re-validates the current value (a no-op for an in-range value). A measurement calls
-   * this when it ingests a scalar, passing `'m'`, so an embedded `i` throws `m(i): ...`. Not a public
-   * knob (see {@link ScalarOptions.wrapperLabel}).
+   * `<wrapper>(<kind>): ...` instead of `<kind>: ...`, and chained under the wrapper's `context` so
+   * the error trace shows the full stack. Preserves the full config (bound, modifier); re-validates
+   * the current value (a no-op for an in-range value). A measurement calls this when it ingests a
+   * scalar, passing `'m'` + its own context, so an embedded `i` throws `m(i): ... [outer > inner]`
+   * (either context alone renders `[outer]` / `[inner]`). Not a public knob (see
+   * {@link ScalarOptions.wrapperLabel}).
    */
-  embedUnder(wrapperLabel: string): this {
+  embedUnder(wrapperLabel: string, wrapperContext?: string): this {
+    const context =
+      [
+        wrapperContext,
+        this.options().context,
+      ]
+        .filter((c): c is string => c !== undefined && c !== '')
+        .join(' > ') || undefined;
     return this.rebuildWith(this.#value, {
       ...this.options(),
       wrapperLabel,
+      context,
     });
   }
 }
