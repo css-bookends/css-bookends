@@ -215,6 +215,9 @@ export interface CompendiumConfig {
   global?: {
     /** Error-rendering config (e.g. stack hints), forwarded into the calipers primitives. */
     errorConfig?: ErrorConfig;
+    /** The blanket snap policy, forwarded into the calipers scalar primitives (integer / float); a
+     *  codex `calipers.global.snap` overrides it. Policy only, no bound value. */
+    snap?: boolean;
   };
   /**
    * The whole calipers (codex) config, forwarded to `createCalipersBundleFactory`.
@@ -347,6 +350,7 @@ export const publishCompendium = (
       errorConfig:
         config.calipers?.global?.errorConfig ??
         config.global?.errorConfig,
+      snap: config.calipers?.global?.snap ?? config.global?.snap,
     },
   }),
   animationIterationCount: publishBookAnimationIterationCount(

@@ -19,6 +19,7 @@ import {
   type Modifier,
   type ScalarConstraints,
   type ScalarOptions,
+  type SnapBound,
 } from './internal/scalarBase';
 import { ScalarRestricted } from './internal/scalarRestricted';
 import type { Scalar } from './scalar';
@@ -28,7 +29,8 @@ export type FloatConstraints = ScalarConstraints;
 export type FloatOptions<
   Min extends number = number,
   Max extends number = number,
-> = ScalarOptions<Min, Max>;
+> = SnapBound<Min, Max> &
+  Omit<ScalarOptions<Min, Max>, 'min' | 'max' | 'snap'>;
 
 export interface IFloat {
   css: () => string;
@@ -233,16 +235,8 @@ export const inRangeFloat = <Min extends number, Max extends number>(
 export type FloatFactoryConfig<
   Min extends number = number,
   Max extends number = number,
-> = {
+> = SnapBound<Min, Max> & {
   errorConfig?: ErrorConfig;
-  /**
-   * A bound baked into every value this factory builds (the named-domain pattern,
-   * e.g. `createFloatFactory({ min: 0, max: 1 })` for opacity). Set once here; a per-value
-   * bound on top throws. Unit-local (no bundle `global`). The literal `Min`/`Max`
-   * are captured so `f` can brand its output.
-   */
-  min?: Min;
-  max?: Max;
   /**
    * The value modifier baked into every value this factory builds. Per-call `options.modifier`
    * overrides it. Floats accept whatever the modifier returns (no integer check).
@@ -299,14 +293,14 @@ export const createFloatFactory = <
 >(
   config: FloatFactoryConfig<Min, Max> = {},
 ): FloatApi<Min, Max> => {
-  const { min, max, modifier } = config;
+  const { min, max, snap, modifier } = config;
   const factoryBounded = min !== undefined || max !== undefined;
   // One per-instance error store, shared by every value this factory binds, so
   // the resolved `stackHints` config reaches `f`.
   const errorStore = createErrorConfigStore(config.errorConfig ?? {});
   // A bound is set ONCE, from one source: if the factory bakes a bound, a value
   // may not also carry its own. To change it, mint a fresh value.
-  const guardBound = (constraints: FloatConstraints): void => {
+  const guardBound = (constraints: FloatOptions): void => {
     if (
       factoryBounded &&
       (constraints.min !== undefined || constraints.max !== undefined)
@@ -343,9 +337,15 @@ export const createFloatFactory = <
       errorStore,
       min,
       max,
+      snap,
       modifier,
       ...options,
-    }) as unknown as ResolveFloatBrand<
+      // Internal composition of an already-validated factory bound + per-value options; the strict
+      // `SnapBound` union guards USER input, so cast past it here.
+    } as unknown as FloatOptions<
+      CallMin,
+      CallMax
+    >) as unknown as ResolveFloatBrand<
       [
         CallMin,
       ] extends [

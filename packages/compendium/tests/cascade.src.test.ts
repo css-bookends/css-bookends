@@ -20,6 +20,38 @@ const messageOf = (fn: () => unknown): string => {
   return '';
 };
 
+describe('compendium snap cascade -> calipers primitives', () => {
+  // A bounded primitive that breaches SNAPS to its limit (snap resolves true) or THROWS. The snap
+  // policy cascades own -> calipers.global -> compendium.global -> default. RED until snap threads
+  // through the compendium; the "snaps" cases fail.
+  it('compendium.global.snap reaches a bounded primitive (i)', () => {
+    const c = publishCompendium({
+      global: { snap: true },
+      calipers: { integer: { min: 0, max: 10 } },
+    });
+    expect(c.i(50).value()).toBe(10);
+  });
+
+  it('codex global (calipers.global) snap overrides compendium global', () => {
+    const c = publishCompendium({
+      global: { snap: false },
+      calipers: {
+        global: { snap: true },
+        integer: { min: 0, max: 10 },
+      },
+    });
+    // codex global 'true' wins over compendium global 'false'.
+    expect(c.i(50).value()).toBe(10);
+  });
+
+  it('default: no snap set anywhere -> a breach throws through the compendium', () => {
+    const c = publishCompendium({
+      calipers: { integer: { min: 0, max: 10 } },
+    });
+    expect(() => c.i(50)).toThrow(/maximum/);
+  });
+});
+
 describe('compendium config cascade -> calipers primitives', () => {
   it('compendium.global reaches the primitives (i)', () => {
     const c = publishCompendium({

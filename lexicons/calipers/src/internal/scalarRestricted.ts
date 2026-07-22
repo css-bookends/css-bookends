@@ -1,9 +1,9 @@
 import { throwBreach } from '../hardening';
 import {
+  edgeSnaps,
+  edgeValue,
   resolveModifier,
   ScalarBase,
-  type ScalarConfig,
-  type ScalarConstraints,
   type ScalarOptions,
   suffix,
 } from './scalarBase';
@@ -11,20 +11,24 @@ import {
 /**
  * The CHECKED scalar base: `ScalarBase` plus the machinery a BOUNDED value needs. It adds nothing
  * to the value surface; it simply OVERRIDES the construction hooks so the shared pipeline in
- * `ScalarBase` also enforces the stored bound (min / max), applies the modifier, and throws on a
- * breach. The bound lives in `#config` on the base (read back through
- * `constraints()`); this class only decides how construction populates and polices it.
+ * `ScalarBase` also enforces the stored bound (min / max), applies the modifier, and reacts to a
+ * breach: THROW by default, or ABSORB the value to the limit when that edge opts into `snap`. The
+ * bound lives in `#config` on the base (read back through `constraints()`); this class only decides
+ * how construction polices it. The raw edge form (`number | { value, snap }`) stays in the config,
+ * so `clone` / arithmetic re-resolve the same policy (base `finalizeConfig` spreads it, unchanged).
  *
  * `IntegerImpl` / `FloatImpl` / `UnspecifiedImpl` all extend THIS, so every scalar today is
  * checked. (A later step moves the deliberately-unspecified `u` down to the bare `ScalarBase`.)
  */
 export abstract class ScalarRestricted extends ScalarBase {
   // The `min > max` sanity check: an impossible bound is rejected up front, before any value work.
+  // Resolves each edge's value from the `{ value, snap }` object form or a bare number.
   protected checkBounds(options: ScalarOptions, label: string): void {
-    const { min, max, context } = options;
+    const min = edgeValue(options.min);
+    const max = edgeValue(options.max);
     if (min !== undefined && max !== undefined && min > max) {
       this.throwScalar(
-        `${label}: min (${min}) must be <= max (${max})${suffix(context)}`,
+        `${label}: min (${min}) must be <= max (${max})${suffix(options.context)}`,
       );
     }
   }
@@ -49,41 +53,32 @@ export abstract class ScalarRestricted extends ScalarBase {
     return finalValue;
   }
 
-  // A range breach THROWS (a bounded value is enforced; there is no reaction config). The throw
-  // routes through this instance's error store so `stackHints` can append a stack block. With no
-  // breach the value is in range and the bound is returned unchanged for `finalizeConfig`.
+  // A range breach either THROWS (the default) or, when that edge opts into `snap`, ABSORBS the value
+  // to the limit (silently) and returns it. The throw routes through this instance's error store so
+  // `stackHints` can append a stack block. Per-edge: min and max resolve their snap policy
+  // independently (the edge's own `snap`, else the blanket, else off). No breach -> value unchanged.
   protected enforceBound(
     value: number,
     options: ScalarOptions,
     label: string,
-  ): ScalarConstraints {
-    const { min, max, context } = options;
+  ): number {
+    const context = options.context;
+    const min = edgeValue(options.min);
+    const max = edgeValue(options.max);
     if (min !== undefined && value < min) {
+      if (edgeSnaps(options.min, options.snap)) return min;
       throwBreach(
         `${label}: ${value} is below the minimum ${min}${suffix(context)}`,
         (message) => this.throwScalar(message),
       );
     }
     if (max !== undefined && value > max) {
+      if (edgeSnaps(options.max, options.snap)) return max;
       throwBreach(
         `${label}: ${value} is above the maximum ${max}${suffix(context)}`,
         (message) => this.throwScalar(message),
       );
     }
-    return { min, max };
-  }
-
-  // Assemble the frozen, normalized config with a SPREAD, not a hand-listed set: a future field
-  // added to `ScalarOptions` flows in via `...options`; only the effective bounds are overridden by
-  // name (they equal the input bounds now, since a breach throws rather than dropping an edge).
-  protected finalizeConfig(
-    options: ScalarOptions,
-    effective: ScalarConstraints,
-  ): ScalarConfig {
-    return {
-      ...options,
-      min: effective.min,
-      max: effective.max,
-    };
+    return value;
   }
 }

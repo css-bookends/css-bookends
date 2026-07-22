@@ -31,6 +31,9 @@ export interface ScalarBundleConfig {
   global?: {
     /** Error-rendering config (e.g. stack hints) shared across integer / float / ratio. */
     errorConfig?: ErrorConfig;
+    /** The blanket snap policy shared across integer / float; a unit's own `snap` (or a per-edge
+     *  `snap` on its `min` / `max`) overrides it. Policy only, no bound value. */
+    snap?: boolean;
   };
   /** forwarded to `createIntegerFactory` (the integer surface). */
   integer?: IntegerFactoryConfig;
@@ -58,10 +61,15 @@ export const createScalarBundleFactory = (
   // so one helper covers integer and float.
   const cascade = (
     own?: IntegerFactoryConfig,
-  ): IntegerFactoryConfig => ({
-    ...own,
-    errorConfig: own?.errorConfig ?? config.global?.errorConfig,
-  });
+  ): IntegerFactoryConfig =>
+    // The merged config is internally VALID (a per-edge `snap` simply wins over this blanket at the
+    // scalar, so a cascade-added blanket is never a live "dead blanket"). The cast tells TS so: the
+    // strict `SnapBound` union guards USER input, not internal composition.
+    ({
+      ...own,
+      errorConfig: own?.errorConfig ?? config.global?.errorConfig,
+      snap: own?.snap ?? config.global?.snap,
+    }) as IntegerFactoryConfig;
   // Ratio takes an errorConfig-only forward.
   const cascadeRatio = (
     own?: RatioFactoryConfig,

@@ -51,6 +51,10 @@ export interface CalipersBundleConfig<
   global?: {
     /** Error-rendering config (e.g. stack hints) shared across every unit. */
     errorConfig?: ErrorConfig;
+    /** The blanket snap policy for the scalar family (integer / float); forwarded to the scalar
+     *  bundle's `global.snap`. A unit's own `snap` (or a per-edge `snap` on `min` / `max`) overrides
+     *  it. Policy only, no bound value; `m` / units / ratio have no bound, so it does not reach them. */
+    snap?: boolean;
   };
   /** forwarded to `createCalipersFactory` (the measurement / scalar surface + units). */
   measurement?: CalipersFactoryConfig;

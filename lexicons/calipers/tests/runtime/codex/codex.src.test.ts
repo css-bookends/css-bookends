@@ -101,6 +101,58 @@ describe('codex config cascade (own key -> global -> factory default)', () => {
   });
 });
 
+describe('codex snap cascade (per-edge -> blanket -> global -> factory default)', () => {
+  // Observable effect: a bounded value that breaches either SNAPS to the limit (snap resolves true)
+  // or THROWS (resolves false / unset). RED until the bundle threads `snap`; the "snaps" cases fail.
+  const iOrThrew = (
+    c: CalipersBundle,
+    v: number,
+  ): number | 'THREW' => {
+    try {
+      return c.i(v).value();
+    } catch {
+      return 'THREW';
+    }
+  };
+
+  it('global.snap applies to i / f when there is no unit key', () => {
+    const on = createCalipersBundleFactory({
+      global: { snap: true },
+      integer: { min: 0, max: 10 },
+      float: { min: 0, max: 1 },
+    });
+    expect(on.i(50).value()).toBe(10); // 50 -> max 10
+    expect(on.f(2).value()).toBe(1); // 2 -> max 1
+  });
+
+  it('the integer key overrides global.snap (unit key wins -> back to throw)', () => {
+    const c = createCalipersBundleFactory({
+      global: { snap: true },
+      integer: { min: 0, max: 10, snap: false },
+    });
+    expect(iOrThrew(c, 50)).toBe('THREW');
+  });
+
+  it('factory default: no snap set anywhere, a breach THROWS', () => {
+    const c = createCalipersBundleFactory({
+      integer: { min: 0, max: 10 },
+    });
+    expect(iOrThrew(c, 50)).toBe('THREW');
+  });
+
+  it('per-edge beats blanket within a tier: max opts out, min still snaps', () => {
+    const c = createCalipersBundleFactory({
+      integer: {
+        min: 0,
+        max: { value: 10, snap: false },
+        snap: true,
+      },
+    });
+    expect(c.i(-5).value()).toBe(0); // blanket -> min snaps
+    expect(iOrThrew(c, 50)).toBe('THREW'); // per-edge max opts out
+  });
+});
+
 describe('codex errorConfig cascade (global -> unit key -> factory default)', () => {
   const captureMessage = (fn: () => void): string => {
     try {

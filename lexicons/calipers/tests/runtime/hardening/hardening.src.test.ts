@@ -2,7 +2,7 @@
 // ingested bounded scalar. A bound is enforced by FAILING (throwing) when
 // construction or arithmetic breaks it; there is no reaction knob (the old
 // `hardening: 'warn' | 'fail'` config was retired 2026-07-21). If you do not want
-// enforcement, use `u` (no bound); the planned `clamp` will absorb to the limit.
+// enforcement, use `u` (no bound); the `snap` opt-in absorbs to the limit.
 //
 // Per docs/foundations.md: the bound lives on the config-bearing scalars i / f; a
 // measurement enforces via the i / f it ingests, since m is a pure container.

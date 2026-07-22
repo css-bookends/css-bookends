@@ -25,6 +25,36 @@ export type ScalarConstraints<
 };
 
 /**
+ * A single bound EDGE as written in the OPTIONS: a bare number (value only), or an object that
+ * co-locates the edge's `value` and its own `snap` policy. `V` carries the literal so a bounded
+ * builder still brands `InRange<min, max>` from the object form. When an edge's resolved `snap` is
+ * `true`, a breach on that edge ABSORBS to the limit instead of throwing.
+ */
+export type SnapEdge<V extends number = number> =
+  | V
+  | { value?: V; snap?: boolean };
+
+/** A bound EDGE that FORBIDS its own `snap` (`snap?: never`): used on the edge that DEFERS to a
+ *  blanket `snap`, so the redundancy ban below can reject a dead blanket at compile time. */
+export type SnapEdgeNoSnap<V extends number = number> =
+  | V
+  | { value?: V; snap?: never };
+
+/**
+ * The bound half of a user-facing scalar config: `min` / `max` edges plus a blanket `snap`, with the
+ * DEAD BLANKET (a blanket `snap` overridden on BOTH edges, so it does nothing) made a COMPILE error
+ * via a three-branch union: no blanket (edges free), or blanket set + one edge DEFERRING to it
+ * (`SnapEdgeNoSnap`). `{ snap: true, min: { snap: false }, max: { snap: false } }` matches no branch.
+ */
+export type SnapBound<
+  Min extends number = number,
+  Max extends number = number,
+> =
+  | { snap?: undefined; min?: SnapEdge<Min>; max?: SnapEdge<Max> }
+  | { snap: boolean; min?: SnapEdgeNoSnap<Min>; max?: SnapEdge<Max> }
+  | { snap: boolean; min?: SnapEdge<Min>; max?: SnapEdgeNoSnap<Max> };
+
+/**
  * An optional value transform applied at intake. The three named shortcuts resolve to the JS
  * rounding built-ins (`'floor'` -> `Math.floor`, `'ceil'` -> `Math.ceil`, `'round'` -> `Math.round`)
  * for the common case; a function gives full control (e.g. `n => Math.round(n / 100) * 100` to snap
@@ -56,7 +86,16 @@ export const resolveModifier = (
 export type ScalarOptions<
   Min extends number = number,
   Max extends number = number,
-> = ScalarConstraints<Min, Max> & {
+> = {
+  /** The lower bound edge: a bare `number`, or `{ value, snap }` co-locating the value with its own
+   *  snap policy. */
+  min?: SnapEdge<Min>;
+  /** The upper bound edge: a bare `number`, or `{ value, snap }`. */
+  max?: SnapEdge<Max>;
+  /** The blanket snap policy governing BOTH edges; a per-edge `snap` (on `min` / `max`) overrides it.
+   *  When resolved `true` for an edge, a breach on that edge ABSORBS to the limit instead of throwing.
+   *  Loose here (internal); the user-facing factory configs layer the redundancy-ban union on top. */
+  snap?: boolean;
   context?: string;
   /**
    * The per-instance error store this value throws through (carries the resolved
@@ -100,6 +139,25 @@ export type ScalarConfig = ScalarOptions;
 /** The `[context]` suffix appended to a scalar error message, or `''` when there is none. */
 export const suffix = (context?: string): string =>
   context ? ` [${context}]` : '';
+
+/** Resolve a bound EDGE (bare number or `{ value, snap }`) to its numeric limit, or `undefined`. */
+export const edgeValue = (
+  edge: SnapEdge | undefined,
+): number | undefined =>
+  edge === undefined
+    ? undefined
+    : typeof edge === 'number'
+      ? edge
+      : edge.value;
+
+/** Resolve an edge's effective snap policy: its own `snap` if set, else the blanket, else `false`. */
+export const edgeSnaps = (
+  edge: SnapEdge | undefined,
+  blanket: boolean | undefined,
+): boolean =>
+  typeof edge === 'object' && edge.snap !== undefined
+    ? edge.snap
+    : (blanket ?? false);
 
 const coerce = (value: Scalar): number => toNumber(value);
 
@@ -174,22 +232,19 @@ export abstract class ScalarBase {
     return value;
   }
 
-  /** Enforce a bound breach (throw) and return the effective bound. Bare base: no bound, so
-   *  nothing to enforce and nothing to carry. */
+  /** Enforce the bound at intake: throw on an un-snapped breach, or ABSORB (snap) the value to the
+   *  limit, returning the possibly-snapped value. Bare base: no bound, so it passes through. */
   protected enforceBound(
-    _value: number,
+    value: number,
     _options: ScalarOptions,
     _label: string,
-  ): ScalarConstraints {
-    return {};
+  ): number {
+    return value;
   }
 
-  /** Assemble the frozen, normalized config. Bare base: spread the options with no bound
-   *  normalization (a bare scalar carries whatever bound the options held, if any). */
-  protected finalizeConfig(
-    options: ScalarOptions,
-    _effective: ScalarConstraints,
-  ): ScalarConfig {
+  /** Assemble the frozen, normalized config: spread the options so the RAW bound (edge form + snap
+   *  policy) is carried for `clone` / arithmetic to re-resolve; a future field flows in via `...`. */
+  protected finalizeConfig(options: ScalarOptions): ScalarConfig {
     return { ...options };
   }
 
@@ -217,15 +272,12 @@ export abstract class ScalarBase {
     // The kind-specific input invariant, on the MODIFIED value (integers reject a non-integer;
     // floats accept). Always throws on violation; it is a type invariant, not a bound.
     this.validateInput(finalValue, options.context);
-    // Range breaches throw (a breached bound is enforced); enforceBound returns the effective
-    // bound (a bound concern; returns `{}` on the bare base).
-    const effective = this.enforceBound(finalValue, options, label);
-    this.#value = finalValue;
-    // Assemble the frozen, normalized config. The hook spreads the options (so a future field flows
-    // in) and bakes the effective bounds.
-    this.#config = Object.freeze(
-      this.finalizeConfig(options, effective),
-    );
+    // Enforce the bound: an un-snapped breach throws; a snapped edge ABSORBS the value to the limit.
+    // enforceBound returns the possibly-snapped value (passthrough on the bare base).
+    this.#value = this.enforceBound(finalValue, options, label);
+    // Assemble the frozen, normalized config. The hook spreads the options (raw edge form + snap
+    // policy) so `clone` / arithmetic re-resolve the same bound; a future field flows in via `...`.
+    this.#config = Object.freeze(this.finalizeConfig(options));
   }
 
   // Throw a scalar error through this instance's error store (or a default one for the storeless
@@ -266,7 +318,10 @@ export abstract class ScalarBase {
   }
 
   constraints(): ScalarConstraints {
-    return { min: this.#config.min, max: this.#config.max };
+    return {
+      min: edgeValue(this.#config.min),
+      max: edgeValue(this.#config.max),
+    };
   }
 
   isInt(): boolean {

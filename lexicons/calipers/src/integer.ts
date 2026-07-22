@@ -18,6 +18,7 @@ import {
   type Modifier,
   type ScalarConstraints,
   type ScalarOptions,
+  type SnapBound,
   suffix,
 } from './internal/scalarBase';
 import { ScalarRestricted } from './internal/scalarRestricted';
@@ -28,7 +29,8 @@ export type IntegerConstraints = ScalarConstraints;
 export type IntegerOptions<
   Min extends number = number,
   Max extends number = number,
-> = ScalarOptions<Min, Max>;
+> = SnapBound<Min, Max> &
+  Omit<ScalarOptions<Min, Max>, 'min' | 'max' | 'snap'>;
 
 export interface IInteger {
   css: () => string;
@@ -257,16 +259,8 @@ export const inRangeInteger = <
 export type IntegerFactoryConfig<
   Min extends number = number,
   Max extends number = number,
-> = {
+> = SnapBound<Min, Max> & {
   errorConfig?: ErrorConfig;
-  /**
-   * A bound baked into every value this factory builds (the named-domain pattern,
-   * e.g. `createIntegerFactory({ min: 100, max: 900 })` for font-weight). Set once here; a
-   * per-value bound on top throws. Unit-local (no bundle `global`). The literal
-   * `Min`/`Max` are captured so `i` can brand its output.
-   */
-  min?: Min;
-  max?: Max;
   /**
    * The value modifier baked into every value this factory builds, e.g. a font-weight domain
    * snapped to multiples of 100. Per-call `options.modifier` overrides it.
@@ -325,14 +319,14 @@ export const createIntegerFactory = <
 >(
   config: IntegerFactoryConfig<Min, Max> = {},
 ): IntegerApi<Min, Max> => {
-  const { min, max, modifier, warnOnNonIntegerInput } = config;
+  const { min, max, snap, modifier, warnOnNonIntegerInput } = config;
   const factoryBounded = min !== undefined || max !== undefined;
   // One per-instance error store, shared by every value this factory binds, so
   // the resolved `stackHints` config reaches `i`.
   const errorStore = createErrorConfigStore(config.errorConfig ?? {});
   // A bound is set ONCE, from one source: if the factory bakes a bound, a value
   // may not also carry its own. To change it, mint a fresh value.
-  const guardBound = (constraints: IntegerConstraints): void => {
+  const guardBound = (constraints: IntegerOptions): void => {
     if (
       factoryBounded &&
       (constraints.min !== undefined || constraints.max !== undefined)
@@ -369,10 +363,16 @@ export const createIntegerFactory = <
       errorStore,
       min,
       max,
+      snap,
       modifier,
       warnOnNonIntegerInput,
       ...options,
-    }) as unknown as ResolveIntegerBrand<
+      // Internal composition of an already-validated factory bound + per-value options; the strict
+      // `SnapBound` union guards USER input, so cast past it here.
+    } as unknown as IntegerOptions<
+      CallMin,
+      CallMax
+    >) as unknown as ResolveIntegerBrand<
       [
         CallMin,
       ] extends [

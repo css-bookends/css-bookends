@@ -10,11 +10,12 @@ import { createAbsoluteUnitsFactory } from '@css-bookends/css-calipers/units';
 
 // A consumer smoke test: it MUST bind the built package itself (a test binder can't
 // stand in) to prove nodenext resolution, so these factory calls are the point.
-// eslint-disable-next-line no-restricted-syntax -- consumer resolution smoke
+/* eslint-disable no-restricted-syntax -- consumer resolution smoke: MUST bind the built package
+   itself (a test binder can't stand in), so these zero-arg factory calls are the point. */
 const { color, f, i, m, nonNegative, r } =
   createCalipersBundleFactory();
-// eslint-disable-next-line no-restricted-syntax -- consumer resolution smoke
 const { mPx } = createAbsoluteUnitsFactory();
+/* eslint-enable no-restricted-syntax */
 
 const px: string = m(8).css();
 const hex: string = color('#3366cc').hex().css();
