@@ -191,6 +191,16 @@ m(i(50, { min: 0, max: 10 }), 'px');     // throws (out of range)
 m(bounded).multiply(2);                  // throws (16 breaks [0, 10])
 ```
 
+### Author-time overflow checks, and their limits
+
+Arithmetic KEEPS the brand: `i(700, { min: 100, max: 900 }).multiply(2)` stays typed as its range, so a slot demanding that range still accepts the result and the runtime enforces the bound (a breach throws or snaps, so the kept brand is never a lie). The next layer adds an author-time OVERFLOW squiggle on top, and its reach is bounded by what TypeScript's type-level arithmetic can do. Measured on **TypeScript 5.9** (the version in use):
+
+- **Provable at compile (a red squiggle):** an INTEGER operation with a LITERAL value AND a LITERAL factor, whose product stays under TypeScript's tuple-length ceiling of roughly 10,000. For example `i(5, { max: 10 }).multiply(3)` is a type error, since `15 > 10`.
+- **NOT provable at compile:** floats (a fraction has no type-level integer encoding, so opacity, line-height, and any fractional token are exempt), non-literal values or factors (`i(someVariable)`), and chains whose running product tops ~10,000 (it compounds quickly, `400 * 3 * 3` already overshoots).
+- Everything the compiler cannot reach is caught by the **opt-in eslint script** (it compiles the edited file and evaluates the real values) and, as the final backstop, at **runtime** (any breach throws or snaps). Correctness never rides on the squiggle or the script; `tsc` plus the runtime always enforce the bound.
+
+TypeScript 7 (the native compiler) would let the live editor prove more before the script is needed, but these ceilings are type-system limits and would not move.
+
 ## Per-property WRITING helpers live in the books layer
 
 calipers owns the value-type primitives (colour, measurements, integers, floats, ratios) AND their bounded values — a font-weight token is a `createIntegerFactory({ min: 100, max: 900 })` value right here. What is NOT a calipers feature is the per-property WRITING helper (`opacity`, `zIndex`, `fontWeight`, ...) that turns such a value into a typed CSS property: those live one layer up, in the books layer. Each is a book that binds a calipers value to one CSS property, adds that property's keyword companions, and types its `.css()` output against the matching csstype `Property.X`. So the VALUE is a lexicon; the property-writing helper is a book. The shared engine behind the books is `@css-bookends/css-value-core`. For the full picture, the value-type side is mapped in `lexicons/calipers/surface.md` and the per-property side in `packages/css-value-core/surface.md`.
