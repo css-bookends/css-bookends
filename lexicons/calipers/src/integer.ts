@@ -8,6 +8,7 @@ import {
   createErrorHelpers,
   type ErrorConfig,
 } from './internal/errors';
+import type { ValueBrand } from './internal/magnitude-arithmetic';
 import {
   makeRefinement,
   type Refinement,
@@ -107,10 +108,15 @@ export type PreserveIntegerBrand<T> =
  * The integer type a bounded builder returns, resolved from the captured bound. A range brand is
  * emitted when BOTH bounds are known literals; `never` bounds (unbounded) fall back to a plain
  * `IInteger`. (A bounded value is always in range or it throws, so the brand is always honest.)
+ *
+ * The optional `Value` captures the construction literal (S2): it rides as `ValueBrand<Value>` ONLY on
+ * the bounded branch (an unbounded value has no bound to check, so the value is dead weight there), and is
+ * transparent for a non-literal. Defaults to `number` (transparent), so existing 2-arg uses are unchanged.
  */
 export type ResolveIntegerBrand<
   Min extends number,
   Max extends number,
+  Value extends number = number,
 > = [
   Min,
 ] extends [
@@ -123,7 +129,7 @@ export type ResolveIntegerBrand<
         never,
       ]
     ? IInteger
-    : InRangeInteger<Min, Max>;
+    : InRangeInteger<Min, Max> & ValueBrand<Value>;
 
 // The base ops (ScalarBase) return `this`, so the class implements IInteger MINUS the six
 // brand-narrowing ops; the public `PreserveIntegerBrand<this>` return is applied at the `i()` cast
@@ -209,23 +215,25 @@ export function i(value: number): IInteger;
 // supplied, so DON'T brand" sentinel that `ResolveIntegerBrand` detects with `[Min] extends
 // [never]`. A real literal still gets captured from `options` via `extends number`.
 export function i<
+  Value extends number,
   Min extends number = never,
   Max extends number = never,
 >(
-  value: number,
+  value: Value,
   options: IntegerOptions<Min, Max>,
-): ResolveIntegerBrand<Min, Max>;
+): ResolveIntegerBrand<Min, Max, Value>;
 export function i<
+  Value extends number,
   Min extends number = never,
   Max extends number = never,
 >(
-  value: number,
+  value: Value,
   options: IntegerOptions<Min, Max> = {},
-): ResolveIntegerBrand<Min, Max> {
+): ResolveIntegerBrand<Min, Max, Value> {
   return new IntegerImpl(
     value,
     options,
-  ) as unknown as ResolveIntegerBrand<Min, Max>;
+  ) as unknown as ResolveIntegerBrand<Min, Max, Value>;
 }
 
 export const isInteger = (value: unknown): value is IInteger =>
@@ -324,13 +332,20 @@ export interface IntegerApi<
   FactoryMin extends number = never,
   FactoryMax extends number = never,
 > {
-  // Two call signatures: with no options the return is fixed to the factory's own resolved
-  // brand (no free type params, so a call site's contextual type cannot back-infer a foreign
-  // brand); with options the per-call bound drives the brand.
+  // Two call signatures: with no options the BOUND brand is fixed to the factory's resolved brand
+  // (FactoryMin/Max are not free, so a call site's contextual type cannot back-infer a foreign brand);
+  // `Value` is inferred from the argument only (the literal capture, S2). With options the per-call
+  // bound drives the brand.
   i: {
-    (value: number): ResolveIntegerBrand<FactoryMin, FactoryMax>;
-    <CallMin extends number = never, CallMax extends number = never>(
-      value: number,
+    <Value extends number>(
+      value: Value,
+    ): ResolveIntegerBrand<FactoryMin, FactoryMax, Value>;
+    <
+      Value extends number,
+      CallMin extends number = never,
+      CallMax extends number = never,
+    >(
+      value: Value,
       options: IntegerOptions<CallMin, CallMax>,
     ): ResolveIntegerBrand<
       [
@@ -346,7 +361,8 @@ export interface IntegerApi<
         never,
       ]
         ? FactoryMax
-        : CallMax
+        : CallMax,
+      Value
     >;
   };
   isInteger: (value: unknown) => value is IInteger;
@@ -381,10 +397,11 @@ export const createIntegerFactory = <
     }
   };
   const boundI = <
+    Value extends number,
     CallMin extends number = never,
     CallMax extends number = never,
   >(
-    value: number,
+    value: Value,
     options: IntegerOptions<CallMin, CallMax> = {},
   ): ResolveIntegerBrand<
     [
@@ -400,7 +417,8 @@ export const createIntegerFactory = <
       never,
     ]
       ? Max
-      : CallMax
+      : CallMax,
+    Value
   > => {
     guardBound(options);
     return i(value, {
@@ -430,7 +448,8 @@ export const createIntegerFactory = <
         never,
       ]
         ? Max
-        : CallMax
+        : CallMax,
+      Value
     >;
   };
   return {

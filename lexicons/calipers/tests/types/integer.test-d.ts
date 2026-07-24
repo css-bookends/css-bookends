@@ -29,10 +29,13 @@ const { i: fontWeight } = createIntegerFactory({
   min: 100,
   max: 900,
 });
-expectType<InRangeInteger<100, 900>>(fontWeight(400));
+// A bounded literal also carries a ValueBrand phantom now (S2); assert assignability, which still pins
+// the exact [100, 900] brand (InRange brands are invariant). The phantom itself is checked in
+// magnitude-value-capture.test-d.ts.
+expectAssignable<InRangeInteger<100, 900>>(fontWeight(400));
 
 // clone() preserves the receiver's brand (same value + bound, so the proof still holds).
-expectType<InRangeInteger<100, 900>>(fontWeight(400).clone());
+expectAssignable<InRangeInteger<100, 900>>(fontWeight(400).clone());
 // a plain integer's clone stays plain.
 expectType<IInteger>(i(5).clone());
 
@@ -46,7 +49,7 @@ expectError(
 );
 
 // a per-value bound brands the same way; a per-call `hardening` is rejected.
-expectType<InRangeInteger<0, 10>>(i(5, { min: 0, max: 10 }));
+expectAssignable<InRangeInteger<0, 10>>(i(5, { min: 0, max: 10 }));
 expectError(i(5, { min: 0, max: 10, hardening: 'warn' }));
 
 // an unbounded integer is never branded.

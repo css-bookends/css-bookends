@@ -18,11 +18,12 @@ import { f, i } from '../support/calipers_tests.dist';
 // blanket only (no per-edge)
 expectAssignable<IInteger>(createIntegerFactory({ snap: true }).i(5));
 // blanket + bare bounds: snap governs both edges; branding still holds.
-expectType<InRangeInteger<0, 100>>(
+// bounded literal also carries a ValueBrand phantom (S2); assignability still pins the [0, 100] brand.
+expectAssignable<InRangeInteger<0, 100>>(
   createIntegerFactory({ min: 0, max: 100, snap: true }).i(50),
 );
 // blanket + ONE edge opting out via the object form (co-locates value + snap).
-expectType<InRangeInteger<0, 100>>(
+expectAssignable<InRangeInteger<0, 100>>(
   createIntegerFactory({
     min: 0,
     max: { value: 100, snap: false },
@@ -30,7 +31,7 @@ expectType<InRangeInteger<0, 100>>(
   }).i(50),
 );
 // per-edge snap, NO blanket: both edges may carry their own snap.
-expectType<InRangeInteger<0, 100>>(
+expectAssignable<InRangeInteger<0, 100>>(
   createIntegerFactory({
     min: { value: 0, snap: true },
     max: { value: 100, snap: false },

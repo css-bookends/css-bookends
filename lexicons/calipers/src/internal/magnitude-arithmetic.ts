@@ -2,8 +2,9 @@
 //   - INTEGER-only (a fraction has no length, so there is no float support);
 //   - products are bounded by TypeScript's ~10,000 tuple-length ceiling (a bigger product is a
 //     "too large to represent" error at the use site), measured on TS 5.9.3.
-// See docs/magnitude.md (D2 / D6) and the README's "Author-time overflow checks" section. These are the
-// foundation the scalar overflow checks (S3-S6) build on; they do NOT touch the scalar types themselves.
+// See docs/magnitude.md (D2 / D6) and the README's "Author-time overflow checks" section. The arithmetic
+// primitives do NOT touch the scalar types; `ValueBrand` (below) is the one bridge: the phantom `i` uses
+// to carry its literal value into those checks.
 
 /** A tuple of length `N` (unary encoding); the building block for the arithmetic below. */
 type BuildTuple<
@@ -55,3 +56,19 @@ export type GreaterThan<A extends number, B extends number> =
   ]
     ? true
     : false;
+
+// The value bridge: how `i` carries its literal value onto the type so the overflow checks (S3+) can read
+// it back off `this`. Keyed by a module-private `unique symbol`, like the constraint brands in `brands.ts`.
+declare const valueBrand: unique symbol;
+
+/**
+ * Carries a scalar's literal VALUE at the type level, so the overflow checks (S3+) can read it off `this`.
+ * TRANSPARENT for a non-literal (`number extends V` -> `unknown`, which intersects away), so `i(x)` with
+ * `x: number` never gains it. `ResolveIntegerBrand` applies it ONLY on the bounded branch: an unbounded
+ * `i(5)` has no bound to check, so it stays plain `IInteger`, while a bounded `i(5, { min, max })` gains
+ * `ValueBrand<5>`. The arithmetic ops shed it (via `PreserveIntegerBrand`) until S4 threads it through
+ * them. Integers only; `f` never captures (D6).
+ */
+export type ValueBrand<V extends number> = number extends V
+  ? unknown
+  : { readonly [valueBrand]: V };
