@@ -8,7 +8,10 @@ import {
   createErrorHelpers,
   type ErrorConfig,
 } from './internal/errors';
-import type { ValueBrand } from './internal/magnitude-arithmetic';
+import type {
+  OverflowGuard,
+  ValueBrand,
+} from './internal/magnitude-arithmetic';
 import {
   makeRefinement,
   type Refinement,
@@ -131,6 +134,19 @@ export type ResolveIntegerBrand<
     ? IInteger
     : InRangeInteger<Min, Max> & ValueBrand<Value>;
 
+/**
+ * The resolved bound for a factory `i`: a per-call bound wins, else the factory's. Set-once makes them
+ * mutually exclusive at runtime, so this is just "whichever side is present". The overflow guard reads it
+ * so a factory-baked bound is checked at construction too.
+ */
+type ResolveBound<Call extends number, Factory extends number> = [
+  Call,
+] extends [
+  never,
+]
+  ? Factory
+  : Call;
+
 // The base ops (ScalarBase) return `this`, so the class implements IInteger MINUS the six
 // brand-narrowing ops; the public `PreserveIntegerBrand<this>` return is applied at the `i()` cast
 // boundary (and `asScalar` is defined here directly). Every other member is still checked.
@@ -219,7 +235,7 @@ export function i<
   Min extends number = never,
   Max extends number = never,
 >(
-  value: Value,
+  value: Value & OverflowGuard<Value, Min, Max>,
   options: IntegerOptions<Min, Max>,
 ): ResolveIntegerBrand<Min, Max, Value>;
 export function i<
@@ -227,7 +243,7 @@ export function i<
   Min extends number = never,
   Max extends number = never,
 >(
-  value: Value,
+  value: Value & OverflowGuard<Value, Min, Max>,
   options: IntegerOptions<Min, Max> = {},
 ): ResolveIntegerBrand<Min, Max, Value> {
   return new IntegerImpl(
@@ -338,14 +354,19 @@ export interface IntegerApi<
   // bound drives the brand.
   i: {
     <Value extends number>(
-      value: Value,
+      value: Value & OverflowGuard<Value, FactoryMin, FactoryMax>,
     ): ResolveIntegerBrand<FactoryMin, FactoryMax, Value>;
     <
       Value extends number,
       CallMin extends number = never,
       CallMax extends number = never,
     >(
-      value: Value,
+      value: Value &
+        OverflowGuard<
+          Value,
+          ResolveBound<CallMin, FactoryMin>,
+          ResolveBound<CallMax, FactoryMax>
+        >,
       options: IntegerOptions<CallMin, CallMax>,
     ): ResolveIntegerBrand<
       [
@@ -401,7 +422,12 @@ export const createIntegerFactory = <
     CallMin extends number = never,
     CallMax extends number = never,
   >(
-    value: Value,
+    value: Value &
+      OverflowGuard<
+        Value,
+        ResolveBound<CallMin, Min>,
+        ResolveBound<CallMax, Max>
+      >,
     options: IntegerOptions<CallMin, CallMax> = {},
   ): ResolveIntegerBrand<
     [
@@ -421,20 +447,22 @@ export const createIntegerFactory = <
     Value
   > => {
     guardBound(options);
-    return i(value, {
-      errorStore,
-      min,
-      max,
-      snap,
-      modifier,
-      warnOnNonIntegerInput,
-      ...options,
-      // Internal composition of an already-validated factory bound + per-value options; the strict
-      // `SnapBound` union guards USER input, so cast past it here.
-    } as unknown as IntegerOptions<
-      CallMin,
-      CallMax
-    >) as unknown as ResolveIntegerBrand<
+    // `value` is already overflow-checked at this factory boundary; pass it to the free `i` as a bare
+    // number so its own guard (against the per-call bound) does not double-check and clash.
+    return i(
+      value as number,
+      {
+        errorStore,
+        min,
+        max,
+        snap,
+        modifier,
+        warnOnNonIntegerInput,
+        ...options,
+        // Internal composition of an already-validated factory bound + per-value options; the strict
+        // `SnapBound` union guards USER input, so cast past it here.
+      } as unknown as IntegerOptions<CallMin, CallMax>,
+    ) as unknown as ResolveIntegerBrand<
       [
         CallMin,
       ] extends [

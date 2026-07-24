@@ -1,5 +1,6 @@
 // Type-level integer arithmetic for the author-time magnitude / overflow checks (D4). Tuple-based, so:
-//   - INTEGER-only (a fraction has no length, so there is no float support);
+//   - INTEGER-only AND NON-NEGATIVE (a fraction has no tuple length, a negative has none either), so
+//     floats and negatives are unsupported and fall to the runtime;
 //   - products are bounded by TypeScript's ~10,000 tuple-length ceiling (a bigger product is a
 //     "too large to represent" error at the use site), measured on TS 5.9.3.
 // See docs/magnitude.md (D2 / D6) and the README's "Author-time overflow checks" section. The arithmetic
@@ -72,3 +73,95 @@ declare const valueBrand: unique symbol;
 export type ValueBrand<V extends number> = number extends V
   ? unknown
   : { readonly [valueBrand]: V };
+
+type Digit =
+  | '0'
+  | '1'
+  | '2'
+  | '3'
+  | '4'
+  | '5'
+  | '6'
+  | '7'
+  | '8'
+  | '9';
+
+/**
+ * An operand is NATIVELY CHECKABLE (by TS's own type-level tuple arithmetic, as opposed to the runtime
+ * and the eslint script, which check EVERYTHING) iff it is a non-negative integer literal with at most
+ * three digits (0-999). Tuple length has no negative or fractional value, and `BuildTuple<N>` for N at or
+ * over ~1000 hits TS's recursion limit (TS2589), so a negative, a fraction, or a 4+-digit literal is
+ * SKIPPED from the type-level check; the runtime and the eslint script are the backstop for those.
+ */
+type IsNativelyCheckable<N extends number> = number extends N
+  ? false
+  : `${N}` extends `-${string}`
+    ? false
+    : `${N}` extends `${string}.${string}`
+      ? false
+      : `${N}` extends `${Digit}${Digit}${Digit}${Digit}${string}`
+        ? false
+        : true;
+
+/**
+ * Does a bounded construction PROVABLY overflow? True iff `Value` is a NATIVELY-CHECKABLE literal (a
+ * non-negative integer, 0-999) exceeding a natively-checkable `Max` (over) or under such a `Min` (under). A
+ * non-literal `Value`, a `never` bound (that side unbounded), or any negative / fractional / 4+-digit
+ * operand skips the check (D6): the runtime and eslint script are the backstop, never a false error.
+ */
+export type Overflows<
+  Value extends number,
+  Min extends number,
+  Max extends number,
+> = number extends Value
+  ? false
+  : IsNativelyCheckable<Value> extends false
+    ? false
+    : (
+          [
+            Max,
+          ] extends [
+            never,
+          ]
+            ? false
+            : IsNativelyCheckable<Max> extends false
+              ? false
+              : GreaterThan<Value, Max>
+        ) extends true
+      ? true
+      : (
+            [
+              Min,
+            ] extends [
+              never,
+            ]
+              ? false
+              : IsNativelyCheckable<Min> extends false
+                ? false
+                : GreaterThan<Min, Value>
+          ) extends true
+        ? true
+        : false;
+
+/**
+ * The construction guard (S3): intersect onto `i`'s `value` parameter so a PROVABLE overflow is a compile
+ * error. `Value` stays naked in `value: Value & OverflowGuard<...>`, so it still infers; on overflow the
+ * guard is an object shape a bare number cannot satisfy, so the call is rejected with the bound shown in
+ * the message. In range (or skipped) it is `unknown`, which intersects away to leave `value: Value`.
+ */
+export type OverflowGuard<
+  Value extends number,
+  Min extends number,
+  Max extends number,
+> =
+  Overflows<Value, Min, Max> extends true
+    ? {
+        readonly __overflow: [
+          'css-calipers: value out of range',
+          Value,
+          'bounds',
+          Min,
+          Max,
+        ];
+      }
+    : unknown;

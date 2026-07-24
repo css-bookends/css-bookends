@@ -18,7 +18,11 @@ describe('snap absorbs a breach to the limit', () => {
   /* ---- blanket snap governs BOTH edges ---- */
   describe('blanket snap: true', () => {
     it('snaps an above-max construction value down to max', () => {
-      expect(i(50, { min: 0, max: 10, snap: true }).value()).toBe(10);
+      // snap absorbs an out-of-range value; the LITERAL is a compile error under S3 (snap-unaware), so
+      // cast to a runtime `number` for now. S6 (snap suppresses the compile error) reverts this to a literal.
+      expect(
+        i(50 as number, { min: 0, max: 10, snap: true }).value(),
+      ).toBe(10);
     });
 
     it('snaps a below-min construction value up to min', () => {
@@ -73,9 +77,9 @@ describe('snap absorbs a breach to the limit', () => {
 
   /* ---- single-edge snap ---- */
   it('snaps a single bounded edge, leaves the open side unbounded', () => {
-    expect(i(50, { max: { value: 10, snap: true } }).value()).toBe(
-      10,
-    );
+    expect(
+      i(50 as number, { max: { value: 10, snap: true } }).value(),
+    ).toBe(10);
     expect(i(-999, { max: { value: 10, snap: true } }).value()).toBe(
       -999,
     ); // no min
@@ -93,13 +97,13 @@ describe('snap absorbs a breach to the limit', () => {
   /* ---- snap keeps the bound ---- */
   it('a snapped value keeps its bound (constraints unchanged)', () => {
     expect(
-      i(50, { min: 0, max: 10, snap: true }).constraints(),
+      i(50 as number, { min: 0, max: 10, snap: true }).constraints(),
     ).toEqual({ min: 0, max: 10 });
   });
 
   /* ---- no snap (default) still throws ---- */
   it('an un-snapped bound still throws (the default)', () => {
-    expect(() => i(50, { min: 0, max: 10 })).toThrow(
+    expect(() => i(50 as number, { min: 0, max: 10 })).toThrow(
       /above the maximum/,
     );
   });

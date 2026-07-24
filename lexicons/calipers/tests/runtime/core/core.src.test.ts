@@ -70,9 +70,10 @@ describe('a bounded / modified measurement is built from a configured scalar', (
       min: 0,
       max: 10,
     });
-    expect(() => m(i(50, { min: 0, max: 10 }), 'px')).toThrow(
-      /above the maximum/,
-    );
+    // out-of-range LITERAL is a compile error (S3); cast to a runtime `number` to test the runtime throw.
+    expect(() =>
+      m(i(50 as number, { min: 0, max: 10 }), 'px'),
+    ).toThrow(/above the maximum/);
   });
 
   it('a modifier rides on the ingested scalar, applied at intake before m wraps it', () => {
@@ -107,9 +108,9 @@ describe('unit helpers are config-free (like m)', () => {
     expect(m(i(50, { min: 0, max: 100 }), '%').constraints()).toEqual(
       { min: 0, max: 100 },
     );
-    expect(() => m(i(150, { min: 0, max: 100 }), '%')).toThrow(
-      /above the maximum/,
-    );
+    expect(() =>
+      m(i(150 as number, { min: 0, max: 100 }), '%'),
+    ).toThrow(/above the maximum/);
   });
 });
 

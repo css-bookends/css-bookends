@@ -12,28 +12,30 @@ through every op and never respecifies it. To change a bound, mint a fresh value
 **D2 — Magnitude ladder (author-time -> runtime), in order:**
 1. `tsc` type-level: the value + factor are captured as LITERALS, type-level arithmetic runs, and a
    PROVABLE overflow is a COMPILE ERROR.
-2. hard limit = `TS2589` (type-level arithmetic goes "excessively deep" on long chains).
+2. TWO hard limits (see D6): the ~10,000 TUPLE-LENGTH wall caps a single product's MAGNITUDE (a bigger
+   product is "too large to represent"); `TS2589` ("excessively deep") caps a long op CHAIN's recursion
+   depth. Integer literals only.
 3. the LIVE language server gives out earlier (per-keystroke perf); the opt-in eslint script (a full
    single-file compile on save) recovers that live gap.
 4. runtime throw / snap = the final backstop. Correctness NEVER rides on the script.
 
 **D3 — Always brand the output; a provable overflow is the ONE exception.** Every op's output is branded
-(`InRange<a,b>` etc.). A provable overflow (all literals, within `TS2589`) is a compile error; a
-non-provable result (non-literal, or past `TS2589`) stays branded and the runtime enforces it. That is
+(`InRange<a,b>` etc.). A provable overflow (all integer literals, within both limits) is a compile error; a
+non-provable result (non-literal, a float, or past the tuple wall / `TS2589`) stays branded and the runtime enforces it. That is
 the only place "always brand" and "catch the overflow" meet.
 
 **D4 — Scalars CAPTURE the literal value + factor and do the arithmetic** — not brand-only. (The first
-code pass shipped brand-only; the literal-magnitude layer is still to add, and it is the fragile `TS2589`
-piece.)
+code pass shipped brand-only; the literal-magnitude layer is still to add, and it is the fragile
+type-arithmetic piece, bounded by the tuple wall + `TS2589`.)
 
 **D5 — `m` uses `IMeasurement<Unit, Brand>` (a parametric brand), NOT a `this`-conditional** (which
 breaks unit covariance). The math ops carry `Brand` uniformly and never inspect it; a CUSTOM brand rides
 as an intersection the ops shed; `absolute` carries `Brand` like the rest (pending final confirm).
 
-**D6 — the ceiling is TS's ~10,000 TUPLE-LENGTH wall (measured 2026-07-24 on TS 5.9.3), not `TS2589`, and
-it is INTEGER-ONLY.** Type-level arithmetic is tuple-based: a product over ~10,000 is "too large to
-represent", a FLOAT (fraction) has no encoding at all, and only LITERAL value + factor are computable. So
-`tsc`'s magnitude coverage is a shallow integer-literal sliver by design; the eslint script (it runs the
+**D6 — the MAGNITUDE ceiling is TS's ~10,000 TUPLE-LENGTH wall (measured 2026-07-24 on TS 5.9.3), not `TS2589`
+(that is the SEPARATE chain-depth limit, D2), and it is INTEGER-ONLY.** Type-level arithmetic is tuple-based: a product over ~10,000 is "too large to
+represent", a FLOAT (fraction) or a NEGATIVE has no tuple length, and only NON-NEGATIVE INTEGER LITERALS
+are computable. So `tsc`'s magnitude coverage is a shallow non-negative-integer-literal sliver by design; the eslint script (it runs the
 code) is the workhorse for floats / non-literals / deeper-or-bigger chains. Expected, not a gap. (TS 7
 native would speed the LIVE server, giving more squiggles before the script, but would NOT raise this
 ceiling.)
@@ -94,12 +96,14 @@ non-snapped edge does. The runtime absorb already shipped; this is its compile-t
 Behaviour and tests cover all four (`i`, `f`, `u`, `m`), across the operations, in-range and overflow,
 snap and no-snap.
 
-## The limit: TS2589, and honestly it comes early
+## The limits: the tuple wall (magnitude) and TS2589 (chain depth), and both come early
 
-Type-level arithmetic compounds per op and goes "excessively deep" (`TS2589`) well before what feels
-like a deep chain. Realistically TS holds the hardening for shallow / small-magnitude cases and the
-ESLint script is the practical workhorse for the rest, not just an occasional deep-chain fallback. The
-IDE's live checker gives out FIRST (it recomputes each keystroke); `tsc` at compile still completes.
+Two limits bound the type-level check. A single product over ~10,000 hits the TUPLE-LENGTH wall ("too
+large to represent"); a long op chain compounds per op and goes "excessively deep" (`TS2589`). Both
+arrive well before what feels like a deep or big chain, so realistically TS holds the hardening for
+shallow / small-magnitude cases and the ESLint script is the practical workhorse for the rest, not just
+an occasional deep-chain fallback. The IDE's live checker gives out FIRST (it recomputes each keystroke);
+`tsc` at compile still completes.
 
 ## The escape hatch: an opt-in compile script (IDE support only)
 
@@ -126,8 +130,9 @@ Per scalar there are TWO layers: the BRAND is carried, and the literal MAGNITUDE
   it honest). `clamp` MINTS `InRange<x,y>`; `clone` returns `this`; `f.asScalar` is the bound-preserving
   `Integer | Float` union.
 - **`i` / `f` magnitude (D4, STILL TO ADD):** capture the value + factor as LITERALS and compute the
-  result type-level; a PROVABLE overflow of the bound is a compile error (up to `TS2589`); a snapped edge
-  absorbs instead of erroring. This is the fragile `TS2589` piece; the eslint script covers past it.
+  result type-level; a PROVABLE overflow of the bound is a compile error (up to the tuple wall + `TS2589`);
+  a snapped edge absorbs instead of erroring. This is the fragile type-arithmetic piece; the eslint script
+  covers past it.
 - **Refinements-as-bounds (SHIPPED):** the built-in bound refinements (`nonNegative` -> min 0,
   `nonPositive` -> max 0, `inRange(a,b)` -> `[a,b]`) set a RUNTIME bound + the brand, SET-ONCE (re-bounding
   an already-bounded value throws). Custom refinements set no bound and add their brand as an

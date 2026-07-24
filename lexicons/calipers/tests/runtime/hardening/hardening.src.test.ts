@@ -29,7 +29,10 @@ describe('bound spectrum', () => {
         max: 1000,
       });
       expect(fontWeight(700).value()).toBe(700);
-      expect(() => fontWeight(0)).toThrow(/below the minimum/);
+      // an out-of-range LITERAL is a compile error (S3); cast to a runtime `number` for the runtime throw.
+      expect(() => fontWeight(0 as number)).toThrow(
+        /below the minimum/,
+      );
       expect(() => fontWeight(1200)).toThrow(/above the maximum/);
     });
 
@@ -115,7 +118,8 @@ describe('bound spectrum', () => {
 
 describe('construction-time bound enforcement (i / f)', () => {
   it('an integer throws when the initial value is out of range', () => {
-    expect(() => i(50, { min: 0, max: 10 })).toThrow(
+    // out-of-range LITERAL is a compile error (S3); cast to a runtime `number` for the runtime throw.
+    expect(() => i(50 as number, { min: 0, max: 10 })).toThrow(
       /above the maximum/,
     );
   });

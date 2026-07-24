@@ -19,10 +19,16 @@ describe('Integer primitive (src)', () => {
   });
 
   it('enforces range constraints', () => {
-    expect(() => i(0, { min: 1 })).toThrow(/below the minimum/);
-    expect(() => i(11, { max: 10 })).toThrow(/above the maximum/);
+    // an out-of-range LITERAL is now a compile error (S3), so cast to a runtime `number` to reach the
+    // runtime throw these tests are about.
+    expect(() => i(0 as number, { min: 1 })).toThrow(
+      /below the minimum/,
+    );
+    expect(() => i(11 as number, { max: 10 })).toThrow(
+      /above the maximum/,
+    );
     expect(i(5, { min: 1, max: 10 }).value()).toBe(5);
-    expect(() => i(5, { min: 10, max: 1 })).toThrow(
+    expect(() => i(5 as number, { min: 10, max: 1 })).toThrow(
       /min .* must be <= max/,
     );
   });
@@ -135,9 +141,9 @@ describe('Integer primitive (src)', () => {
 
   it('prefixes errors with a wrapper label when embedded (m(i): ...)', () => {
     // both the bound-breach and the integer-check errors carry the wrapper.
-    expect(() => i(15, { wrapperLabel: 'm', max: 10 })).toThrow(
-      /^m\(i\):/,
-    );
+    expect(() =>
+      i(15 as number, { wrapperLabel: 'm', max: 10 }),
+    ).toThrow(/^m\(i\):/);
     expect(() => i(2.5, { wrapperLabel: 'm' })).toThrow(
       /^m\(i\): expected an integer/,
     );
