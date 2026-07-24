@@ -1,16 +1,46 @@
-# Hardening through math + author-time magnitude feedback (SPEC, DRAFT 2026-07-22)
+# Hardening through math + author-time magnitude feedback (SPEC)
 
-> DRAFT for review. This REDESIGNS how the brand behaves through arithmetic (today it is dropped);
-> confirm the direction before code.
+> This REDESIGNS how the brand behaves through arithmetic (today it is dropped). The direction is
+> CONFIRMED; the load-bearing decisions below are the authoritative record. Re-read them before any edit
+> to this doc or the code, and reconcile everything else to them.
+
+## LOAD-BEARING DECISIONS (read before touching anything)
+
+**D1 — Never drop a constraint; only mint a new one.** A bound is set once. Math carries the brand
+through every op and never respecifies it. To change a bound, mint a fresh value (factory / refinement).
+
+**D2 — Magnitude ladder (author-time -> runtime), in order:**
+1. `tsc` type-level: the value + factor are captured as LITERALS, type-level arithmetic runs, and a
+   PROVABLE overflow is a COMPILE ERROR.
+2. hard limit = `TS2589` (type-level arithmetic goes "excessively deep" on long chains).
+3. the LIVE language server gives out earlier (per-keystroke perf); the opt-in eslint script (a full
+   single-file compile on save) recovers that live gap.
+4. runtime throw / snap = the final backstop. Correctness NEVER rides on the script.
+
+**D3 — Always brand the output; a provable overflow is the ONE exception.** Every op's output is branded
+(`InRange<a,b>` etc.). A provable overflow (all literals, within `TS2589`) is a compile error; a
+non-provable result (non-literal, or past `TS2589`) stays branded and the runtime enforces it. That is
+the only place "always brand" and "catch the overflow" meet.
+
+**D4 — Scalars CAPTURE the literal value + factor and do the arithmetic** — not brand-only. (The first
+code pass shipped brand-only; the literal-magnitude layer is still to add, and it is the fragile `TS2589`
+piece.)
+
+**D5 — `m` uses `IMeasurement<Unit, Brand>` (a parametric brand), NOT a `this`-conditional** (which
+breaks unit covariance). The math ops carry `Brand` uniformly and never inspect it; a CUSTOM brand rides
+as an intersection the ops shed; `absolute` carries `Brand` like the rest (pending final confirm).
+
+**D6 — `TS2589` comes EARLY.** `tsc`'s magnitude coverage is shallow by design, so the eslint script is
+the workhorse. That is expected, not a gap.
 
 ## The principle
 
 Calipers restricts `i` / `f` as strictly as it can (`u` is the open escape). A value stays HARDENED at
-EVERY math operation: TS ALWAYS keeps carrying the bound brand (`InRange<min,max>`) op after op, so the
-editor keeps guiding the author. The MAGNITUDE itself (has this chain overflowed?) is NOT tracked in the
-type (type-level arithmetic trips `TS2589`); the runtime enforces it (throw / snap) and the opt-in
-compile script surfaces it author-time. Correctness is never at stake: `tsc` plus the runtime always run
-the full check.
+EVERY math operation: TS ALWAYS carries the bound brand (`InRange<min,max>`), AND it computes the
+MAGNITUDE where it can (D2 / D3), capturing the value + factor as literals so a PROVABLE overflow is a
+compile error. Past `TS2589` (and past what the live language server recomputes per keystroke) the
+opt-in compile script recovers the diagnostic, and the runtime is the final backstop. Correctness is
+never at stake: `tsc` plus the runtime always run the full check.
 
 **HARD RULE (absolute):** NEVER drop the hardening when it is present. EVERY math operation on a
 bounded value preserves the brand, no exceptions. A bounded `i` / `f` (or an `m` embedding one) stays
@@ -25,28 +55,29 @@ guiding after the FIRST op. That is the gap: we must stay hardened at every op, 
 plain value. (The runtime System B still re-checks and throws, so it was never a correctness hole,
 only lost editor guidance.)
 
-## Harden at each op (the brand is PRESERVED, never re-derived)
+## Harden at each op (brand carried + magnitude computed where TS can)
 
-Every math op returns the SAME hardened type as its receiver: a bounded `i` / `f` stays `InRange<min,max>`
-through `multiply` / `add` / etc. The type keeps carrying the bound, so the editor still guides you (a
-function wanting `InRange<0, 900>` still accepts the result). The runtime (System B) enforces it (throw,
-or clamp under snap), so no out-of-range value ever survives with the brand.
+Every math op returns the SAME bound brand as its receiver: a bounded `i` / `f` stays `InRange<min,max>`
+through `multiply` / `add` / etc., so the editor keeps guiding you (a function wanting `InRange<0, 900>`
+still accepts the result), and the runtime enforces it (throw, or clamp under snap) so no out-of-range
+value ever survives with the brand.
 
-TS does NOT compute the resulting MAGNITUDE to re-check it, that is type-level arithmetic and trips
-`TS2589` almost at once. So the type asserts the bound but cannot, on its own, flag that a chain has
-overflowed. That author-time magnitude check is exactly what the opt-in compile script provides.
+For a LITERAL chain TS ALSO computes the magnitude (capture the value + factor as literals, type-level
+arithmetic, compare to `[Min, Max]`): the result keeps `InRange` when provably in range, and a PROVABLE
+overflow is a compile ERROR (D3). Where TS's type-level arithmetic gives out (`TS2589`, D2) the opt-in
+script covers the same check; either way the runtime is the backstop.
 
-## Snap is a RUNTIME reaction; the brand stays `InRange<min,max>`
+## Snap decides the compile-time outcome for a provable overflow
 
-Because the output is ALWAYS branded with the bound (see "Confirm before code"), snap does NOT change the
-STATIC type: a bounded value is `InRange<min,max>` with or without snap. Snap decides the RUNTIME reaction
-on a breach:
-- `snap: true`: the value absorbs to the limit (stays in range), silently.
-- no snap (the default): the breach throws.
+The brand is always `InRange<min,max>`. What snap changes is whether a PROVABLE overflow on the breached
+edge is a compile error (D3):
+- `snap: true` on that edge: a would-overflow ABSORBS to the limit, so it stays in range, `InRange`
+  survives, NO compile error (and no runtime throw, it clamps).
+- no snap (the default): a PROVABLE overflow is a compile error (or the script diagnostic past `TS2589`),
+  and the runtime throws; a NON-provable result keeps `InRange` and the runtime re-check stands.
 
-Either way the compile-time brand is `InRange<min,max>`. A would-breach value is surfaced AUTHOR-TIME by
-the compile script and enforced at runtime, never by a change to the TS type. (This supersedes an earlier
-draft where snap changed the output type; that was the type-level-magnitude path we are NOT taking.)
+So snap is not only a runtime reaction: a snapped edge never errors on overflow (it absorbs), a
+non-snapped edge does. The runtime absorb already shipped; this is its compile-time half.
 
 ## Per type: `i`, `f`, `u`, `m`
 
@@ -79,6 +110,35 @@ compiler. Our example uses `vanilla-extract`.
 2. The agnostic single-file compile-and-report script.
 3. An example: a chain that outruns TS's live check, the error appears, and is remedied by the script,
    via `vanilla-extract`.
+
+## Implementation plan (the code)
+
+Per scalar there are TWO layers: the BRAND is carried, and the literal MAGNITUDE is computed (D2-D4).
+
+- **`i` / `f` brand (SHIPPED):** `add` / `subtract` / `multiply` / `divide` / `withValue` return
+  `PreserveIntegerBrand<this>` / `PreserveFloatBrand<this>`, a conditional that keeps the receiver's
+  bound-brand (`InRange` / `NonNegative` / `NonPositive`) and drops a CUSTOM one (correct: no bound keeps
+  it honest). `clamp` MINTS `InRange<x,y>`; `clone` returns `this`; `f.asScalar` is the bound-preserving
+  `Integer | Float` union.
+- **`i` / `f` magnitude (D4, STILL TO ADD):** capture the value + factor as LITERALS and compute the
+  result type-level; a PROVABLE overflow of the bound is a compile error (up to `TS2589`); a snapped edge
+  absorbs instead of erroring. This is the fragile `TS2589` piece; the eslint script covers past it.
+- **Refinements-as-bounds (SHIPPED):** the built-in bound refinements (`nonNegative` -> min 0,
+  `nonPositive` -> max 0, `inRange(a,b)` -> `[a,b]`) set a RUNTIME bound + the brand, SET-ONCE (re-bounding
+  an already-bounded value throws). Custom refinements set no bound and add their brand as an
+  intersection (dropped by math). `is` narrows but cannot re-mint, so it is the one non-backed path.
+- **`m` (D5, parametric brand):** `IMeasurement<Unit, Brand = unknown>`, NOT a `this`-conditional (that
+  breaks unit covariance). `m<S extends Scalar>(value: S, ...)` DERIVES `Brand` from the embedded scalar;
+  the ops carry `Brand` parametrically (`add(delta): IMeasurement<Unit, Brand>`) and never inspect it; a
+  custom brand rides as an intersection the ops shed; `absolute` carries `Brand` (pending confirm); the
+  branded aliases are one-liners over `IMeasurement<Unit, Brand>`.
+- **`r` (generic):** `IRatio<N, D>`; `r<N, D>(num, den)`; `numeratorScalar(): N`,
+  `denominatorScalar(): D`; `withNumerator<NewN>` / `withDenominator<NewD>` restate one side, preserve
+  the other.
+
+Order: (A) `i`/`f` brand [SHIPPED] + refinements-as-bounds [SHIPPED]; (A2) `i`/`f` MAGNITUDE layer (D4);
+(B) `m` parametric-brand derive (D5); (C) `r` generic; (D) the compile script + example. Each phase
+updates docs, flips/adds its tests, lands green, then a red-hat pass.
 
 ## Test matrix (FULL, no skips, finalized 2026-07-23)
 
@@ -124,20 +184,17 @@ The spine is the HARD RULE: after ANY value-producing op the brand is STILL pres
 Every cell is checked at BOTH layers: tsd `expectType` for the brand (A), and a runtime test for the
 value / throw / clamp / `.constraints()` (B, C).
 
-## Confirm before code
+## Resolved (the decisions are D1-D6 at the top)
 
-- This flips arithmetic branding from "dropped" to "brand preserved at every op" (the HARD RULE) and
-  completes snap's compile-time effect. It is a real redesign; confirm the direction.
-- **RESOLVED, (a): TS ALWAYS brands the output.** Per "TS must ALWAYS brand the output": the output type
-  always carries the bound brand (`InRange<min,max>`), preserved through every op. TS NEVER drops it and
-  NEVER turns an overflow into a type ERROR (an error would leave the output UNbranded, which the HARD
-  RULE forbids). TS does NOT track the computed magnitude type-level (that is `TS2589`-prone). All
-  magnitude + snap-vs-overflow judgement is RUNTIME (throw / snap) plus AUTHOR-TIME (the compile script).
-  `u` / unbounded is the sole exception: nothing to brand.
-- **Consequence for snap:** since the output is `InRange<min,max>` with OR without snap, snap changes the
-  RUNTIME reaction (clamp vs throw), NOT the static type. This supersedes the earlier "snap changes the
-  TS output type" (that was the (b) / type-level-magnitude path we are NOT taking); see the Snap section,
-  updated to match.
+- This flips arithmetic branding from "dropped" to "brand carried at every op" (D1), AND adds the
+  literal-magnitude layer (D2-D4) so a provable overflow is a compile error.
+- **RETRACTED:** an earlier draft of this section said "TS does NOT track the computed magnitude" and
+  "overflow is never a type error" (the "(a)" reading). That was WRONG. Correct = D2/D3: TS captures the
+  value + factor as literals, computes the magnitude, and a PROVABLE overflow IS a compile error, up to
+  `TS2589`; past that the eslint script recovers the live gap; the runtime is the backstop. The brand is
+  always carried; the provable overflow is the single exception.
+- **Snap's compile-time effect (D3):** a snapped edge absorbs a would-overflow (no error), a non-snapped
+  edge makes a provable overflow an error. See the Snap section.
 
 ---
 
@@ -186,8 +243,30 @@ block proves `u` never carries a brand.
 
 ## 3. `m` x brand (A) — runs the FULL scalar matrix, delegated
 
-`m(i(...))` / `m(f(...))` / `m(u(...))` just SURFACE the embedded scalar's hardening, so `m` re-runs
+**DECIDED 2026-07-23: `m` DERIVES its brand from the embedded scalar (option "derive the brand").** So
+`m(i(5, {min:0,max:10}), 'px')` is `InRangeMeasurement<'px', 0, 10>`, `m(nonNegative..., 'px')` is
+`NonNegativeMeasurement<'px'>`, and `m(plainNumber)` is unbranded. `m()` becomes GENERIC over the
+embedded scalar's brand (the bigger build), so the editor guides on the bound THROUGH `m`, not just at
+runtime. `m(i(...))` / `m(f(...))` / `m(u(...))` SURFACE the embedded scalar's hardening, so `m` re-runs
 blocks 1-2 in full (every restriction x the shared ops). Its EXTRA ops:
+
+**MECHANISM DECIDED 2026-07-24: `IMeasurement<Unit, Brand = unknown>` (a parametric brand), NOT the
+scalar's `Preserve<this>` conditional.** The `this`-conditional breaks unit COVARIANCE on `m` (TS can no
+longer prove `IMeasurement<'px'>` <= `IMeasurement<string>`, cascading through `context` / unit helpers /
+`bundle`), because `this` drags `Unit` into an invariant position. A plain `Brand` parameter does not.
+Consequences (all verified with scratch tsd):
+- The branded aliases collapse to one-liners: `InRangeMeasurement<U,Min,Max> = IMeasurement<U,
+  InRangeBrand<Min,Max>>`, `NonNegativeMeasurement<U> = IMeasurement<U, GreaterOrEqualToZeroBrand>`, etc.
+- The math ops are declared ONCE and carry `Brand` PARAMETRICALLY: `add(delta: number |
+  IMeasurement<Unit>): IMeasurement<Unit, Brand>`. They do NOT inspect the brand ("none of the math
+  functions mind a new brand"), and the runtime (delegated to the embedded scalar) enforces the bound
+  (throw / snap) so the carried brand is never a lie.
+- A CUSTOM refinement brand rides as an INTERSECTION (`IMeasurement<Unit, Brand> & EvenBrand`) that the
+  parametric ops shed, so custom brands still DROP through math with no special-casing; a BOUND
+  refinement sets the `Brand` param (runtime-backed) and is carried. The distinction lives INSIDE the
+  refinement, never in the ops.
+- `absolute` carries `Brand` like every other op (does NOT mint `NonNegative`); use `nonNegative.ensure`
+  for the `>= 0` proof. *(Pending final confirm; default = carry.)*
 
 | op | m over bounded `i` / `f` | m over plain number (wraps `u`) |
 |---|---|---|
@@ -205,17 +284,22 @@ preserve identically.)
 
 ## 4. `r` x brand (A) — hardening in the embedded scalars
 
+**DECIDED 2026-07-23: `IRatio` becomes GENERIC `IRatio<N, D>` over the numerator / denominator scalar
+brands (option "include r now").** So `r` SURFACES the embedded brands: `numeratorScalar()` returns `N`,
+`denominatorScalar()` returns `D`, and `withNumerator` / `withDenominator` restate one side while
+PRESERVING the other. `r` itself has no bound and no math ops; the accessors just expose the embedded
+state. `IRatio`'s ONLY methods are the four below (`numeratorOrDenominator` is a PARAMETER name in
+standalone ratio helpers, NOT a method).
+
 | op | numerator bounded, denom unbounded | both bounded | both unbounded |
 |---|---|---|---|
-| `withNumerator(n)`  | new numerator state; denom unchanged | both re-stated | plain |
-| `withDenominator(d)`| numerator preserved; new denom state | both re-stated | plain |
-| `numeratorScalar()` | numerator's brand | numerator's brand | plain |
-| `denominatorScalar()`| plain (denom unbounded) | denom's brand | plain |
-| `numeratorOrDenominator(sel)` | the selected scalar's state | selected scalar's state | plain |
-| `clone()`           | both preserved | both preserved | plain |
+| `withNumerator(n)`  | new numerator brand; denom preserved | both restated | plain / `u` |
+| `withDenominator(d)`| numerator preserved; new denom brand | both restated | plain / `u` |
+| `numeratorScalar()` | numerator's brand | numerator's brand | `u` (bare number) |
+| `denominatorScalar()`| `u` (denom unbounded plain) or the denom's brand | denom's brand | `u` |
 
-NOTE: `r.clone()` does NOT exist yet; it is the TARGET here. Adding `clone` to `r` (and to `color`) is a
-separate follow-up (see the todo), done AFTER this matrix plan.
+NOTE: `r.clone()` does NOT exist yet. With `IRatio` now generic, adding `clone` (returns `this`, so both
+brands preserve) is trivial; it can ride along or stay in the `r.clone` + `color` follow-up.
 
 ## 5. Runtime behavior (C), scenario x snap (every bounded op, both edges)
 
