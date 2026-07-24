@@ -30,8 +30,13 @@ piece.)
 breaks unit covariance). The math ops carry `Brand` uniformly and never inspect it; a CUSTOM brand rides
 as an intersection the ops shed; `absolute` carries `Brand` like the rest (pending final confirm).
 
-**D6 — `TS2589` comes EARLY.** `tsc`'s magnitude coverage is shallow by design, so the eslint script is
-the workhorse. That is expected, not a gap.
+**D6 — the ceiling is TS's ~10,000 TUPLE-LENGTH wall (measured 2026-07-24 on TS 5.9.3), not `TS2589`, and
+it is INTEGER-ONLY.** Type-level arithmetic is tuple-based: a product over ~10,000 is "too large to
+represent", a FLOAT (fraction) has no encoding at all, and only LITERAL value + factor are computable. So
+`tsc`'s magnitude coverage is a shallow integer-literal sliver by design; the eslint script (it runs the
+code) is the workhorse for floats / non-literals / deeper-or-bigger chains. Expected, not a gap. (TS 7
+native would speed the LIVE server, giving more squiggles before the script, but would NOT raise this
+ceiling.)
 
 ## The principle
 
