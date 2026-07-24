@@ -44,12 +44,15 @@ export interface IInteger {
   constraints: () => IntegerConstraints;
   isInt: () => boolean;
   isFloat: () => boolean;
-  asScalar: () => IInteger;
-  withValue: (value: number) => IInteger;
-  add: (delta: Scalar) => IInteger;
-  subtract: (delta: Scalar) => IInteger;
-  multiply: (factor: Scalar) => IInteger;
-  divide: (divisor: Scalar) => IInteger;
+  // The HARD RULE: every value-producing op PRESERVES the receiver's bound-brand (InRange /
+  // NonNegative / NonPositive); a custom refinement brand falls through to plain `IInteger`. See
+  // `PreserveIntegerBrand`. `clamp` still MINTS a fresh range; `clone` still returns `this`.
+  asScalar: () => PreserveIntegerBrand<this>;
+  withValue: (value: number) => PreserveIntegerBrand<this>;
+  add: (delta: Scalar) => PreserveIntegerBrand<this>;
+  subtract: (delta: Scalar) => PreserveIntegerBrand<this>;
+  multiply: (factor: Scalar) => PreserveIntegerBrand<this>;
+  divide: (divisor: Scalar) => PreserveIntegerBrand<this>;
   clamp: <Min extends number, Max extends number>(
     min: Min,
     max: Max,
@@ -85,6 +88,22 @@ export type InRangeInteger<
 > = IInteger & InRangeBrand<Min, Max>;
 
 /**
+ * The HARD RULE, at the type level: a value-producing op keeps the receiver's BOUND-brand. Extract it
+ * from `this` and re-apply it; a value with no bound-brand (or only a CUSTOM refinement brand such as
+ * `Even`) falls through to plain `IInteger`, since only a min/max bound keeps the brand honest at
+ * runtime. A value carries at most ONE range brand (a bound is set once), so the inference is
+ * unambiguous.
+ */
+export type PreserveIntegerBrand<T> =
+  T extends InRangeBrand<infer Min, infer Max>
+    ? InRangeInteger<Min, Max>
+    : T extends GreaterOrEqualToZeroBrand
+      ? NonNegativeInteger
+      : T extends SmallerOrEqualToZeroBrand
+        ? NonPositiveInteger
+        : IInteger;
+
+/**
  * The integer type a bounded builder returns, resolved from the captured bound. A range brand is
  * emitted when BOTH bounds are known literals; `never` bounds (unbounded) fall back to a plain
  * `IInteger`. (A bounded value is always in range or it throws, so the brand is always honest.)
@@ -106,7 +125,22 @@ export type ResolveIntegerBrand<
     ? IInteger
     : InRangeInteger<Min, Max>;
 
-class IntegerImpl extends ScalarRestricted implements IInteger {
+// The base ops (ScalarBase) return `this`, so the class implements IInteger MINUS the six
+// brand-narrowing ops; the public `PreserveIntegerBrand<this>` return is applied at the `i()` cast
+// boundary (and `asScalar` is defined here directly). Every other member is still checked.
+class IntegerImpl
+  extends ScalarRestricted
+  implements
+    Omit<
+      IInteger,
+      | 'add'
+      | 'subtract'
+      | 'multiply'
+      | 'divide'
+      | 'withValue'
+      | 'asScalar'
+    >
+{
   protected label(): string {
     return 'i';
   }
@@ -155,8 +189,12 @@ class IntegerImpl extends ScalarRestricted implements IInteger {
     >;
   }
 
-  asScalar(): IInteger {
-    return i(this.value());
+  asScalar(): PreserveIntegerBrand<this> {
+    // Recover the value as a scalar, carrying the bound (a config-preserving copy), so the brand is
+    // preserved and still runtime-backed.
+    return this.rebuildWith(
+      this.value(),
+    ) as unknown as PreserveIntegerBrand<this>;
   }
 }
 
@@ -203,6 +241,9 @@ const integerRefinementAdapters: RefinementAdapters<IInteger> = {
       message,
     ),
   rebuild: (fallbackValue) => i(fallbackValue),
+  // refinements-as-bounds: check set-once, then re-mint a fresh copy carrying the bound.
+  constraintsOf: (value) => value.constraints(),
+  mintBounded: (value, bound) => i(value.value(), bound),
 };
 
 /**
@@ -221,6 +262,7 @@ export const nonNegativeInteger =
     message: (value) =>
       `expected an integer >= 0 (got ${value.css()})`,
     defaultFallback: 0,
+    bound: { min: 0 },
   });
 
 export const nonPositiveInteger =
@@ -229,6 +271,7 @@ export const nonPositiveInteger =
     message: (value) =>
       `expected an integer <= 0 (got ${value.css()})`,
     defaultFallback: 0,
+    bound: { max: 0 },
   });
 
 export const inRangeInteger = <
@@ -248,6 +291,7 @@ export const inRangeInteger = <
     message: (value) =>
       `expected an integer in [${min}, ${max}] (got ${value.css()})`,
     defaultFallback: min,
+    bound: { min, max },
   });
 };
 

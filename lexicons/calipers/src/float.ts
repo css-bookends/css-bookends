@@ -1,4 +1,10 @@
-import { i, type IInteger } from './integer';
+import {
+  i,
+  type IInteger,
+  type InRangeInteger,
+  type NonNegativeInteger,
+  type NonPositiveInteger,
+} from './integer';
 import type {
   GreaterOrEqualToZeroBrand,
   InRangeBrand,
@@ -44,12 +50,14 @@ export interface IFloat {
   constraints: () => FloatConstraints;
   isInt: () => boolean;
   isFloat: () => boolean;
-  asScalar: () => IInteger | IFloat;
-  withValue: (value: number) => IFloat;
-  add: (delta: Scalar) => IFloat;
-  subtract: (delta: Scalar) => IFloat;
-  multiply: (factor: Scalar) => IFloat;
-  divide: (divisor: Scalar) => IFloat;
+  // The HARD RULE: value-producing ops PRESERVE the receiver's bound-brand (see `PreserveFloatBrand`).
+  // `asScalar` narrows Integer|Float, so it preserves the BOUND across the narrowing (a union).
+  asScalar: () => PreserveFloatBrandAsScalar<this>;
+  withValue: (value: number) => PreserveFloatBrand<this>;
+  add: (delta: Scalar) => PreserveFloatBrand<this>;
+  subtract: (delta: Scalar) => PreserveFloatBrand<this>;
+  multiply: (factor: Scalar) => PreserveFloatBrand<this>;
+  divide: (divisor: Scalar) => PreserveFloatBrand<this>;
   clamp: <Min extends number, Max extends number>(
     min: Min,
     max: Max,
@@ -84,6 +92,28 @@ export type InRangeFloat<
   Max extends number = number,
 > = IFloat & InRangeBrand<Min, Max>;
 
+/** The HARD RULE at the type level for `f` (mirrors `PreserveIntegerBrand`): keep the receiver's
+ *  bound-brand; a custom refinement brand falls through to plain `IFloat`. */
+export type PreserveFloatBrand<T> =
+  T extends InRangeBrand<infer Min, infer Max>
+    ? InRangeFloat<Min, Max>
+    : T extends GreaterOrEqualToZeroBrand
+      ? NonNegativeFloat
+      : T extends SmallerOrEqualToZeroBrand
+        ? NonPositiveFloat
+        : IFloat;
+
+/** `asScalar` narrows a whole-valued float to an integer, so it preserves the BOUND across BOTH the
+ *  integer and float form (a union). */
+export type PreserveFloatBrandAsScalar<T> =
+  T extends InRangeBrand<infer Min, infer Max>
+    ? InRangeInteger<Min, Max> | InRangeFloat<Min, Max>
+    : T extends GreaterOrEqualToZeroBrand
+      ? NonNegativeInteger | NonNegativeFloat
+      : T extends SmallerOrEqualToZeroBrand
+        ? NonPositiveInteger | NonPositiveFloat
+        : IInteger | IFloat;
+
 /**
  * The float type a bounded builder returns, resolved from the captured bound. A range brand is
  * emitted when BOTH bounds are known literals; `never` bounds (unbounded) fall back to a plain
@@ -107,7 +137,22 @@ export type ResolveFloatBrand<
     ? IFloat
     : InRangeFloat<Min, Max>;
 
-class FloatImpl extends ScalarRestricted implements IFloat {
+// See IntegerImpl: the base ops return `this`, so the class implements IFloat MINUS the six
+// brand-narrowing ops; the public `PreserveFloatBrand<this>` return is applied at the `f()` cast
+// boundary (and `asScalar` is defined here directly).
+class FloatImpl
+  extends ScalarRestricted
+  implements
+    Omit<
+      IFloat,
+      | 'add'
+      | 'subtract'
+      | 'multiply'
+      | 'divide'
+      | 'withValue'
+      | 'asScalar'
+    >
+{
   protected label(): string {
     return 'f';
   }
@@ -136,10 +181,16 @@ class FloatImpl extends ScalarRestricted implements IFloat {
     >;
   }
 
-  asScalar(): IInteger | IFloat {
-    return Number.isInteger(this.value())
-      ? i(this.value())
-      : f(this.value());
+  asScalar(): PreserveFloatBrandAsScalar<this> {
+    // Narrow a whole-valued float to an integer, else stay a float; carry the bound either way so the
+    // brand is preserved and still runtime-backed.
+    const bound = this.constraints();
+    return (Number.isInteger(this.value())
+      ? i(this.value(), bound)
+      : f(
+          this.value(),
+          bound,
+        )) as unknown as PreserveFloatBrandAsScalar<this>;
   }
 }
 
@@ -184,6 +235,9 @@ const floatRefinementAdapters: RefinementAdapters<IFloat> = {
       message,
     ),
   rebuild: (fallbackValue) => f(fallbackValue),
+  // refinements-as-bounds: check set-once, then re-mint a fresh copy carrying the bound.
+  constraintsOf: (value) => value.constraints(),
+  mintBounded: (value, bound) => f(value.value(), bound),
 };
 
 /**
@@ -201,6 +255,7 @@ export const nonNegativeFloat =
     predicate: (value) => value >= 0,
     message: (value) => `expected a float >= 0 (got ${value.css()})`,
     defaultFallback: 0,
+    bound: { min: 0 },
   });
 
 export const nonPositiveFloat =
@@ -208,6 +263,7 @@ export const nonPositiveFloat =
     predicate: (value) => value <= 0,
     message: (value) => `expected a float <= 0 (got ${value.css()})`,
     defaultFallback: 0,
+    bound: { max: 0 },
   });
 
 export const inRangeFloat = <Min extends number, Max extends number>(
@@ -224,6 +280,7 @@ export const inRangeFloat = <Min extends number, Max extends number>(
     message: (value) =>
       `expected a float in [${min}, ${max}] (got ${value.css()})`,
     defaultFallback: min,
+    bound: { min, max },
   });
 };
 

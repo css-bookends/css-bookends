@@ -3,9 +3,10 @@
  *
  * The `InRange` brand is a COMPILE-TIME proof. A runtime check proves a value is within a range,
  * then stamps a phantom tag onto its type; a function can DEMAND that proof, and the compiler rejects
- * an unproven value. The brand is additive over `IInteger`, it SURVIVES `clone()` (same value and
- * bound, so the proof still holds), and it is DROPPED by arithmetic (a derived value must be
- * re-proven). This is the "JS validates what TS can't, then TS enforces it" promise in one type.
+ * an unproven value. The brand SURVIVES `clone()` (same value and bound), and under the HARD RULE it
+ * is PRESERVED through arithmetic too: every result re-validates against the runtime bound (throwing
+ * on a breach), so the brand stays honest. This is the "JS validates what TS can't, then TS enforces
+ * it" promise in one type.
  */
 
 import { createIntegerFactory } from '@css-bookends/css-calipers';
@@ -36,8 +37,7 @@ export const plainRejected = (): void => {
   needsUnitInterval(i(5));
 };
 
-// Arithmetic drops the brand, so a derived value must be re-proven before it fits the slot.
-export const arithmeticDropsBrand = (): void => {
-  // @ts-expect-error add() returns a plain IInteger; the range proof is gone
+// The HARD RULE: arithmetic PRESERVES the brand, so a derived value still fits the slot without
+// re-proving (the runtime bound throws on a breach, so the preserved brand is never a lie).
+export const arithmeticPreservesBrand = (): void =>
   needsUnitInterval(level(5).add(1));
-};

@@ -52,9 +52,10 @@ expectError(needs0to10(i(4))); // a plain integer is unproven
 expectNotAssignable<NonNegativeInteger>(i(4));
 expectNotAssignable<InRangeInteger>(i(4));
 
-// Arithmetic drops the brand - the result must be re-checked.
-expectNotAssignable<NonNegativeInteger>(geZeroInt.add(1));
-expectNotAssignable<NonNegativeInteger>(geZeroInt.multiply(2));
+// The HARD RULE (2026-07-24): arithmetic PRESERVES a bound-brand. `nonNegative` is stored as min 0
+// and kept honest at runtime, so a value that stays >= 0 keeps the brand through every op.
+expectAssignable<NonNegativeInteger>(geZeroInt.add(1));
+expectAssignable<NonNegativeInteger>(geZeroInt.multiply(2));
 
 // The scalar brand reuses the measurement brand symbol (structurally shared).
 expectAssignable<IInteger & InRangeBrand<0, 10>>(r0to10);
