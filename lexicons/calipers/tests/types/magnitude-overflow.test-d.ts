@@ -63,3 +63,28 @@ i(5, { min: 0, max: 10 }).subtract(1000); // 4-digit operand: skip
 i(5, { max: 10 }).add(20); // single-edge bound: no captured value, no squiggle (runtime catches)
 i(20, { min: 0, max: 100 }).divide(2).multiply(60); // divide drops the captured value, so the next op skips (runtime: 600 > 100 throws)
 f(2, { min: 0, max: 5 }).add(8); // f is brand-only: no check
+
+// --- FactorValue: a BOUNDED i OPERAND is checked via its captured value (its own bound is irrelevant;
+// only the value applies to the receiver). An unbounded operand or a float (never captures) skips. ---
+// provable overflow through a bounded operand (RED until FactorValue lands):
+expectError(
+  i(5, { min: 0, max: 10 }).multiply(i(3, { min: 0, max: 5 })),
+); // operand 3: 5 * 3 = 15 > 10
+expectError(i(5, { min: 0, max: 10 }).add(i(8, { min: 0, max: 8 }))); // operand 8: 5 + 8 = 13 > 10
+expectError(
+  i(2, { min: 0, max: 10 }).subtract(i(5, { min: 0, max: 5 })),
+); // operand 5: 2 - 5 = -3 < 0
+expectError(
+  i(10, { min: 6, max: 100 }).divide(i(2, { min: 0, max: 5 })),
+); // operand 2: 10 / 2 = 5 < 6
+expectError(
+  i(2, { min: 0, max: 10 })
+    .multiply(i(3, { min: 0, max: 5 }))
+    .multiply(2),
+); // operand 3 -> 6, then 6 * 2 = 12 > 10 (the operand-derived value threads)
+
+// clean (GREEN before and after):
+i(2, { min: 0, max: 10 }).multiply(i(3, { min: 0, max: 5 })); // 2 * 3 = 6 <= 10
+i(2, { min: 0, max: 10 }).add(i(3, { min: 0, max: 5 })); // 2 + 3 = 5 <= 10
+i(5, { min: 0, max: 10 }).multiply(i(3)); // unbounded operand: no captured value, skip (runtime catches)
+i(5, { min: 0, max: 10 }).multiply(f(3, { min: 0, max: 5 })); // float operand: f never captures, skip

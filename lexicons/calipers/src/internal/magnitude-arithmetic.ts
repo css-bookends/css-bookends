@@ -177,6 +177,19 @@ export type ValueOf<T> = T extends {
   : never;
 
 /**
+ * The OPERAND's value for a math guard (the "FactorValue" rule): a number LITERAL is itself; a BOUNDED
+ * `i` scalar contributes its OWN captured value (via {@link ValueOf}), so `x.multiply(i(3, { min, max }))`
+ * checks against `3`; an unbounded scalar, a float (never captures), or a non-literal `number` yields
+ * `never`, so the check SKIPS. The operand's own min / max are IRRELEVANT: only its value is applied to
+ * the receiver. The bare `F extends number` (not tuple-wrapped) keeps the true branch NARROWED, so
+ * `FactorValue<F>` is provably `extends number` (a resolved value feeds `Multiply` / `Sum` / `Diff`, which
+ * require it). Every consumer must guard `[FactorValue<F>] extends [never]` (tuple-wrapped) FIRST, since a
+ * naked `never extends` would DISTRIBUTE to `never` and poison the check; the guard keeps `never` (an
+ * unbounded / float / non-literal operand) from ever reaching the arithmetic below.
+ */
+export type FactorValue<F> = F extends number ? F : ValueOf<F>;
+
+/**
  * The product `V * F` against a MAX bound, SHORT-CIRCUITING so a huge product never reaches the ~10k tuple
  * wall: accumulate `BuildTuple<V>` up to F times, but stop the moment the partial product passes `Max`, so
  * the accumulator never grows past ~`Max + V` (< 2000). `'over'` if it passes Max, else `'within'`.
@@ -283,33 +296,40 @@ type ProductOutOfRange<
           : false;
 
 /**
- * The multiply guard (S4): intersect onto `multiply`'s factor so a PROVABLE product overflow is a compile
- * error. A non-number factor (an `IInteger` / `IFloat` scalar) or an unbounded receiver skips (`unknown`).
+ * The multiply guard (S4 + FactorValue): intersect onto `multiply`'s factor so a PROVABLE product overflow
+ * is a compile error. The factor value is resolved via {@link FactorValue} (a literal, OR a bounded `i`
+ * operand's captured value); an unbounded operand, a float, or an unbounded receiver resolves to `never`
+ * and skips (`unknown`).
  */
 export type MultiplyGuard<
   F,
   V extends number,
   Min extends number,
   Max extends number,
-> = F extends number
-  ? ProductOutOfRange<V, F, Min, Max> extends true
+> = [
+  FactorValue<F>,
+] extends [
+  never,
+]
+  ? unknown
+  : ProductOutOfRange<V, FactorValue<F>, Min, Max> extends true
     ? {
         readonly __overflow: [
           'css-calipers: product out of range',
           V,
           '*',
-          F,
+          FactorValue<F>,
           'bounds',
           Min,
           Max,
         ];
       }
-    : unknown
-  : unknown;
+    : unknown;
 
 /**
- * The NEW value `multiply` carries so a chain keeps checking. `V * F` when the product is in range (so it
- * is <= Max < 1000, safe to compute), else `number` (out of range, non-number factor, or non-checkable).
+ * The NEW value `multiply` carries so a chain keeps checking. `V * FactorValue<F>` when the product is in
+ * range (so <= Max < 1000, safe to compute), else `number` (out of range, an unbounded / float / non-literal
+ * operand, or a non-checkable receiver).
  */
 export type MultiplyValue<
   F,
@@ -322,15 +342,24 @@ export type MultiplyValue<
   never,
 ]
   ? number
-  : F extends number
-    ? IsNativelyCheckable<V> extends false
-      ? number
-      : IsNativelyCheckable<F> extends false
+  : [
+        FactorValue<F>,
+      ] extends [
+        never,
+      ]
+    ? number
+    : // Resolve the operand into a plain `K extends number` (via `infer ... extends number`), so
+      // `Multiply<V, K>` gets a genuinely constrained number literal; the tuple never-guard above keeps
+      // `never` (a skipped operand) out of this inference, where a naked `never` would poison it.
+      FactorValue<F> extends infer K extends number
+      ? IsNativelyCheckable<V> extends false
         ? number
-        : ProductOutOfRange<V, F, Min, Max> extends true
+        : IsNativelyCheckable<K> extends false
           ? number
-          : Multiply<V, F>
-    : number;
+          : ProductOutOfRange<V, K, Min, Max> extends true
+            ? number
+            : Multiply<V, K>
+      : number;
 
 // --- S5: overflow through add / subtract / divide -------------------------------------------------
 // add RAISES the value (a checkable operand is >= 0), so like multiply it can only breach the MAX;
@@ -482,100 +511,117 @@ type QuotientOutOfRange<
             ? true
             : false;
 
-/** The add guard (S5): a PROVABLE sum overflow (over the MAX) is a compile error; a non-number operand
- *  or an unbounded receiver skips (`unknown`). Mirrors {@link MultiplyGuard}. */
-export type AddGuard<
-  K,
-  V extends number,
-  Max extends number,
-> = K extends number
-  ? SumOutOfRange<V, K, Max> extends true
+/** The add guard (S5 + FactorValue): a PROVABLE sum overflow (over the MAX) is a compile error; the operand
+ *  value is resolved via {@link FactorValue}, so an unbounded / float / non-literal operand or an unbounded
+ *  receiver skips (`unknown`). Mirrors {@link MultiplyGuard}. */
+export type AddGuard<K, V extends number, Max extends number> = [
+  FactorValue<K>,
+] extends [
+  never,
+]
+  ? unknown
+  : SumOutOfRange<V, FactorValue<K>, Max> extends true
     ? {
         readonly __overflow: [
           'css-calipers: sum out of range',
           V,
           '+',
-          K,
+          FactorValue<K>,
           'max',
           Max,
         ];
       }
-    : unknown
-  : unknown;
+    : unknown;
 
-/** The subtract guard (S5): a PROVABLE difference underflow (below the MIN) is a compile error. */
-export type SubtractGuard<
-  K,
-  V extends number,
-  Min extends number,
-> = K extends number
-  ? DiffOutOfRange<V, K, Min> extends true
+/** The subtract guard (S5 + FactorValue): a PROVABLE difference underflow (below the MIN) is a compile
+ *  error; the operand value is resolved via {@link FactorValue}. */
+export type SubtractGuard<K, V extends number, Min extends number> = [
+  FactorValue<K>,
+] extends [
+  never,
+]
+  ? unknown
+  : DiffOutOfRange<V, FactorValue<K>, Min> extends true
     ? {
         readonly __overflow: [
           'css-calipers: difference out of range',
           V,
           '-',
-          K,
+          FactorValue<K>,
           'min',
           Min,
         ];
       }
-    : unknown
-  : unknown;
+    : unknown;
 
-/** The divide guard (S5): a PROVABLE quotient underflow (below the MIN) is a compile error. Divide only
- *  shrinks toward zero, so it never breaches the max; a non-integer quotient is the runtime's throw. */
-export type DivideGuard<
-  K,
-  V extends number,
-  Min extends number,
-> = K extends number
-  ? QuotientOutOfRange<V, K, Min> extends true
+/** The divide guard (S5 + FactorValue): a PROVABLE quotient underflow (below the MIN) is a compile error;
+ *  the operand value is resolved via {@link FactorValue}. Divide only shrinks toward zero, so it never
+ *  breaches the max; a non-integer quotient is the runtime's throw. */
+export type DivideGuard<K, V extends number, Min extends number> = [
+  FactorValue<K>,
+] extends [
+  never,
+]
+  ? unknown
+  : QuotientOutOfRange<V, FactorValue<K>, Min> extends true
     ? {
         readonly __overflow: [
           'css-calipers: quotient out of range',
           V,
           '/',
-          K,
+          FactorValue<K>,
           'min',
           Min,
         ];
       }
-    : unknown
-  : unknown;
+    : unknown;
 
-/** The value `add` carries so a chain keeps checking: `V + K` when in range (so <= Max < 1000, safe to
- *  represent), else `number`. `[V] extends [never]` is checked FIRST so an unbounded receiver collapses
- *  to `number` (a transparent `ValueBrand`), exactly as {@link MultiplyValue} does. */
-export type AddValue<K, V extends number, Max extends number> = [
+/** The value `add` carries so a chain keeps checking: `V + FactorValue<F>` when in range (so <= Max < 1000,
+ *  safe to represent), else `number`. `[V] extends [never]` is checked FIRST so an unbounded receiver
+ *  collapses to `number` (a transparent `ValueBrand`); the operand is resolved to a plain `K extends number`
+ *  via `infer ... extends number` (guarded from `never` first), exactly as {@link MultiplyValue} does. */
+export type AddValue<F, V extends number, Max extends number> = [
   V,
 ] extends [
   never,
 ]
   ? number
-  : K extends number
-    ? IsNativelyCheckable<V> extends false
-      ? number
-      : IsNativelyCheckable<K> extends false
+  : [
+        FactorValue<F>,
+      ] extends [
+        never,
+      ]
+    ? number
+    : FactorValue<F> extends infer K extends number
+      ? IsNativelyCheckable<V> extends false
         ? number
-        : SumOutOfRange<V, K, Max> extends true
+        : IsNativelyCheckable<K> extends false
           ? number
-          : Sum<V, K>
-    : number;
+          : SumOutOfRange<V, K, Max> extends true
+            ? number
+            : Sum<V, K>
+      : number;
 
-/** The value `subtract` carries: `V - K` when in range (so >= Min >= 0, safe), else `number`. */
-export type SubtractValue<K, V extends number, Min extends number> = [
+/** The value `subtract` carries: `V - FactorValue<F>` when in range (so >= Min >= 0, safe), else `number`.
+ *  The operand resolves to a plain `K extends number` via `infer ... extends number` (never-guarded first). */
+export type SubtractValue<F, V extends number, Min extends number> = [
   V,
 ] extends [
   never,
 ]
   ? number
-  : K extends number
-    ? IsNativelyCheckable<V> extends false
-      ? number
-      : IsNativelyCheckable<K> extends false
+  : [
+        FactorValue<F>,
+      ] extends [
+        never,
+      ]
+    ? number
+    : FactorValue<F> extends infer K extends number
+      ? IsNativelyCheckable<V> extends false
         ? number
-        : DiffOutOfRange<V, K, Min> extends true
+        : IsNativelyCheckable<K> extends false
           ? number
-          : Diff<V, K>
-    : number;
+          : DiffOutOfRange<V, K, Min> extends true
+            ? number
+            : Diff<V, K>
+      : number;
