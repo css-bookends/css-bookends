@@ -12,7 +12,8 @@ export type ErrorCode =
   // The scalar arithmetic contract, emitted by the scalar core for m / i / f / u AND ratio.
   | 'CALIPERS_E_NONFINITE'
   | 'CALIPERS_E_NONFINITE_RESULT'
-  | 'CALIPERS_E_DIVIDE_BY_ZERO';
+  | 'CALIPERS_E_DIVIDE_BY_ZERO'
+  | 'CALIPERS_E_NON_INTEGER_RATIO';
 
 export interface ErrorDetails {
   code?: ErrorCode;

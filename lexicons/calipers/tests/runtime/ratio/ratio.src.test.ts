@@ -161,6 +161,8 @@ describe('Ratio helper (src)', () => {
       valueOf: () => numerator / denominator,
       numerator: () => numerator,
       denominator: () => denominator,
+      isIntRatio: () =>
+        Number.isInteger(numerator) && Number.isInteger(denominator),
       numeratorScalar: () => i(0),
       denominatorScalar: () => i(0),
       withNumerator: () => fakeRatio(numerator, denominator),
@@ -219,5 +221,31 @@ describe('Ratio helper (src)', () => {
       isInteger(r(2, 3).withNumerator(i(4)).numeratorScalar()),
     ).toBe(true);
     expect(r(2, 3).withNumerator(i(4)).denominator()).toBe(3);
+  });
+});
+
+// S-pv1 (pure-values, docs/pure-values.md): integer-ratio validation on `r`. RED until the code lands:
+// `.isIntRatio()` and the `{ asInts: true }` option do not exist yet.
+describe('integer-ratio validation (S-pv1)', () => {
+  it('isIntRatio() is VALUE-based: true iff both operand values are whole numbers', () => {
+    expect(r(1, 2).isIntRatio()).toBe(true);
+    expect(r(4).isIntRatio()).toBe(true); // 4/1
+    expect(r(i(1), i(2)).isIntRatio()).toBe(true);
+    expect(r(6, 3).isIntRatio()).toBe(true); // both whole
+    // value-based, NOT type-based: f(2) is a float SCALAR but its VALUE 2 is whole, so this is true
+    // (mirrors r(1, 2) -> true, whose bare operands embed as `u`, never `i`).
+    expect(r(f(2), i(3)).isIntRatio()).toBe(true);
+    expect(r(1, Math.PI).isIntRatio()).toBe(false);
+    expect(r(1.5, 2).isIntRatio()).toBe(false);
+    expect(r(f(1.5), i(2)).isIntRatio()).toBe(false);
+  });
+
+  it('{ asInts: true } enforces: throws a coded error on a non-integer operand, passes on integers', () => {
+    // a non-integer operand: the option enforces, so construction throws (the red: asInts not wired yet)
+    expect(() => r(1, Math.PI, { asInts: true })).toThrow(/integer/i);
+    expect(() => r(1.5, 2, { asInts: true })).toThrow(/integer/i);
+    // integer operands construct fine (no throw); numerator() already exists, so this stays a clean red
+    expect(r(1, 2, { asInts: true }).numerator()).toBe(1);
+    expect(r(i(1), i(2), { asInts: true }).numerator()).toBe(1);
   });
 });

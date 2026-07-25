@@ -31,6 +31,9 @@ export interface IRatio {
   valueOf: () => number;
   numerator: () => number;
   denominator: () => number;
+  /** Whether BOTH edges are integer-valued (value-based: `Number.isInteger` on each operand's value, so
+   *  a whole-valued `f` counts). The pure-values detect path (docs/pure-values.md, PV4-sub). */
+  isIntRatio: () => boolean;
   /** the numerator recovered as a scalar: an explicit `i` / `f` intact, a bare number as `u`. */
   numeratorScalar: () => RatioScalar;
   /** the denominator recovered as a scalar: an explicit `i` / `f` intact, a bare number as `u`. */
@@ -56,6 +59,7 @@ class RatioImpl implements IRatio {
     options: {
       omitDenominatorWhenOne?: boolean;
       errorStore?: ErrorConfigStore;
+      asInts?: boolean;
     } = {},
   ) {
     // Set the error store FIRST so the throws below render through it.
@@ -72,6 +76,14 @@ class RatioImpl implements IRatio {
       this.#throwScalar(
         `r(${this.#denominatorScalar.kind()}): denominator cannot be zero`,
         'CALIPERS_E_DIVIDE_BY_ZERO',
+      );
+    }
+    // `asInts: true` ENFORCES an integer ratio (pure-values S-pv1): a non-integer operand fails fast,
+    // like the zero-denominator rule above. Value-based, matching `.isIntRatio()`.
+    if (options.asInts && !this.isIntRatio()) {
+      this.#throwScalar(
+        `r: expected an integer ratio (got ${this.#numeratorScalar.value()}/${this.#denominatorScalar.value()})`,
+        'CALIPERS_E_NON_INTEGER_RATIO',
       );
     }
     this.#omitDenominatorWhenOne =
@@ -104,6 +116,13 @@ class RatioImpl implements IRatio {
 
   denominator(): number {
     return this.#denominatorScalar.value();
+  }
+
+  isIntRatio(): boolean {
+    return (
+      Number.isInteger(this.#numeratorScalar.value()) &&
+      Number.isInteger(this.#denominatorScalar.value())
+    );
   }
 
   numeratorScalar(): RatioScalar {
@@ -148,6 +167,9 @@ class RatioImpl implements IRatio {
 
 type RatioCreateOptions = {
   simplify?: boolean;
+  /** ENFORCE an integer ratio: throw `CALIPERS_E_NON_INTEGER_RATIO` if either operand is non-integer
+   *  (value-based). The pure-values strict path (docs/pure-values.md, PV4-sub). */
+  asInts?: boolean;
 };
 
 // The shared `r` body. Both the free `r()` export and the `createRatioFactory` factory
@@ -169,7 +191,7 @@ const makeRatio = (
   const ratio = new RatioImpl(
     numeratorOrDenominator,
     resolvedDenominator,
-    { errorStore },
+    { errorStore, asInts: resolvedOptions?.asInts },
   );
   return resolvedOptions?.simplify ? simplifyRatio(ratio) : ratio;
 };
