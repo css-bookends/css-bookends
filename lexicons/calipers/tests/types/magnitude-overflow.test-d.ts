@@ -38,3 +38,28 @@ i(2, { min: 0, max: 10 }).multiply(5); // 10 = 10, upper edge inclusive
 i(5, { min: 0, max: 10 }).multiply(dyn); // non-literal factor: skip
 i(5, { min: 0, max: 10 }).multiply(1000); // 4-digit factor: skip, runtime catches
 f(2, { min: 0, max: 5 }).multiply(3); // f is brand-only: no check
+
+// --- S5: overflow through add / subtract / divide (the captured value threads through each op) ------
+// add raises the value, so (like multiply) it can only breach the MAX; subtract / divide lower it
+// (divide shrinks toward zero), so they can only breach the MIN. Same operand rules as multiply: a
+// non-negative integer literal 0-999 on a FULLY BOUNDED receiver (both edges); anything else skips.
+// provable overflow (RED until S5):
+expectError(i(5, { min: 0, max: 10 }).add(8)); // 5 + 8 = 13 > 10
+expectError(i(2, { min: 0, max: 10 }).add(3).add(6)); // 5, then 11 > 10 (the value threads)
+expectError(i(2, { min: 0, max: 10 }).subtract(5)); // 2 - 5 = -3 < 0
+expectError(i(9, { min: 0, max: 10 }).subtract(3).subtract(8)); // 6, then -2 < 0 (value threads)
+expectError(i(3, { min: 2, max: 10 }).subtract(2)); // 3 - 2 = 1 < 2
+expectError(i(10, { min: 6, max: 100 }).divide(2)); // 10 / 2 = 5 < 6 (min * k > value)
+expectError(i(2, { min: 0, max: 10 }).multiply(4).subtract(20)); // 8, then -12 < 0 (threads across ops)
+
+// clean (GREEN before and after):
+i(2, { min: 0, max: 10 }).add(8); // 10 = 10, upper edge inclusive
+i(2, { min: 0, max: 10 }).add(3); // 5 <= 10
+i(5, { min: 0, max: 10 }).subtract(5); // 0 = 0, lower edge inclusive
+i(5, { min: 0, max: 10 }).subtract(3); // 2 >= 0
+i(10, { min: 5, max: 100 }).divide(2); // 5 = 5, lower edge inclusive
+i(5, { min: 0, max: 10 }).add(dyn); // non-literal operand: skip
+i(5, { min: 0, max: 10 }).subtract(1000); // 4-digit operand: skip
+i(5, { max: 10 }).add(20); // single-edge bound: no captured value, no squiggle (runtime catches)
+i(20, { min: 0, max: 100 }).divide(2).multiply(60); // divide drops the captured value, so the next op skips (runtime: 600 > 100 throws)
+f(2, { min: 0, max: 5 }).add(8); // f is brand-only: no check

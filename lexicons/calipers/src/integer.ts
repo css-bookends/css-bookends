@@ -9,9 +9,14 @@ import {
   type ErrorConfig,
 } from './internal/errors';
 import type {
+  AddGuard,
+  AddValue,
+  DivideGuard,
   MultiplyGuard,
   MultiplyValue,
   OverflowGuard,
+  SubtractGuard,
+  SubtractValue,
   ValueBrand,
   ValueOf,
 } from './internal/magnitude-arithmetic';
@@ -65,8 +70,19 @@ export interface IInteger {
   // `PreserveIntegerBrand`. `clamp` still MINTS a fresh range; `clone` still returns `this`.
   asScalar: () => PreserveIntegerBrand<this>;
   withValue: (value: number) => PreserveIntegerBrand<this>;
-  add: (delta: Scalar) => PreserveIntegerBrand<this>;
-  subtract: (delta: Scalar) => PreserveIntegerBrand<this>;
+  // add / subtract / multiply thread the captured value so a CHAIN keeps checking (S4/S5): each carries
+  // a fresh `ValueBrand` of the result. add raises the value (breaches MAX only), subtract lowers it
+  // (breaches MIN only). divide only shrinks toward zero (breaches MIN only) and does NOT thread a value:
+  // its exact-integer quotient is a narrow case (a non-integer quotient throws at runtime anyway), so a
+  // chain CONTINUING past a divide skips to the runtime; the divide overflow itself is still a squiggle.
+  add: <K extends Scalar>(
+    delta: K & AddGuard<K, ValueOf<this>, MaxOf<this>>,
+  ) => PreserveIntegerBrand<this> &
+    ValueBrand<AddValue<K, ValueOf<this>, MaxOf<this>>>;
+  subtract: <K extends Scalar>(
+    delta: K & SubtractGuard<K, ValueOf<this>, MinOf<this>>,
+  ) => PreserveIntegerBrand<this> &
+    ValueBrand<SubtractValue<K, ValueOf<this>, MinOf<this>>>;
   multiply: <F extends Scalar>(
     factor: F &
       MultiplyGuard<F, ValueOf<this>, MinOf<this>, MaxOf<this>>,
@@ -74,7 +90,9 @@ export interface IInteger {
     ValueBrand<
       MultiplyValue<F, ValueOf<this>, MinOf<this>, MaxOf<this>>
     >;
-  divide: (divisor: Scalar) => PreserveIntegerBrand<this>;
+  divide: <K extends Scalar>(
+    divisor: K & DivideGuard<K, ValueOf<this>, MinOf<this>>,
+  ) => PreserveIntegerBrand<this>;
   clamp: <Min extends number, Max extends number>(
     min: Min,
     max: Max,

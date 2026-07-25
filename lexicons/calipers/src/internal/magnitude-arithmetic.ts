@@ -331,3 +331,251 @@ export type MultiplyValue<
           ? number
           : Multiply<V, F>
     : number;
+
+// --- S5: overflow through add / subtract / divide -------------------------------------------------
+// add RAISES the value (a checkable operand is >= 0), so like multiply it can only breach the MAX;
+// subtract / divide LOWER it (divide shrinks toward zero), so they can only breach the MIN. A sum /
+// difference of two < 1000 operands is at most ~2000, well under the ~10k wall, so it is built by
+// CONCATENATING two in-range tuples (never recursed past the depth limit). Divide needs no new
+// arithmetic: `V / K < Min` iff `Min * K > V`, so it REUSES the multiply short-circuit `ProductVsMax`.
+
+/** `V + K` as a tuple, by concatenation. Both operands are checkable (< 1000), so the result is at most
+ *  ~2000 long and is built from two independent in-range tuples, never a single recursion past ~1000. */
+type SumTuple<V extends number, K extends number> = [
+  ...BuildTuple<V>,
+  ...BuildTuple<K>,
+];
+
+/** `V + K` as a number literal (e.g. `Sum<5, 8>` is `13`); the value `add` carries when it stays in range. */
+type Sum<V extends number, K extends number> = SumTuple<
+  V,
+  K
+>['length'];
+
+/**
+ * `V - K` as a number literal when `V >= K` (e.g. `Diff<5, 3>` is `2`), else `number`. A negative
+ * difference has no tuple length; the value computation only reaches here on the in-range (>= Min >= 0)
+ * branch, where `V >= K` holds, so the fallback just keeps a skipped case safe.
+ */
+type Diff<V extends number, K extends number> =
+  BuildTuple<V> extends [
+    ...BuildTuple<K>,
+    ...infer Rest,
+  ]
+    ? Rest['length']
+    : number;
+
+/** Does `V + K` exceed `Max`? `'over'` once the sum passes Max, else `'within'`. (add breaches MAX only.) */
+type SumVsMax<
+  V extends number,
+  K extends number,
+  Max extends number,
+> =
+  SumTuple<V, K> extends [
+    ...BuildTuple<Max>,
+    unknown,
+    ...unknown[],
+  ]
+    ? 'over'
+    : 'within';
+
+/**
+ * Does `V - K` fall below `Min`? Equivalent to `Min + K > V`, so no tuple SUBTRACTION is needed:
+ * `'under'` once `Min + K` passes V, else `'atLeast'`. (subtract breaches MIN only.)
+ */
+type DiffVsMin<
+  V extends number,
+  K extends number,
+  Min extends number,
+> =
+  SumTuple<Min, K> extends [
+    ...BuildTuple<V>,
+    unknown,
+    ...unknown[],
+  ]
+    ? 'under'
+    : 'atLeast';
+
+/** Does `V + K` PROVABLY exceed `Max`? Non-negative-integer-<1000 operands only, else skip (false). */
+type SumOutOfRange<
+  V extends number,
+  K extends number,
+  Max extends number,
+> = [
+  V,
+] extends [
+  never,
+]
+  ? false
+  : IsNativelyCheckable<V> extends false
+    ? false
+    : IsNativelyCheckable<K> extends false
+      ? false
+      : [
+            Max,
+          ] extends [
+            never,
+          ]
+        ? false
+        : IsNativelyCheckable<Max> extends false
+          ? false
+          : SumVsMax<V, K, Max> extends 'over'
+            ? true
+            : false;
+
+/** Does `V - K` PROVABLY fall below `Min`? Non-negative-integer-<1000 operands only, else skip (false). */
+type DiffOutOfRange<
+  V extends number,
+  K extends number,
+  Min extends number,
+> = [
+  V,
+] extends [
+  never,
+]
+  ? false
+  : IsNativelyCheckable<V> extends false
+    ? false
+    : IsNativelyCheckable<K> extends false
+      ? false
+      : [
+            Min,
+          ] extends [
+            never,
+          ]
+        ? false
+        : IsNativelyCheckable<Min> extends false
+          ? false
+          : DiffVsMin<V, K, Min> extends 'under'
+            ? true
+            : false;
+
+/**
+ * Does `V / K` PROVABLY fall below `Min`? `V / K < Min` iff `Min * K > V`, so this reuses the
+ * short-circuiting `ProductVsMax<Min, K, V>` (Min * K, stopped the moment it passes V). Non-negative-
+ * integer-<1000 operands only. `K = 0` yields `Min * 0 = 0`, never over, so divide-by-zero skips here
+ * (it is the runtime throw); a fractional / non-integer quotient in range is likewise the runtime's job.
+ */
+type QuotientOutOfRange<
+  V extends number,
+  K extends number,
+  Min extends number,
+> = [
+  V,
+] extends [
+  never,
+]
+  ? false
+  : IsNativelyCheckable<V> extends false
+    ? false
+    : IsNativelyCheckable<K> extends false
+      ? false
+      : [
+            Min,
+          ] extends [
+            never,
+          ]
+        ? false
+        : IsNativelyCheckable<Min> extends false
+          ? false
+          : ProductVsMax<Min, K, V> extends 'over'
+            ? true
+            : false;
+
+/** The add guard (S5): a PROVABLE sum overflow (over the MAX) is a compile error; a non-number operand
+ *  or an unbounded receiver skips (`unknown`). Mirrors {@link MultiplyGuard}. */
+export type AddGuard<
+  K,
+  V extends number,
+  Max extends number,
+> = K extends number
+  ? SumOutOfRange<V, K, Max> extends true
+    ? {
+        readonly __overflow: [
+          'css-calipers: sum out of range',
+          V,
+          '+',
+          K,
+          'max',
+          Max,
+        ];
+      }
+    : unknown
+  : unknown;
+
+/** The subtract guard (S5): a PROVABLE difference underflow (below the MIN) is a compile error. */
+export type SubtractGuard<
+  K,
+  V extends number,
+  Min extends number,
+> = K extends number
+  ? DiffOutOfRange<V, K, Min> extends true
+    ? {
+        readonly __overflow: [
+          'css-calipers: difference out of range',
+          V,
+          '-',
+          K,
+          'min',
+          Min,
+        ];
+      }
+    : unknown
+  : unknown;
+
+/** The divide guard (S5): a PROVABLE quotient underflow (below the MIN) is a compile error. Divide only
+ *  shrinks toward zero, so it never breaches the max; a non-integer quotient is the runtime's throw. */
+export type DivideGuard<
+  K,
+  V extends number,
+  Min extends number,
+> = K extends number
+  ? QuotientOutOfRange<V, K, Min> extends true
+    ? {
+        readonly __overflow: [
+          'css-calipers: quotient out of range',
+          V,
+          '/',
+          K,
+          'min',
+          Min,
+        ];
+      }
+    : unknown
+  : unknown;
+
+/** The value `add` carries so a chain keeps checking: `V + K` when in range (so <= Max < 1000, safe to
+ *  represent), else `number`. `[V] extends [never]` is checked FIRST so an unbounded receiver collapses
+ *  to `number` (a transparent `ValueBrand`), exactly as {@link MultiplyValue} does. */
+export type AddValue<K, V extends number, Max extends number> = [
+  V,
+] extends [
+  never,
+]
+  ? number
+  : K extends number
+    ? IsNativelyCheckable<V> extends false
+      ? number
+      : IsNativelyCheckable<K> extends false
+        ? number
+        : SumOutOfRange<V, K, Max> extends true
+          ? number
+          : Sum<V, K>
+    : number;
+
+/** The value `subtract` carries: `V - K` when in range (so >= Min >= 0, safe), else `number`. */
+export type SubtractValue<K, V extends number, Min extends number> = [
+  V,
+] extends [
+  never,
+]
+  ? number
+  : K extends number
+    ? IsNativelyCheckable<V> extends false
+      ? number
+      : IsNativelyCheckable<K> extends false
+        ? number
+        : DiffOutOfRange<V, K, Min> extends true
+          ? number
+          : Diff<V, K>
+    : number;

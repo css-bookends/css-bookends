@@ -24,8 +24,11 @@ expectType<IInteger>(i(5));
 declare const dynamic: number;
 expectType<InRangeInteger<0, 10>>(i(dynamic, { min: 0, max: 10 }));
 
-// the value is SHED by arithmetic for now (S4 threads it through); `add` returns the plain bound brand.
-expectType<InRangeInteger<0, 10>>(i(5, { min: 0, max: 10 }).add(1));
+// the value THREADS through arithmetic now (S4 multiply, S5 add/subtract): `add` carries the new value,
+// so a chain keeps checking. 5 + 1 = 6, so the result is the bound brand intersected with `ValueBrand<6>`.
+expectType<InRangeInteger<0, 10> & ValueBrand<6>>(
+  i(5, { min: 0, max: 10 }).add(1),
+);
 
 // `f` NEVER captures (floats are unencodable; D6): a bounded float stays brand-only.
 expectType<InRangeFloat<0, 1>>(f(0.5, { min: 0, max: 1 }));
