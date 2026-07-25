@@ -13,9 +13,9 @@ import { createRatioFactory } from '../../../src/ratio';
 describe('createIntegerFactory (direct factory behavior)', () => {
   it('binds an i that throws on a breached bound', () => {
     const c = createIntegerFactory();
-    expect(() => c.i(8, { min: 0, max: 10 }).multiply(2)).toThrow(
-      /maximum/,
-    ); // 16 > 10
+    expect(() =>
+      c.i(8, { min: 0, max: 10 }).multiply(c.i(2)),
+    ).toThrow(/maximum/); // 16 > 10
   });
 });
 
@@ -56,7 +56,9 @@ describe('scalar errorConfig (stackHints) rendering', () => {
       errorConfig: { stackHints: 'on' },
     });
     expect(
-      captureMessage(() => c.i(8, { min: 0, max: 10 }).multiply(2)),
+      captureMessage(() =>
+        c.i(8, { min: 0, max: 10 }).multiply(c.i(2)),
+      ),
     ).toContain('stack=');
   });
 
@@ -65,7 +67,9 @@ describe('scalar errorConfig (stackHints) rendering', () => {
       errorConfig: { stackHints: 'off' },
     });
     expect(
-      captureMessage(() => c.i(8, { min: 0, max: 10 }).multiply(2)),
+      captureMessage(() =>
+        c.i(8, { min: 0, max: 10 }).multiply(c.i(2)),
+      ),
     ).not.toContain('stack=');
   });
 

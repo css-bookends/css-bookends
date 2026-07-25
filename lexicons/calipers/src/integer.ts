@@ -9,8 +9,11 @@ import {
   type ErrorConfig,
 } from './internal/errors';
 import type {
+  MultiplyGuard,
+  MultiplyValue,
   OverflowGuard,
   ValueBrand,
+  ValueOf,
 } from './internal/magnitude-arithmetic';
 import {
   makeRefinement,
@@ -36,6 +39,15 @@ export type IntegerOptions<
 > = SnapBound<Min, Max> &
   Omit<ScalarOptions<Min, Max>, 'min' | 'max' | 'snap'>;
 
+/**
+ * Read a receiver's captured MIN / MAX bound off its `InRangeBrand`, so `multiply` can check the product
+ * against the bound. `never` when the receiver is unbounded (no range brand).
+ */
+type MinOf<T> =
+  T extends InRangeBrand<infer Min, number> ? Min : never;
+type MaxOf<T> =
+  T extends InRangeBrand<number, infer Max> ? Max : never;
+
 export interface IInteger {
   css: () => string;
   toString: () => string;
@@ -55,7 +67,13 @@ export interface IInteger {
   withValue: (value: number) => PreserveIntegerBrand<this>;
   add: (delta: Scalar) => PreserveIntegerBrand<this>;
   subtract: (delta: Scalar) => PreserveIntegerBrand<this>;
-  multiply: (factor: Scalar) => PreserveIntegerBrand<this>;
+  multiply: <F extends Scalar>(
+    factor: F &
+      MultiplyGuard<F, ValueOf<this>, MinOf<this>, MaxOf<this>>,
+  ) => PreserveIntegerBrand<this> &
+    ValueBrand<
+      MultiplyValue<F, ValueOf<this>, MinOf<this>, MaxOf<this>>
+    >;
   divide: (divisor: Scalar) => PreserveIntegerBrand<this>;
   clamp: <Min extends number, Max extends number>(
     min: Min,

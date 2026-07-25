@@ -165,3 +165,169 @@ export type OverflowGuard<
         ];
       }
     : unknown;
+
+/**
+ * Read the literal value `i` captured (S2) back off a receiver's `ValueBrand`, so an op can compute with
+ * it. `never` when the receiver has no captured value (unbounded, or built from a non-literal).
+ */
+export type ValueOf<T> = T extends {
+  readonly [valueBrand]: infer V extends number;
+}
+  ? V
+  : never;
+
+/**
+ * The product `V * F` against a MAX bound, SHORT-CIRCUITING so a huge product never reaches the ~10k tuple
+ * wall: accumulate `BuildTuple<V>` up to F times, but stop the moment the partial product passes `Max`, so
+ * the accumulator never grows past ~`Max + V` (< 2000). `'over'` if it passes Max, else `'within'`.
+ */
+type ProductVsMax<
+  V extends number,
+  F extends number,
+  Max extends number,
+  Acc extends unknown[] = [],
+  I extends unknown[] = [],
+> = Acc extends [
+  ...BuildTuple<Max>,
+  unknown,
+  ...unknown[],
+]
+  ? 'over'
+  : I['length'] extends F
+    ? 'within'
+    : ProductVsMax<
+        V,
+        F,
+        Max,
+        [
+          ...Acc,
+          ...BuildTuple<V>,
+        ],
+        [
+          ...I,
+          unknown,
+        ]
+      >;
+
+/** The MIN-side mirror: `'atLeast'` once the partial product reaches `Min`, else `'under'` when F is done. */
+type ProductVsMin<
+  V extends number,
+  F extends number,
+  Min extends number,
+  Acc extends unknown[] = [],
+  I extends unknown[] = [],
+> = Acc extends [
+  ...BuildTuple<Min>,
+  ...unknown[],
+]
+  ? 'atLeast'
+  : I['length'] extends F
+    ? 'under'
+    : ProductVsMin<
+        V,
+        F,
+        Min,
+        [
+          ...Acc,
+          ...BuildTuple<V>,
+        ],
+        [
+          ...I,
+          unknown,
+        ]
+      >;
+
+/**
+ * Does `V * F` PROVABLY fall outside `[Min, Max]`? Non-negative-integer-<1000 operands only (as the
+ * construction check); a `never` value/bound or any non-checkable operand skips (false).
+ */
+type ProductOutOfRange<
+  V extends number,
+  F extends number,
+  Min extends number,
+  Max extends number,
+> = [
+  V,
+] extends [
+  never,
+]
+  ? false
+  : IsNativelyCheckable<V> extends false
+    ? false
+    : IsNativelyCheckable<F> extends false
+      ? false
+      : (
+            [
+              Max,
+            ] extends [
+              never,
+            ]
+              ? false
+              : IsNativelyCheckable<Max> extends false
+                ? false
+                : ProductVsMax<V, F, Max>
+          ) extends 'over'
+        ? true
+        : (
+              [
+                Min,
+              ] extends [
+                never,
+              ]
+                ? false
+                : IsNativelyCheckable<Min> extends false
+                  ? false
+                  : ProductVsMin<V, F, Min>
+            ) extends 'under'
+          ? true
+          : false;
+
+/**
+ * The multiply guard (S4): intersect onto `multiply`'s factor so a PROVABLE product overflow is a compile
+ * error. A non-number factor (an `IInteger` / `IFloat` scalar) or an unbounded receiver skips (`unknown`).
+ */
+export type MultiplyGuard<
+  F,
+  V extends number,
+  Min extends number,
+  Max extends number,
+> = F extends number
+  ? ProductOutOfRange<V, F, Min, Max> extends true
+    ? {
+        readonly __overflow: [
+          'css-calipers: product out of range',
+          V,
+          '*',
+          F,
+          'bounds',
+          Min,
+          Max,
+        ];
+      }
+    : unknown
+  : unknown;
+
+/**
+ * The NEW value `multiply` carries so a chain keeps checking. `V * F` when the product is in range (so it
+ * is <= Max < 1000, safe to compute), else `number` (out of range, non-number factor, or non-checkable).
+ */
+export type MultiplyValue<
+  F,
+  V extends number,
+  Min extends number,
+  Max extends number,
+> = [
+  V,
+] extends [
+  never,
+]
+  ? number
+  : F extends number
+    ? IsNativelyCheckable<V> extends false
+      ? number
+      : IsNativelyCheckable<F> extends false
+        ? number
+        : ProductOutOfRange<V, F, Min, Max> extends true
+          ? number
+          : Multiply<V, F>
+    : number;

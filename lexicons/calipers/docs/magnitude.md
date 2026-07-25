@@ -69,10 +69,13 @@ through `multiply` / `add` / etc., so the editor keeps guiding you (a function w
 still accepts the result), and the runtime enforces it (throw, or clamp under snap) so no out-of-range
 value ever survives with the brand.
 
-For a LITERAL chain TS ALSO computes the magnitude (capture the value + factor as literals, type-level
-arithmetic, compare to `[Min, Max]`): the result keeps `InRange` when provably in range, and a PROVABLE
-overflow is a compile ERROR (D3). Where TS's type-level arithmetic gives out (`TS2589`, D2) the opt-in
-script covers the same check; either way the runtime is the backstop.
+For a chain of KNOWN operands TS ALSO computes the magnitude: it reads the receiver's captured value and
+the OPERAND's value (a number literal, OR a scalar operand's own captured value; the operand's `min`/`max`
+are IRRELEVANT, only its value is applied to the receiver), runs the type-level arithmetic, and compares
+to `[Min, Max]`. The result keeps `InRange` when provably in range, and a PROVABLE overflow is a compile
+ERROR (D3). An UNSPECIFIED operand (a bare `number` variable, an unbounded scalar, or `u`) has no
+type-level value, so the op skips to the runtime. Where TS's type-level arithmetic gives out (`TS2589`,
+D2) the opt-in script covers the same check; either way the runtime is the backstop.
 
 ## Snap decides the compile-time outcome for a provable overflow
 

@@ -35,7 +35,9 @@ describe('snap absorbs a breach to the limit', () => {
         max: 10,
         snap: true,
       });
-      expect(bounded(8).multiply(2).value()).toBe(10); // 16 -> 10
+      // multiply overflow is a compile error under S4 (snap-unaware); an unbounded i factor skips it for now.
+      // S6 (snap suppresses the compile error) reverts this to a literal factor.
+      expect(bounded(8).multiply(i(2)).value()).toBe(10); // 16 -> 10
     });
 
     it('leaves an in-bounds value untouched', () => {

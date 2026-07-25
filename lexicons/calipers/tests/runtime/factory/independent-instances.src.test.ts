@@ -47,7 +47,8 @@ describe('independent factory instances (no global state)', () => {
   it('per-value bounds are independent within one factory', () => {
     const { i } = createIntegerFactory();
     // same factory, same starting value, different per-value bounds -> independent outcomes
-    expect(() => i(8, { min: 0, max: 10 }).multiply(2)).toThrow(); // 16 > 10
+    // multiply overflow is a compile error (S4); an unbounded i factor has no type-level value, so it skips to the runtime throw.
+    expect(() => i(8, { min: 0, max: 10 }).multiply(i(2))).toThrow(); // 16 > 10
     expect(i(8, { min: 0, max: 100 }).multiply(2).value()).toBe(16); // 16 <= 100
   });
 

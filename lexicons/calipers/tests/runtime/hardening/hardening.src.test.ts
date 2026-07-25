@@ -42,7 +42,8 @@ describe('bound spectrum', () => {
         max: 10,
       });
       expect(bounded(4).multiply(2).value()).toBe(8); // in bounds
-      expect(() => bounded(8).multiply(2)).toThrow(
+      // multiply overflow is a compile error (S4); an unbounded i factor has no type-level value, so it skips to the runtime throw.
+      expect(() => bounded(8).multiply(i(2))).toThrow(
         /above the maximum/,
       ); // 16 > 10
     });
