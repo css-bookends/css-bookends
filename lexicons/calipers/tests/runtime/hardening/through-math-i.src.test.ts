@@ -80,7 +80,7 @@ describe('red-hat: the runtime bound keeps the preserved brand honest', () => {
   it('a FACTORY-bound value preserves and enforces through math', () => {
     const { i: level } = createIntegerFactory({ min: 0, max: 10 });
     expect(level(5).multiply(1).value()).toBe(5);
-    // multiply overflow is a compile error (S4); an unbounded i factor has no type-level value, so it skips to the runtime throw.
+    // multiply overflow is a compile error; an unbounded i factor has no type-level value, so it skips to the runtime throw.
     expect(() => level(5).multiply(i(3))).toThrow(
       /above the maximum/,
     ); // 15 > 10

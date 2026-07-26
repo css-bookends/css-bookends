@@ -19,7 +19,7 @@ describe('Integer primitive (src)', () => {
   });
 
   it('enforces range constraints', () => {
-    // an out-of-range LITERAL is now a compile error (S3), so cast to a runtime `number` to reach the
+    // an out-of-range LITERAL is now a compile error, so cast to a runtime `number` to reach the
     // runtime throw these tests are about.
     expect(() => i(0 as number, { min: 1 })).toThrow(
       /below the minimum/,

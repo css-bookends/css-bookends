@@ -78,7 +78,7 @@ class RatioImpl implements IRatio {
         'CALIPERS_E_DIVIDE_BY_ZERO',
       );
     }
-    // `asInts: true` ENFORCES an integer ratio (pure-values S-pv1): a non-integer operand fails fast,
+    // `asInts: true` ENFORCES an integer ratio (see docs/pure-values.md): a non-integer operand fails fast,
     // like the zero-denominator rule above. Value-based, matching `.isIntRatio()`.
     if (options.asInts && !this.isIntRatio()) {
       this.#throwScalar(

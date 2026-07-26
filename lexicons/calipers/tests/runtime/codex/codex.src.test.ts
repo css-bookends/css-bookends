@@ -206,7 +206,7 @@ describe('codex errorConfig cascade (global -> unit key -> factory default)', ()
   // The scalar family (i / f / r) is composed through createScalarBundleFactory; the
   // codex `global.errorConfig` must reach it, same as it reaches m + unit groups.
   const iError = (c: CalipersBundle): string =>
-    // multiply overflow is a compile error (S4); an unbounded i factor has no type-level value, so it skips to the runtime throw.
+    // multiply overflow is a compile error; an unbounded i factor has no type-level value, so it skips to the runtime throw.
     captureMessage(() =>
       c.i(8, { min: 0, max: 10 }).multiply(c.i(2)),
     );

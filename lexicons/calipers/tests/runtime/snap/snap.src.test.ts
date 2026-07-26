@@ -18,8 +18,8 @@ describe('snap absorbs a breach to the limit', () => {
   /* ---- blanket snap governs BOTH edges ---- */
   describe('blanket snap: true', () => {
     it('snaps an above-max construction value down to max', () => {
-      // snap absorbs an out-of-range value; the LITERAL is a compile error under S3 (snap-unaware), so
-      // cast to a runtime `number` for now. S6 (snap suppresses the compile error) reverts this to a literal.
+      // snap absorbs an out-of-range value; the LITERAL is a compile error (snap-unaware), so
+      // cast to a runtime `number` for now. Once snap suppresses the compile error this reverts to a literal.
       expect(
         i(50 as number, { min: 0, max: 10, snap: true }).value(),
       ).toBe(10);
@@ -35,8 +35,8 @@ describe('snap absorbs a breach to the limit', () => {
         max: 10,
         snap: true,
       });
-      // multiply overflow is a compile error under S4 (snap-unaware); an unbounded i factor skips it for now.
-      // S6 (snap suppresses the compile error) reverts this to a literal factor.
+      // multiply overflow is a compile error (snap-unaware); an unbounded i factor skips it for now.
+      // Once snap suppresses the compile error this reverts to a literal factor.
       expect(bounded(8).multiply(i(2)).value()).toBe(10); // 16 -> 10
     });
 

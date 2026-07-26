@@ -71,7 +71,7 @@ describe('a bounded / modified measurement is built from a configured scalar', (
       min: 0,
       max: 10,
     });
-    // out-of-range LITERAL is a compile error (S3); cast to a runtime `number` to test the runtime throw.
+    // out-of-range LITERAL is a compile error; cast to a runtime `number` to test the runtime throw.
     expect(() =>
       m(i(50 as number, { min: 0, max: 10 }), 'px'),
     ).toThrow(/above the maximum/);
@@ -149,10 +149,10 @@ describe('Measurement clone()', () => {
   });
 });
 
-// S-pv2 (pure-values): m accepts an r by WRAPPING it in a float and ingesting that (m is a pure container;
+// See docs/pure-values.md: m accepts an r by WRAPPING it in a float and ingesting that (m is a pure container;
 // purity is f's / r's concern, not m's). RED until the ingest wraps a ratio: today m(r) embeds the ratio
 // object as the scalar and m.value() calls r.value() (not a function) -> throws.
-describe('m accepts an r value (S-pv2)', () => {
+describe('m accepts an r value', () => {
   it('wraps a ratio in a float and ingests it', () => {
     expect(m(r(9, 10), 'px').value()).toBe(0.9);
     expect(m(r(9, 10), 'px').css()).toBe('0.9px');

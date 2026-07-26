@@ -34,7 +34,7 @@ expectType<InRangeInteger<0, 10>>(ranged.multiply(2));
 expectType<InRangeInteger<0, 10>>(ranged.divide(2));
 expectType<InRangeInteger<0, 10>>(ranged.withValue(3));
 expectType<InRangeInteger<0, 10>>(ranged.asScalar());
-expectAssignable<InRangeInteger<0, 10>>(ranged.clone()); // clone returns `this`, now with a ValueBrand phantom (S2)
+expectAssignable<InRangeInteger<0, 10>>(ranged.clone()); // clone returns `this`, now with a ValueBrand phantom
 expectType<InRangeInteger<2, 8>>(ranged.clamp(2, 8)); // green: clamp mints InRange<2, 8>
 
 // arg-kind axis: a non-literal number arg, and a hardened scalar arg (`i.add(f(...))`). The

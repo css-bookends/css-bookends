@@ -58,16 +58,16 @@ export type GreaterThan<A extends number, B extends number> =
     ? true
     : false;
 
-// The value bridge: how `i` carries its literal value onto the type so the overflow checks (S3+) can read
+// The value bridge: how `i` carries its literal value onto the type so the overflow checks can read
 // it back off `this`. Keyed by a module-private `unique symbol`, like the constraint brands in `brands.ts`.
 declare const valueBrand: unique symbol;
 
 /**
- * Carries a scalar's literal VALUE at the type level, so the overflow checks (S3+) can read it off `this`.
+ * Carries a scalar's literal VALUE at the type level, so the overflow checks can read it off `this`.
  * TRANSPARENT for a non-literal (`number extends V` -> `unknown`, which intersects away), so `i(x)` with
  * `x: number` never gains it. `ResolveIntegerBrand` applies it ONLY on the bounded branch: an unbounded
  * `i(5)` has no bound to check, so it stays plain `IInteger`, while a bounded `i(5, { min, max })` gains
- * `ValueBrand<5>`. The arithmetic ops shed it (via `PreserveIntegerBrand`) until S4 threads it through
+ * `ValueBrand<5>`. The arithmetic ops shed it (via `PreserveIntegerBrand`) until an op threads it through
  * them. Integers only; `f` never captures (D6).
  */
 export type ValueBrand<V extends number> = number extends V
@@ -144,7 +144,7 @@ export type Overflows<
         : false;
 
 /**
- * The construction guard (S3): intersect onto `i`'s `value` parameter so a PROVABLE overflow is a compile
+ * The construction guard: intersect onto `i`'s `value` parameter so a PROVABLE overflow is a compile
  * error. `Value` stays naked in `value: Value & OverflowGuard<...>`, so it still infers; on overflow the
  * guard is an object shape a bare number cannot satisfy, so the call is rejected with the bound shown in
  * the message. In range (or skipped) it is `unknown`, which intersects away to leave `value: Value`.
@@ -167,7 +167,7 @@ export type OverflowGuard<
     : unknown;
 
 /**
- * Read the literal value `i` captured (S2) back off a receiver's `ValueBrand`, so an op can compute with
+ * Read the literal value `i` captured back off a receiver's `ValueBrand`, so an op can compute with
  * it. `never` when the receiver has no captured value (unbounded, or built from a non-literal).
  */
 export type ValueOf<T> = T extends {
@@ -296,7 +296,7 @@ type ProductOutOfRange<
           : false;
 
 /**
- * The multiply guard (S4 + FactorValue): intersect onto `multiply`'s factor so a PROVABLE product overflow
+ * The multiply guard (FactorValue): intersect onto `multiply`'s factor so a PROVABLE product overflow
  * is a compile error. The factor value is resolved via {@link FactorValue} (a literal, OR a bounded `i`
  * operand's captured value); an unbounded operand, a float, or an unbounded receiver resolves to `never`
  * and skips (`unknown`).
@@ -361,7 +361,7 @@ export type MultiplyValue<
             : Multiply<V, K>
       : number;
 
-// --- S5: overflow through add / subtract / divide -------------------------------------------------
+// --- overflow through add / subtract / divide -------------------------------------------------
 // add RAISES the value (a checkable operand is >= 0), so like multiply it can only breach the MAX;
 // subtract / divide LOWER it (divide shrinks toward zero), so they can only breach the MIN. A sum /
 // difference of two < 1000 operands is at most ~2000, well under the ~10k wall, so it is built by
@@ -511,7 +511,7 @@ type QuotientOutOfRange<
             ? true
             : false;
 
-/** The add guard (S5 + FactorValue): a PROVABLE sum overflow (over the MAX) is a compile error; the operand
+/** The add guard (FactorValue): a PROVABLE sum overflow (over the MAX) is a compile error; the operand
  *  value is resolved via {@link FactorValue}, so an unbounded / float / non-literal operand or an unbounded
  *  receiver skips (`unknown`). Mirrors {@link MultiplyGuard}. */
 export type AddGuard<K, V extends number, Max extends number> = [
@@ -533,7 +533,7 @@ export type AddGuard<K, V extends number, Max extends number> = [
       }
     : unknown;
 
-/** The subtract guard (S5 + FactorValue): a PROVABLE difference underflow (below the MIN) is a compile
+/** The subtract guard (FactorValue): a PROVABLE difference underflow (below the MIN) is a compile
  *  error; the operand value is resolved via {@link FactorValue}. */
 export type SubtractGuard<K, V extends number, Min extends number> = [
   FactorValue<K>,
@@ -554,7 +554,7 @@ export type SubtractGuard<K, V extends number, Min extends number> = [
       }
     : unknown;
 
-/** The divide guard (S5 + FactorValue): a PROVABLE quotient underflow (below the MIN) is a compile error;
+/** The divide guard (FactorValue): a PROVABLE quotient underflow (below the MIN) is a compile error;
  *  the operand value is resolved via {@link FactorValue}. Divide only shrinks toward zero, so it never
  *  breaches the max; a non-integer quotient is the runtime's throw. */
 export type DivideGuard<K, V extends number, Min extends number> = [

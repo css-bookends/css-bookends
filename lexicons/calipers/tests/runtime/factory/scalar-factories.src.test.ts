@@ -101,7 +101,7 @@ describe('scalar factory bounds (min / max)', () => {
       min: 100,
       max: 900,
     });
-    // out-of-range LITERAL is a compile error (S3); cast to a runtime `number` for the runtime throw.
+    // out-of-range LITERAL is a compile error; cast to a runtime `number` for the runtime throw.
     expect(() => fontWeight(50 as number)).toThrow(/minimum/);
     expect(() => fontWeight(1000)).toThrow(/maximum/);
   });

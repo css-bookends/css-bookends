@@ -29,7 +29,7 @@ const { i: fontWeight } = createIntegerFactory({
   min: 100,
   max: 900,
 });
-// A bounded literal also carries a ValueBrand phantom now (S2); assert assignability, which still pins
+// A bounded literal also carries a ValueBrand phantom now; assert assignability, which still pins
 // the exact [100, 900] brand (InRange brands are invariant). The phantom itself is checked in
 // magnitude-value-capture.test-d.ts.
 expectAssignable<InRangeInteger<100, 900>>(fontWeight(400));

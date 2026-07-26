@@ -1,4 +1,4 @@
-// S1 of the author-time magnitude layer (D4): the type-level integer arithmetic primitives.
+// The author-time magnitude layer (D4): the type-level integer arithmetic primitives.
 // Pins their contract AND the measured ceiling. Integer-only, tuple-based (see docs/magnitude.md D6).
 import { expectType } from 'tsd';
 

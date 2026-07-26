@@ -1,4 +1,4 @@
-// S3 of the author-time magnitude layer (D4): a PROVABLE construction overflow is a COMPILE ERROR.
+// The author-time magnitude layer (D4): a PROVABLE construction overflow is a COMPILE ERROR.
 // `i(50, { max: 10 })` cannot be in range, so the call is rejected at author time (the runtime also
 // throws). NON-NEGATIVE INTEGER LITERALS against a real bound only (tuple arithmetic, D6): a negative
 // value or bound is exempt (skipped, the runtime catches it), and so are unbounded / non-literal
@@ -8,7 +8,7 @@ import { expectError } from 'tsd';
 
 import { f, i } from '../support/calipers_tests.src';
 
-// --- NEW behaviour (RED until S3 lands): a provable construction overflow is a compile error --
+// --- NEW behaviour (RED until the code lands): a provable construction overflow is a compile error --
 expectError(i(50, { max: 10 })); // over max-only
 expectError(i(50, { min: 0, max: 10 })); // over max, both edges bounded
 expectError(i(3, { min: 5, max: 10 })); // under min
@@ -25,8 +25,8 @@ declare const dyn: number;
 i(dyn, { min: 0, max: 10 }); // non-literal: not provable
 f(50, { min: 0, max: 10 }); // f is brand-only: no compile check, the runtime throws
 
-// --- S4: overflow through `multiply` (the captured value threads through the op) --------------
-// provable overflow (RED until S4): value * factor exceeds the max. The receiver must be fully bounded
+// --- overflow through `multiply` (the captured value threads through the op) --------------
+// provable overflow (RED until the code lands): value * factor exceeds the max. The receiver must be fully bounded
 // (min + max), so it carries the ValueBrand the op reads.
 expectError(i(5, { min: 0, max: 10 }).multiply(3)); // 5 * 3 = 15 > 10
 expectError(i(2, { min: 0, max: 10 }).multiply(3).multiply(2)); // 6, then 12 > 10 (the value threads)
@@ -39,11 +39,11 @@ i(5, { min: 0, max: 10 }).multiply(dyn); // non-literal factor: skip
 i(5, { min: 0, max: 10 }).multiply(1000); // 4-digit factor: skip, runtime catches
 f(2, { min: 0, max: 5 }).multiply(3); // f is brand-only: no check
 
-// --- S5: overflow through add / subtract / divide (the captured value threads through each op) ------
+// --- overflow through add / subtract / divide (the captured value threads through each op) ------
 // add raises the value, so (like multiply) it can only breach the MAX; subtract / divide lower it
 // (divide shrinks toward zero), so they can only breach the MIN. Same operand rules as multiply: a
 // non-negative integer literal 0-999 on a FULLY BOUNDED receiver (both edges); anything else skips.
-// provable overflow (RED until S5):
+// provable overflow (RED until the code lands):
 expectError(i(5, { min: 0, max: 10 }).add(8)); // 5 + 8 = 13 > 10
 expectError(i(2, { min: 0, max: 10 }).add(3).add(6)); // 5, then 11 > 10 (the value threads)
 expectError(i(2, { min: 0, max: 10 }).subtract(5)); // 2 - 5 = -3 < 0

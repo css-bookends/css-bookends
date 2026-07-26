@@ -11,7 +11,7 @@ import { type IInteger, type InRangeInteger } from '../../dist/index';
 import { i } from '../support/calipers_tests.dist';
 
 // A bounded builder brands its exact range, [0, 100] here, and is still assignable to plain IInteger.
-// It also carries a ValueBrand<5> phantom now (S2); assignability still pins the exact [0, 100] brand.
+// It also carries a ValueBrand<5> phantom now; assignability still pins the exact [0, 100] brand.
 const bounded0to100 = i(5, { min: 0, max: 100 });
 expectAssignable<InRangeInteger<0, 100>>(bounded0to100);
 expectAssignable<IInteger>(bounded0to100);

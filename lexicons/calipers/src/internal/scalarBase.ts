@@ -179,9 +179,9 @@ const coerce = (value: Scalar): number => toNumber(value);
  */
 export abstract class ScalarBase {
   #value: number;
-  // The exact rational this value was built from, when it is PURE (currently: an integer `r`, pure-values
-  // S-pv2); `undefined` for a plain number. INTERNAL storage, no public accessor: purity is not something the
-  // scalar surface (or `m`) exposes; the exact-arithmetic ops (S-pv3) read it directly. Value-adjacent, NOT
+  // The exact rational this value was built from, when it is PURE (currently: an integer `r`; see
+  // docs/pure-values.md); `undefined` for a plain number. INTERNAL storage, no public accessor: purity is not
+  // something the scalar surface (or `m`) exposes; the exact-arithmetic ops read it directly. Value-adjacent, NOT
   // config: `clone` preserves it, but arithmetic DROPS it (the value changed, so the fraction is stale).
   #rational?: RatioParts;
   // The SINGLE source of truth for everything about this value EXCEPT the value itself: bound,

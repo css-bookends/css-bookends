@@ -218,9 +218,9 @@ export function f<
   value: number | IRatio,
   options: FloatOptions<Min, Max> = {},
 ): ResolveFloatBrand<Min, Max> {
-  // Accept an `r` as the value (pure-values S-pv2): coerce via its `.valueOf()` (= n/d), and when it is an
-  // INTEGER ratio, carry its exact rational INTERNALLY (no public accessor; the exact-arithmetic ops read it
-  // in S-pv3), so the float remembers it is exact without exposing purity on its surface.
+  // Accept an `r` as the value (see docs/pure-values.md): coerce via its `.valueOf()` (= n/d), and when it is an
+  // INTEGER ratio, carry its exact rational INTERNALLY (no public accessor; the exact-arithmetic ops read it),
+  // so the float remembers it is exact without exposing purity on its surface.
   const numeric = typeof value === 'number' ? value : value.valueOf();
   const rational =
     typeof value === 'number' || !value.isIntRatio()

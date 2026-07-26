@@ -162,10 +162,10 @@ describe('Float primitive (src)', () => {
   });
 });
 
-// S-pv2 (pure-values, docs/pure-values.md): f accepts an r as its value, coercing via r.valueOf() (= n/d).
+// f accepts an r as its value (see docs/pure-values.md), coercing via r.valueOf() (= n/d).
 // RED until f's input widens to `number | IRatio`: today f(r(...)) passes the ratio object straight through
-// and throws "expected a finite number". No exact-rational storage yet (that is S-pv3).
-describe('f accepts an r value (S-pv2)', () => {
+// and throws "expected a finite number". No exact-rational storage yet (see docs/pure-values.md).
+describe('f accepts an r value', () => {
   it('coerces an integer ratio to its decimal value', () => {
     expect(f(r(9, 10)).value()).toBe(0.9);
     expect(f(r(1, 4)).value()).toBe(0.25);

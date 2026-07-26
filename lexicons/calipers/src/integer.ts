@@ -70,7 +70,7 @@ export interface IInteger {
   // `PreserveIntegerBrand`. `clamp` still MINTS a fresh range; `clone` still returns `this`.
   asScalar: () => PreserveIntegerBrand<this>;
   withValue: (value: number) => PreserveIntegerBrand<this>;
-  // add / subtract / multiply thread the captured value so a CHAIN keeps checking (S4/S5): each carries
+  // add / subtract / multiply thread the captured value so a CHAIN keeps checking: each carries
   // a fresh `ValueBrand` of the result. add raises the value (breaches MAX only), subtract lowers it
   // (breaches MIN only). divide only shrinks toward zero (breaches MIN only) and does NOT thread a value:
   // its exact-integer quotient is a narrow case (a non-integer quotient throws at runtime anyway), so a
@@ -148,7 +148,7 @@ export type PreserveIntegerBrand<T> =
  * emitted when BOTH bounds are known literals; `never` bounds (unbounded) fall back to a plain
  * `IInteger`. (A bounded value is always in range or it throws, so the brand is always honest.)
  *
- * The optional `Value` captures the construction literal (S2): it rides as `ValueBrand<Value>` ONLY on
+ * The optional `Value` captures the construction literal: it rides as `ValueBrand<Value>` ONLY on
  * the bounded branch (an unbounded value has no bound to check, so the value is dead weight there), and is
  * transparent for a non-literal. Defaults to `number` (transparent), so existing 2-arg uses are unchanged.
  */
@@ -386,7 +386,7 @@ export interface IntegerApi<
 > {
   // Two call signatures: with no options the BOUND brand is fixed to the factory's resolved brand
   // (FactoryMin/Max are not free, so a call site's contextual type cannot back-infer a foreign brand);
-  // `Value` is inferred from the argument only (the literal capture, S2). With options the per-call
+  // `Value` is inferred from the argument only (the literal capture). With options the per-call
   // bound drives the brand.
   i: {
     <Value extends number>(

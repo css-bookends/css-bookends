@@ -224,9 +224,9 @@ describe('Ratio helper (src)', () => {
   });
 });
 
-// S-pv1 (pure-values, docs/pure-values.md): integer-ratio validation on `r`. RED until the code lands:
+// integer-ratio validation on `r` (see docs/pure-values.md). RED until the code lands:
 // `.isIntRatio()` and the `{ asInts: true }` option do not exist yet.
-describe('integer-ratio validation (S-pv1)', () => {
+describe('integer-ratio validation', () => {
   it('isIntRatio() is VALUE-based: true iff both operand values are whole numbers', () => {
     expect(r(1, 2).isIntRatio()).toBe(true);
     expect(r(4).isIntRatio()).toBe(true); // 4/1

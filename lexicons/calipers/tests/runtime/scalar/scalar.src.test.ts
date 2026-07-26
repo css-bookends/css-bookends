@@ -36,7 +36,7 @@ describe('createScalarBundleFactory (scalar family bundle)', () => {
     const iError = (
       s: ReturnType<typeof createScalarBundleFactory>,
     ): string =>
-      // multiply overflow is a compile error (S4); an unbounded i factor has no type-level value, so it skips to the runtime throw.
+      // multiply overflow is a compile error; an unbounded i factor has no type-level value, so it skips to the runtime throw.
       captureMessage(() =>
         s.i(8, { min: 0, max: 10 }).multiply(s.i(2)),
       );
