@@ -1,3 +1,4 @@
+import type { RatioParts } from '../ratio';
 import { type Scalar, toNumber } from '../scalar';
 import {
   createErrorConfigStore,
@@ -178,6 +179,11 @@ const coerce = (value: Scalar): number => toNumber(value);
  */
 export abstract class ScalarBase {
   #value: number;
+  // The exact rational this value was built from, when it is PURE (currently: an integer `r`, pure-values
+  // S-pv2); `undefined` for a plain number. Value-adjacent, NOT config: `clone` preserves it, but arithmetic
+  // DROPS it (the value changes, so the fraction is stale until S-pv3 recomputes it). Read via `asFraction` /
+  // `isPure`.
+  #rational?: RatioParts;
   // The SINGLE source of truth for everything about this value EXCEPT the value itself: bound,
   // context, error store, and any config prop added later. `clone` / `rebuildWith`
   // reconstruct from this whole object (via `options()`), so a new prop is carried automatically
@@ -248,7 +254,11 @@ export abstract class ScalarBase {
     return { ...options };
   }
 
-  constructor(value: number, options: ScalarOptions = {}) {
+  constructor(
+    value: number,
+    options: ScalarOptions = {},
+    rational?: RatioParts,
+  ) {
     // Preliminary config so every throw below renders through the right error store (the only
     // config the construction-time throws need). The frozen, normalized config is assembled at
     // the end once the effective bound is known.
@@ -278,6 +288,8 @@ export abstract class ScalarBase {
     // Assemble the frozen, normalized config. The hook spreads the options (raw edge form + snap
     // policy) so `clone` / arithmetic re-resolve the same bound; a future field flows in via `...`.
     this.#config = Object.freeze(this.finalizeConfig(options));
+    // Value-adjacent: set at construction, preserved by `clone`, dropped by every rebuild (arithmetic).
+    this.#rational = rational;
   }
 
   // Throw a scalar error through this instance's error store (or a default one for the storeless
@@ -301,6 +313,17 @@ export abstract class ScalarBase {
 
   value(): number {
     return this.#value;
+  }
+
+  /** The exact rational this value carries when PURE (built from an integer `r`; pure-values S-pv2), else
+   *  `null`. Only a CAPTURED rational counts here; a plain number is not inferred as a fraction. */
+  asFraction(): RatioParts | null {
+    return this.#rational ?? null;
+  }
+
+  /** Whether this value carries an exact rational (is runtime-pure). */
+  isPure(): boolean {
+    return this.#rational !== undefined;
   }
 
   /** The scalar's kind label (`'i'` / `'f'` / `'u'`). A measurement reads this to name its embedded
@@ -392,7 +415,10 @@ export abstract class ScalarBase {
   }
 
   clone(): this {
-    return this.rebuildWith(this.#value);
+    // A copy of the SAME value stays PURE: rebuild drops the rational, so carry it onto the copy.
+    const copy = this.rebuildWith(this.#value);
+    copy.#rational = this.#rational;
+    return copy;
   }
 
   /**

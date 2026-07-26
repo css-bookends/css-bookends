@@ -28,6 +28,7 @@ import {
   type SnapBound,
 } from './internal/scalarBase';
 import { ScalarRestricted } from './internal/scalarRestricted';
+import type { IRatio, RatioParts } from './ratio';
 import type { Scalar } from './scalar';
 
 export type FloatConstraints = ScalarConstraints;
@@ -43,6 +44,11 @@ export interface IFloat {
   toString: () => string;
   valueOf: () => number;
   value: () => number;
+  /** The exact rational this float carries when it is PURE (built from an integer `r`; pure-values S-pv2),
+   *  else `null`. `clone` preserves it; arithmetic drops it (the result is a plain double until S-pv3). */
+  asFraction: () => RatioParts | null;
+  /** Whether this float carries an exact rational (is runtime-pure). */
+  isPure: () => boolean;
   /** The scalar's kind label (`'f'`). Distinct from the value-based `isFloat()`. */
   kind: () => string;
   /** Always `''` (floats are unitless); present for value-surface uniformity. */
@@ -199,7 +205,7 @@ class FloatImpl
  * constraints. Operations re-validate against the same constraints, so a
  * hardened float stays hardened (or throws) through arithmetic.
  */
-export function f(value: number): IFloat;
+export function f(value: number | IRatio): IFloat;
 // `= never` (not `= number`, cf. `ScalarConstraints`): here the default is the "no bound
 // supplied, so DON'T brand" sentinel that `ResolveFloatBrand` detects with `[Min] extends
 // [never]`. A real literal still gets captured from `options` via `extends number`.
@@ -207,19 +213,30 @@ export function f<
   Min extends number = never,
   Max extends number = never,
 >(
-  value: number,
+  value: number | IRatio,
   options: FloatOptions<Min, Max>,
 ): ResolveFloatBrand<Min, Max>;
 export function f<
   Min extends number = never,
   Max extends number = never,
 >(
-  value: number,
+  value: number | IRatio,
   options: FloatOptions<Min, Max> = {},
 ): ResolveFloatBrand<Min, Max> {
+  // Accept an `r` as the value (pure-values S-pv2): coerce via its `.valueOf()` (= n/d), and when it is an
+  // INTEGER ratio, carry its exact rational so the float is runtime-pure (`asFraction` / `isPure`).
+  const numeric = typeof value === 'number' ? value : value.valueOf();
+  const rational =
+    typeof value === 'number' || !value.isIntRatio()
+      ? undefined
+      : {
+          numerator: value.numerator(),
+          denominator: value.denominator(),
+        };
   return new FloatImpl(
-    value,
+    numeric,
     options,
+    rational,
   ) as unknown as ResolveFloatBrand<Min, Max>;
 }
 
@@ -315,9 +332,11 @@ export interface FloatApi<
   // brand (no free type params, so a call site's contextual type cannot back-infer a foreign
   // brand); with options the per-call bound drives the brand.
   f: {
-    (value: number): ResolveFloatBrand<FactoryMin, FactoryMax>;
+    (
+      value: number | IRatio,
+    ): ResolveFloatBrand<FactoryMin, FactoryMax>;
     <CallMin extends number = never, CallMax extends number = never>(
-      value: number,
+      value: number | IRatio,
       options: FloatOptions<CallMin, CallMax>,
     ): ResolveFloatBrand<
       [
@@ -371,7 +390,7 @@ export const createFloatFactory = <
     CallMin extends number = never,
     CallMax extends number = never,
   >(
-    value: number,
+    value: number | IRatio,
     options: FloatOptions<CallMin, CallMax> = {},
   ): ResolveFloatBrand<
     [

@@ -67,11 +67,16 @@ Each slice is one commit boundary; forks resolve just-in-time per slice.
   operands integer) + an `{ asInts: true }` option that THROWS a coded `CALIPERS_E_*` on a non-integer
   operand. Reuse `r`'s gcd/normalize + scalar embedding. Runtime only (the `IntRatio` type-brand rides on
   Phase C, S-pv6).
-- **S-pv2 — `f` / `m` accept an `r`.** `f(r(9, 10))` -> `0.9`; `m(r(i(10), i(3)), 'px')` -> `10/3` px. `f`'s
-  input type grows to include `IRatio`. When the `r` is integer (`.isIntRatio()`), store its exact rational
-  internally (runtime-pure); `.value()` / `.css()` render from it. Arithmetic still double for now.
-- **S-pv3 — exact arithmetic on pure operands.** `+ − × ÷` stay symbolic (rational) through a chain; tainting
-  (one impure operand -> impure). The `0.1 + 0.2` / `0.3 ÷ 0.1` payoff.
+- **S-pv2 — `f` accepts an `r` value AND carries its exact rational (runtime-pure).** `f(r(9, 10))` -> `0.9`;
+  `f`'s input widens to `number | IRatio`, coercing via `.valueOf()`. When the `r` is `.isIntRatio()`, the
+  float STORES its exact rational and reports it: `f(r(9, 10)).asFraction()` -> `{ numerator: 9, denominator:
+  10 }`, `.isPure()` -> `true` (a plain `f(0.9)` -> `null` / `false`, until S-pv4 auto-detect). `clone`
+  preserves the rational; arithmetic DROPS it (the value changes, so the fraction is stale until S-pv3
+  recomputes it). `m` accepting an `r` directly is the one deferral: it tangles with the in-flight Phase B
+  m-ingest rework; `m(f(r(...)), 'px')` works in the meantime.
+- **S-pv3 — the pure-rational engine.** Store the exact rational (from an integer `r` input, or integer math)
+  and expose it (`.asFraction()`); keep `+ − × ÷` symbolic (rational) through a chain, with tainting (one
+  impure operand -> impure). The `0.1 + 0.2` / `0.3 ÷ 0.1` payoff.
 - **S-pv4 — auto-detect clean decimal literals** (PV3 conservative): `f(0.5)` -> `1/2` at runtime.
 - **S-pv5 — output precision** for a non-terminating rational (`10/3` -> rounded `.css()`).
 - **S-pv6 — type-level squiggle (needs Phase C).** `r` generic `IRatio<N, D>` -> harden to `IntRatio` when
@@ -80,10 +85,12 @@ Each slice is one commit boundary; forks resolve just-in-time per slice.
 ## OPEN FORKS (work top-to-bottom)
 
 - [ ] **"How clean is clean" — the exact bound (direction SET by PV3: conservative).** Mechanism: read the
-  double's shortest round-trip decimal (`.toString()`); promote only when SHORT (`<= K` fractional digits) so
-  it is unambiguously intended; a long string (`0.3/0.1` -> `2.9999999999999996`, or `pi`) stays impure.
-  Remaining: fix `K`, plus belt-and-suspenders (cap the reduced denominator). Distinct from the tuple limit
-  (which gates only the type squiggle).
+  double's shortest round-trip decimal (`.toString()`) and take it LITERALLY as its exact rational (`0.333`
+  -> `333/1000`, honouring what was typed). NO fraction-RECOGNITION: we never look at `0.3333333333333333`
+  and guess `1/3` (a double cannot even hold 30 threes; it rounds to `0.3333333333333333`, a 16-digit string).
+  Promote only when the string is SHORT (`<= K` fractional digits); a long / repeating string
+  (`0.333…` -> the double above, `0.3/0.1` -> `2.9999999999999996`, `pi`) stays impure. Remaining: fix `K`,
+  plus belt-and-suspenders (cap the reduced denominator). Distinct from the tuple limit (type squiggle only).
 - [ ] **Constructs that carry purity** — `f` (yes), `m` (embeds a scalar -> inherits), `i` (trivially `n/1`?).
 - [ ] **Representation** — `number` num/den (overflow past 2^53) vs `bigint` (exact, heavier); GCD-reduce each
   op (`6/3` -> `2/1`).
@@ -112,6 +119,13 @@ Each slice is one commit boundary; forks resolve just-in-time per slice.
 
 - Parsing `pi` / arbitrary long doubles into fractions.
 - Unbounded-precision arithmetic for every value (only PURE values are exact).
+
+## Later (low priority)
+
+- **Symbolic Math irrationals in `r`.** A JS built-in irrational (`Math.PI`, `Math.E`) could be recognized
+  SYMBOLICALLY — as the constant, not a fabricated fraction — and potentially rendered via CSS's `pi` / `e`
+  `calc()` constants. This is recognition of a KNOWN constant, distinct from the fraction-guessing non-goal
+  above (`Math.PI` stays impure under the current rules). Not now; a bullet for later.
 
 ## Relation to `magnitude.md`
 

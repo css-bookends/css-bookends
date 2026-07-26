@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 
-import { f, i, isFloat } from '../../support/calipers_tests.src';
+import { f, i, isFloat, r } from '../../support/calipers_tests.src';
 
 describe('Float primitive (src)', () => {
   it('creates a float and renders it', () => {
@@ -159,5 +159,61 @@ describe('Float primitive (src)', () => {
     expect(derived.value()).toBe(0.75);
     expect(orig.value()).toBe(0.25);
     expect(orig.constraints()).toEqual({ min: 0, max: 1 });
+  });
+});
+
+// S-pv2 (pure-values, docs/pure-values.md): f accepts an r as its value, coercing via r.valueOf() (= n/d).
+// RED until f's input widens to `number | IRatio`: today f(r(...)) passes the ratio object straight through
+// and throws "expected a finite number". No exact-rational storage yet (that is S-pv3).
+describe('f accepts an r value (S-pv2)', () => {
+  it('coerces an integer ratio to its decimal value', () => {
+    expect(f(r(9, 10)).value()).toBe(0.9);
+    expect(f(r(1, 4)).value()).toBe(0.25);
+    expect(f(r(i(3), i(2))).value()).toBe(1.5);
+    expect(f(r(3)).value()).toBe(3); // 3/1
+  });
+
+  it('coerces a non-integer ratio too (still just the double for now) and renders it', () => {
+    expect(f(r(1.5, 2)).value()).toBe(0.75);
+    expect(f(r(1, 4)).css()).toBe('0.25');
+  });
+
+  it('accepts an r with bounds, coercing THEN enforcing', () => {
+    expect(f(r(1, 2), { min: 0, max: 1 }).value()).toBe(0.5);
+    expect(() => f(r(3, 2), { min: 0, max: 1 })).toThrow(/maximum/i); // 1.5 > 1
+  });
+});
+
+// S-pv2 (pure-values): a float built from an INTEGER r carries its exact rational (runtime-pure) and
+// reports it; clone preserves it, arithmetic drops it (double until S-pv3).
+describe('f carries the exact rational when pure (S-pv2)', () => {
+  it('an integer ratio makes the float runtime-pure', () => {
+    expect(f(r(9, 10)).asFraction()).toEqual({
+      numerator: 9,
+      denominator: 10,
+    });
+    expect(f(r(9, 10)).isPure()).toBe(true);
+    expect(f(r(i(3), i(2))).asFraction()).toEqual({
+      numerator: 3,
+      denominator: 2,
+    });
+  });
+
+  it('a plain number or a non-integer ratio is NOT pure', () => {
+    expect(f(0.9).asFraction()).toBe(null);
+    expect(f(0.9).isPure()).toBe(false);
+    expect(f(r(1.5, 2)).isPure()).toBe(false); // float numerator -> not an integer ratio
+    expect(f(r(1.5, 2)).value()).toBe(0.75);
+  });
+
+  it('clone preserves the rational; arithmetic drops it (double until S-pv3)', () => {
+    const pure = f(r(9, 10));
+    expect(pure.clone().asFraction()).toEqual({
+      numerator: 9,
+      denominator: 10,
+    });
+    expect(pure.clone().isPure()).toBe(true);
+    expect(pure.multiply(1).isPure()).toBe(false);
+    expect(pure.add(0).asFraction()).toBe(null);
   });
 });
