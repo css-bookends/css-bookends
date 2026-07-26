@@ -1,4 +1,6 @@
 import type { IMeasurement, InscribedMeasurement } from '../../core';
+import { f } from '../../float';
+import { type IRatio, isRatio } from '../../ratio';
 import { type Scalar } from '../../scalar';
 import { ScalarBase } from '../scalarBase';
 import { type IUnspecified, u } from '../unspecified';
@@ -56,22 +58,22 @@ export const makeConstruct = (
   const isMeasurement = (x: unknown): x is IMeasurement<string> =>
     x instanceof Measurement;
 
-  function m(value: Scalar): InscribedMeasurement<'px'>;
+  function m(value: Scalar | IRatio): InscribedMeasurement<'px'>;
   function m(
-    value: Scalar,
+    value: Scalar | IRatio,
     options: { context?: string },
   ): InscribedMeasurement<'px'>;
   function m<Unit extends string>(
-    value: Scalar,
+    value: Scalar | IRatio,
     unit: Unit,
     context?: string,
   ): InscribedMeasurement<Lowercase<Unit>>;
   function m<Unit extends string>(
-    value: Scalar,
+    value: Scalar | IRatio,
     options: MeasurementCreateOptions<Unit>,
   ): InscribedMeasurement<Lowercase<Unit>>;
   function m<Unit extends string>(
-    value: Scalar,
+    value: Scalar | IRatio,
     unitOrOptions:
       | Unit
       | MeasurementCreateOptions<Unit> = defaultUnit as Unit,
@@ -85,24 +87,32 @@ export const makeConstruct = (
     const contextLabel = options.context;
     const normalizedUnit = unit.toLowerCase() as Lowercase<Unit>;
 
+    // A ratio has no scalar API of its own; wrap it in a pure `f` (which carries the exact rational) and
+    // ingest THAT like any scalar. `m` stays a pure container: purity is `f`'s / `r`'s concern, not m's.
+    const scalarValue: Scalar = isRatio(value) ? f(value) : value;
+
     // A typed scalar (i / f) is INGESTED as-is: it already owns its numeric config (value, bound,
     // modifier, integer-ness), so the measurement embeds it directly and delegates. `m`
     // adds NO numeric config of its own (it is a pure container), so there is nothing to reconcile: a
     // bound / modifier rides on the scalar you pass in, or you mint a fresh value.
-    if (typeof value === 'object' && value !== null) {
+    if (typeof scalarValue === 'object' && scalarValue !== null) {
       // Embed the ingested scalar under the `m` wrapper so its errors name the measurement AND the
       // subtype (`m(i): ...`), preserving its full config. Every scalar is a `ScalarBase` (that is
       // where `embedUnder` lives); the guard is a defensive narrow.
       const embedded =
-        value instanceof ScalarBase
-          ? value.embedUnder('m', contextLabel)
-          : (value as unknown as IUnspecified);
+        scalarValue instanceof ScalarBase
+          ? scalarValue.embedUnder('m', contextLabel)
+          : (scalarValue as unknown as IUnspecified);
       return createMeasurement(embedded, normalizedUnit);
     }
 
     // A plain number embeds a `u` carrying only m's error store (no bound / modifier).
     // The `u` validates finiteness at construction.
-    return buildMeasurement(value, normalizedUnit, contextLabel);
+    return buildMeasurement(
+      scalarValue,
+      normalizedUnit,
+      contextLabel,
+    );
   }
 
   return { createMeasurement, buildMeasurement, isMeasurement, m };

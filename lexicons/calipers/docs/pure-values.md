@@ -59,6 +59,10 @@ opaque double, as today.
   + num/den for the squiggle). `i()` operands harden automatically (their type is already `IInteger`); the
   `{ integer: true }` option hardens AND runtime-enforces even for bare-number operands, per the project's
   `hardening implies type` rule. This hardened brand is the type-level "pure" marker `f` / `m` read. (2026-07-24)
+- **PV7 — purity is INTERNAL storage; NO public accessor.** `#rational` is read only by the exact-arithmetic
+  ops (S-pv3); there is NO public `.asFraction()` / `.isPure()`, and `m` (a pure container) never surfaces it.
+  A scalar / measurement does not advertise its purity on its API. So the S-pv2 storage is verified through
+  S-pv3's exact RESULTS, not a query. (2026-07-26)
 
 ## SLICING (protocol build order, smallest-first)
 
@@ -67,16 +71,18 @@ Each slice is one commit boundary; forks resolve just-in-time per slice.
   operands integer) + an `{ asInts: true }` option that THROWS a coded `CALIPERS_E_*` on a non-integer
   operand. Reuse `r`'s gcd/normalize + scalar embedding. Runtime only (the `IntRatio` type-brand rides on
   Phase C, S-pv6).
-- **S-pv2 — `f` accepts an `r` value AND carries its exact rational (runtime-pure).** `f(r(9, 10))` -> `0.9`;
+- **S-pv2 — `f` / `m` accept an `r`; `f` carries its exact rational INTERNALLY.** `f(r(9, 10))` -> `0.9`;
   `f`'s input widens to `number | IRatio`, coercing via `.valueOf()`. When the `r` is `.isIntRatio()`, the
-  float STORES its exact rational and reports it: `f(r(9, 10)).asFraction()` -> `{ numerator: 9, denominator:
-  10 }`, `.isPure()` -> `true` (a plain `f(0.9)` -> `null` / `false`, until S-pv4 auto-detect). `clone`
-  preserves the rational; arithmetic DROPS it (the value changes, so the fraction is stale until S-pv3
-  recomputes it). `m` accepting an `r` directly is the one deferral: it tangles with the in-flight Phase B
-  m-ingest rework; `m(f(r(...)), 'px')` works in the meantime.
-- **S-pv3 — the pure-rational engine.** Store the exact rational (from an integer `r` input, or integer math)
-  and expose it (`.asFraction()`); keep `+ − × ÷` symbolic (rational) through a chain, with tainting (one
-  impure operand -> impure). The `0.1 + 0.2` / `0.3 ÷ 0.1` payoff.
+  float STORES its exact rational (`#rational`) as INTERNAL state — there is NO public accessor; purity is
+  internal storage the exact-arithmetic ops (S-pv3) read directly. `clone` preserves it; arithmetic DROPS it
+  (the value changed, so the fraction is stale). `m` ALSO accepts an `r`, by WRAPPING it in a pure `f` and
+  ingesting that scalar: `m` stays a pure CONTAINER (purity is `f`'s / `r`'s concern, NO `m`-level API), and
+  the embedded `f` carries the rational. `m(r(9, 10), 'px')` -> `0.9px`.
+- **S-pv3 — the pure-rational engine.** Keep `#rational` INTERNAL (no public accessor). Make `+ − × ÷` stay
+  symbolic (rational) through a chain by RECOMPUTING `#rational` from the operands instead of dropping it,
+  with tainting (one impure operand -> impure). The observable is the exact RESULT (`f(0.1).add(f(0.2))` ->
+  `0.3`, `f(0.3).divide(f(0.1))` -> `3`), which is ALSO how the S-pv2 storage (currently carried but internal)
+  gets its test coverage.
 - **S-pv4 — auto-detect clean decimal literals** (PV3 conservative): `f(0.5)` -> `1/2` at runtime.
 - **S-pv5 — output precision** for a non-terminating rational (`10/3` -> rounded `.css()`).
 - **S-pv6 — type-level squiggle (needs Phase C).** `r` generic `IRatio<N, D>` -> harden to `IntRatio` when
@@ -103,8 +109,8 @@ Each slice is one commit boundary; forks resolve just-in-time per slice.
   where `r` renders `"16/9"`)?
 - [ ] **Two-tier interaction** — how a TYPE-pure `iRatio` value and a RUNTIME-pure decimal value compose
   through an op (the result's tier).
-- [ ] **API surface** — `f.frac(n, d)` shorthand? `.asFraction()` / `.isPure()` accessors? `iRatio` inputs
-  (bare literals `iRatio(9, 10)` vs `i()` values vs both).
+- [ ] **API surface** — `f.frac(n, d)` shorthand? `iRatio` inputs (bare literals `iRatio(9, 10)` vs `i()`
+  values vs both)? (`.asFraction()` / `.isPure()` are RESOLVED: no public accessor, purity is internal — PV7.)
 
 ## Guidance (to document for authors)
 

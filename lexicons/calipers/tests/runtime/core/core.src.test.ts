@@ -10,6 +10,7 @@ import {
   i,
   m,
   makeUnitHelperFromDefinition,
+  r,
 } from '../../support/calipers_tests.src';
 import type { CoreApi } from './core.shared';
 import { runCoreTests } from './core.shared';
@@ -145,5 +146,17 @@ describe('Measurement clone()', () => {
     expect(derived.value()).toBe(9);
     expect(orig.value()).toBe(8);
     expect(orig.constraints()).toEqual({ min: 0, max: 10 });
+  });
+});
+
+// S-pv2 (pure-values): m accepts an r by WRAPPING it in a float and ingesting that (m is a pure container;
+// purity is f's / r's concern, not m's). RED until the ingest wraps a ratio: today m(r) embeds the ratio
+// object as the scalar and m.value() calls r.value() (not a function) -> throws.
+describe('m accepts an r value (S-pv2)', () => {
+  it('wraps a ratio in a float and ingests it', () => {
+    expect(m(r(9, 10), 'px').value()).toBe(0.9);
+    expect(m(r(9, 10), 'px').css()).toBe('0.9px');
+    expect(m(r(1, 4), 'em').css()).toBe('0.25em');
+    expect(m(r(i(10), i(3)), 'px').value()).toBeCloseTo(10 / 3);
   });
 });

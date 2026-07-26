@@ -183,37 +183,3 @@ describe('f accepts an r value (S-pv2)', () => {
     expect(() => f(r(3, 2), { min: 0, max: 1 })).toThrow(/maximum/i); // 1.5 > 1
   });
 });
-
-// S-pv2 (pure-values): a float built from an INTEGER r carries its exact rational (runtime-pure) and
-// reports it; clone preserves it, arithmetic drops it (double until S-pv3).
-describe('f carries the exact rational when pure (S-pv2)', () => {
-  it('an integer ratio makes the float runtime-pure', () => {
-    expect(f(r(9, 10)).asFraction()).toEqual({
-      numerator: 9,
-      denominator: 10,
-    });
-    expect(f(r(9, 10)).isPure()).toBe(true);
-    expect(f(r(i(3), i(2))).asFraction()).toEqual({
-      numerator: 3,
-      denominator: 2,
-    });
-  });
-
-  it('a plain number or a non-integer ratio is NOT pure', () => {
-    expect(f(0.9).asFraction()).toBe(null);
-    expect(f(0.9).isPure()).toBe(false);
-    expect(f(r(1.5, 2)).isPure()).toBe(false); // float numerator -> not an integer ratio
-    expect(f(r(1.5, 2)).value()).toBe(0.75);
-  });
-
-  it('clone preserves the rational; arithmetic drops it (double until S-pv3)', () => {
-    const pure = f(r(9, 10));
-    expect(pure.clone().asFraction()).toEqual({
-      numerator: 9,
-      denominator: 10,
-    });
-    expect(pure.clone().isPure()).toBe(true);
-    expect(pure.multiply(1).isPure()).toBe(false);
-    expect(pure.add(0).asFraction()).toBe(null);
-  });
-});
