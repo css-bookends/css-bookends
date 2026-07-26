@@ -365,8 +365,9 @@ export type MultiplyValue<
 // add RAISES the value (a checkable operand is >= 0), so like multiply it can only breach the MAX;
 // subtract / divide LOWER it (divide shrinks toward zero), so they can only breach the MIN. A sum /
 // difference of two < 1000 operands is at most ~2000, well under the ~10k wall, so it is built by
-// CONCATENATING two in-range tuples (never recursed past the depth limit). Divide needs no new
-// arithmetic: `V / K < Min` iff `Min * K > V`, so it REUSES the multiply short-circuit `ProductVsMax`.
+// CONCATENATING two in-range tuples (never recursed past the depth limit). Divide's GUARD needs no new
+// arithmetic: `V / K < Min` iff `Min * K > V`, so it REUSES the multiply short-circuit `ProductVsMax`; its
+// threaded VALUE reuses the same `BuildTuple<K>`-chunk machinery, read in reverse as a count (see `DivExact`).
 
 /** `V + K` as a tuple, by concatenation. Both operands are checkable (< 1000), so the result is at most
  *  ~2000 long and is built from two independent in-range tuples, never a single recursion past ~1000. */
@@ -624,4 +625,71 @@ export type SubtractValue<F, V extends number, Min extends number> = [
           : DiffOutOfRange<V, K, Min> extends true
             ? number
             : Diff<V, K>
+      : number;
+
+/**
+ * `V / K` as an EXACT integer quotient (e.g. `DivExact<100, 2>` is `50`), else `number`. A fractional
+ * quotient makes an `i` throw at runtime, so it never needs a threaded value; `K = 0` (divide-by-zero) and
+ * `K = 1` (identity) short-circuit. Reuses the same `BuildTuple<K>` chunk the multiply guard tallies in
+ * `ProductVsMax`, read in reverse: strip K-sized chunks off `V` and count them (an exact tiling is the
+ * quotient, a leftover is a fractional quotient). Non-negative-integer operands only.
+ */
+type DivExact<V extends number, K extends number> = K extends 0
+  ? number
+  : K extends 1
+    ? V
+    : QuotientOf<BuildTuple<V>, K>;
+
+/**
+ * Strip `BuildTuple<K>` off the front of `VT`, counting the passes in `Q`. An empty remainder means `K`
+ * tiled `V` exactly, so the quotient is `Q['length']`; a non-empty remainder is a fractional quotient
+ * (`number`). Tail-recursive, and `K >= 2` here (`DivExact` short-circuits 0 / 1), so the depth is at most
+ * `V / 2`.
+ */
+type QuotientOf<
+  VT extends unknown[],
+  K extends number,
+  Q extends unknown[] = [],
+> = VT extends [
+  ...BuildTuple<K>,
+  ...infer Rest extends unknown[],
+]
+  ? QuotientOf<
+      Rest,
+      K,
+      [
+        ...Q,
+        unknown,
+      ]
+    >
+  : VT extends []
+    ? Q['length']
+    : number;
+
+/**
+ * The value `divide` carries so a chain keeps checking: the EXACT quotient `V / FactorValue<F>` when it is
+ * an integer in range (>= Min >= 0), else `number` (out of range, fractional, or an unbounded / float /
+ * non-literal / non-checkable operand, all handled by the divide guard or the runtime). Mirrors
+ * {@link MultiplyValue}; divide only shrinks toward zero, so there is no MAX to breach.
+ */
+export type DivideValue<F, V extends number, Min extends number> = [
+  V,
+] extends [
+  never,
+]
+  ? number
+  : [
+        FactorValue<F>,
+      ] extends [
+        never,
+      ]
+    ? number
+    : FactorValue<F> extends infer K extends number
+      ? IsNativelyCheckable<V> extends false
+        ? number
+        : IsNativelyCheckable<K> extends false
+          ? number
+          : QuotientOutOfRange<V, K, Min> extends true
+            ? number
+            : DivExact<V, K>
       : number;

@@ -12,6 +12,7 @@ import type {
   AddGuard,
   AddValue,
   DivideGuard,
+  DivideValue,
   MultiplyGuard,
   MultiplyValue,
   OverflowGuard,
@@ -70,11 +71,11 @@ export interface IInteger {
   // `PreserveIntegerBrand`. `clamp` still MINTS a fresh range; `clone` still returns `this`.
   asScalar: () => PreserveIntegerBrand<this>;
   withValue: (value: number) => PreserveIntegerBrand<this>;
-  // add / subtract / multiply thread the captured value so a CHAIN keeps checking: each carries
+  // add / subtract / multiply / divide thread the captured value so a CHAIN keeps checking: each carries
   // a fresh `ValueBrand` of the result. add raises the value (breaches MAX only), subtract lowers it
-  // (breaches MIN only). divide only shrinks toward zero (breaches MIN only) and does NOT thread a value:
-  // its exact-integer quotient is a narrow case (a non-integer quotient throws at runtime anyway), so a
-  // chain CONTINUING past a divide skips to the runtime; the divide overflow itself is still a squiggle.
+  // (breaches MIN only). divide shrinks toward zero (breaches MIN only) and threads its EXACT quotient
+  // (`DivideValue` reuses the multiply chunk machinery); a fractional quotient threads no value (a
+  // non-integer quotient throws at runtime anyway), so a chain past such a divide skips to the runtime.
   add: <K extends Scalar>(
     delta: K & AddGuard<K, ValueOf<this>, MaxOf<this>>,
   ) => PreserveIntegerBrand<this> &
@@ -92,7 +93,8 @@ export interface IInteger {
     >;
   divide: <K extends Scalar>(
     divisor: K & DivideGuard<K, ValueOf<this>, MinOf<this>>,
-  ) => PreserveIntegerBrand<this>;
+  ) => PreserveIntegerBrand<this> &
+    ValueBrand<DivideValue<K, ValueOf<this>, MinOf<this>>>;
   clamp: <Min extends number, Max extends number>(
     min: Min,
     max: Max,

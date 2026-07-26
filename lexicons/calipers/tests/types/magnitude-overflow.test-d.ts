@@ -51,6 +51,9 @@ expectError(i(9, { min: 0, max: 10 }).subtract(3).subtract(8)); // 6, then -2 < 
 expectError(i(3, { min: 2, max: 10 }).subtract(2)); // 3 - 2 = 1 < 2
 expectError(i(10, { min: 6, max: 100 }).divide(2)); // 10 / 2 = 5 < 6 (min * k > value)
 expectError(i(2, { min: 0, max: 10 }).multiply(4).subtract(20)); // 8, then -12 < 0 (threads across ops)
+// a chain PAST a divide keeps checking now: divide threads its EXACT quotient (RED until DivideValue lands)
+expectError(i(100, { min: 0, max: 100 }).divide(2).multiply(3)); // 50, then 50 * 3 = 150 > 100
+expectError(i(20, { min: 0, max: 100 }).divide(2).multiply(60)); // 10, then 10 * 60 = 600 > 100
 
 // clean (GREEN before and after):
 i(2, { min: 0, max: 10 }).add(8); // 10 = 10, upper edge inclusive
@@ -61,7 +64,8 @@ i(10, { min: 5, max: 100 }).divide(2); // 5 = 5, lower edge inclusive
 i(5, { min: 0, max: 10 }).add(dyn); // non-literal operand: skip
 i(5, { min: 0, max: 10 }).subtract(1000); // 4-digit operand: skip
 i(5, { max: 10 }).add(20); // single-edge bound: no captured value, no squiggle (runtime catches)
-i(20, { min: 0, max: 100 }).divide(2).multiply(60); // divide drops the captured value, so the next op skips (runtime: 600 > 100 throws)
+i(100, { min: 0, max: 100 }).divide(2).multiply(2); // 50, then 50 * 2 = 100 = max: clean (divide threads exactly)
+i(20, { min: 0, max: 100 }).divide(3).multiply(60); // 20 / 3 is not an integer: no threaded value, next op skips (runtime throws on the non-integer)
 f(2, { min: 0, max: 5 }).add(8); // f is brand-only: no check
 
 // --- FactorValue: a BOUNDED i OPERAND is checked via its captured value (its own bound is irrelevant;

@@ -24,10 +24,16 @@ expectType<IInteger>(i(5));
 declare const dynamic: number;
 expectType<InRangeInteger<0, 10>>(i(dynamic, { min: 0, max: 10 }));
 
-// the value THREADS through arithmetic now (multiply, add/subtract): `add` carries the new value,
-// so a chain keeps checking. 5 + 1 = 6, so the result is the bound brand intersected with `ValueBrand<6>`.
+// the value THREADS through arithmetic (multiply, add/subtract, and divide): each op carries the new
+// value, so a chain keeps checking. 5 + 1 = 6, so the result is the bound brand intersected with `ValueBrand<6>`.
 expectType<InRangeInteger<0, 10> & ValueBrand<6>>(
   i(5, { min: 0, max: 10 }).add(1),
+);
+
+// divide threads its EXACT integer quotient (RED until DivideValue lands): 100 / 2 = 50, so the result
+// carries `ValueBrand<50>` alongside the preserved bound brand. A fractional quotient would thread no value.
+expectType<InRangeInteger<0, 100> & ValueBrand<50>>(
+  i(100, { min: 0, max: 100 }).divide(2),
 );
 
 // `f` NEVER captures (floats are unencodable; D6): a bounded float stays brand-only.
