@@ -160,3 +160,31 @@ describe('m accepts an r value', () => {
     expect(m(r(i(10), i(3)), 'px').value()).toBeCloseTo(10 / 3);
   });
 });
+
+// Exact rational arithmetic through m (see docs/pure-values.md): m delegates to its embedded scalar, so a
+// chain that passes through a non-terminating intermediate (10/3) still resolves exactly when it lands on
+// a whole value. The embedded scalar must accept non-integers (a bare-number `u` or an `f`); an embedded
+// `i` rejects the fractional step and throws, which is why these use m(f(10)) / m(10), not m(i(10)).
+describe('exact rational arithmetic through m (see docs/pure-values.md)', () => {
+  it('keeps a divide-then-multiply chain exact (1/10 * 3 = 0.3, no drift)', () => {
+    // m delegates to the embedded scalar; 1/10 stays symbolic, so * 3 is exactly 0.3, not the drifted
+    // 0.30000000000000004.
+    expect(m(f(1)).divide(i(10)).multiply(i(3)).value()).toBe(0.3);
+    // a bare number embeds a `u` (integer-valued, trivially n/1), so it is exact too
+    expect(m(1).divide(i(10)).multiply(i(3)).value()).toBe(0.3);
+    expect(0.1 * 3).not.toBe(0.3); // the drift this avoids
+  });
+
+  it('carries an r-sourced rational through m (embedUnder preserves it) and stays exact', () => {
+    // m(r(1, 10)) wraps the ratio in a pure f; embedding under the m wrapper must keep the rational, so
+    // * 3 is exactly 0.3px, not the drifted 0.30000000000000004.
+    expect(m(r(1, 10), 'px').multiply(i(3)).value()).toBe(0.3);
+    expect(m(r(1, 10), 'px').multiply(i(3)).css()).toBe('0.3px');
+  });
+
+  it('an embedded i still rejects a fractional intermediate (purity does not bypass the kind)', () => {
+    // m(i(10)) embeds an integer scalar, so a divide that goes fractional throws BEFORE any later op:
+    // the exact-rational engine does not relax the integer invariant.
+    expect(() => m(i(10)).divide(i(3))).toThrow(/integer/i);
+  });
+});

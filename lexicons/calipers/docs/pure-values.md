@@ -80,9 +80,13 @@ Each slice is one commit boundary; forks resolve just-in-time per slice.
   the embedded `f` carries the rational. `m(r(9, 10), 'px')` -> `0.9px`.
 - **S-pv3 — the pure-rational engine.** Keep `#rational` INTERNAL (no public accessor). Make `+ − × ÷` stay
   symbolic (rational) through a chain by RECOMPUTING `#rational` from the operands instead of dropping it,
-  with tainting (one impure operand -> impure). The observable is the exact RESULT (`f(0.1).add(f(0.2))` ->
-  `0.3`, `f(0.3).divide(f(0.1))` -> `3`), which is ALSO how the S-pv2 storage (currently carried but internal)
-  gets its test coverage.
+  with tainting (one impure operand -> impure). An operand is PURE when it carries a stored `#rational` OR is
+  integer-valued (trivially `n/1`), so integer chains and `m(10)` stay exact with no auto-detect. The
+  observable is the exact RESULT, which is ALSO how the S-pv2 storage (currently carried but internal) gets
+  its coverage. This slice ships only the ENGINE, so the purity sources are the ones S-pv2 already provides:
+  an `r`-sourced float (`f(r(3, 10)).divide(f(r(1, 10)))` -> `3`) and integers
+  (`m(f(10)).divide(i(3)).multiply(i(3))` -> `10`). The decimal-literal spelling (`f(0.1).add(f(0.2))` ->
+  `0.3`) lights up at S-pv4, when auto-detect makes `f(0.1)` pure `1/10`.
 - **S-pv4 — auto-detect clean decimal literals** (PV3 conservative): `f(0.5)` -> `1/2` at runtime.
 - **S-pv5 — output precision** for a non-terminating rational (`10/3` -> rounded `.css()`).
 - **S-pv6 — type-level squiggle (needs Phase C).** `r` generic `IRatio<N, D>` -> harden to `IntRatio` when
@@ -97,9 +101,12 @@ Each slice is one commit boundary; forks resolve just-in-time per slice.
   Promote only when the string is SHORT (`<= K` fractional digits); a long / repeating string
   (`0.333…` -> the double above, `0.3/0.1` -> `2.9999999999999996`, `pi`) stays impure. Remaining: fix `K`,
   plus belt-and-suspenders (cap the reduced denominator). Distinct from the tuple limit (type squiggle only).
-- [ ] **Constructs that carry purity** — `f` (yes), `m` (embeds a scalar -> inherits), `i` (trivially `n/1`?).
+- [x] **Constructs that carry purity** — `f` (yes), `m` (embeds a scalar -> inherits), `i` (trivially `n/1` —
+  YES, resolved S-pv3: an integer-VALUED operand is treated as `n/1`, so integer math and `m(10)` are exact
+  with no auto-detect; an integer scalar need not STORE a `#rational` for this).
 - [ ] **Representation** — `number` num/den (overflow past 2^53) vs `bigint` (exact, heavier); GCD-reduce each
-  op (`6/3` -> `2/1`).
+  op (`6/3` -> `2/1`). S-pv3: GCD-reduce every op; on an unsafe-integer result (past 2^53) TAINT to a plain
+  double (honest impurity) rather than claim a false-exact value — `bigint` stays the deferred richer option.
 - [ ] **Symbolic vs eager** — stay `10/3` through the whole chain, collapse only at `.css()` / `.value()`.
 - [ ] **Output** — `.css()` on a non-terminating rational (`10/3`) rounds to N places (reuse `toPlainDecimal`
   + a precision knob); does `.value()` collapse to a double?
@@ -161,13 +168,16 @@ only (no type tier). No cell skipped as "unreachable".
 | `f(1 / 3)` = `f(0.3333333333333333)` | impure | (double) | long -> double (PV3) |
 
 ### 2. Exact arithmetic (the precision payoff), runtime `.value()`
+> Decimal-literal rows (`f(0.1)` / `f(0.3)` / `f(0.5)`) need S-pv4 auto-detect to be pure; at S-pv3 the same
+> engine is proven with the `r`-sourced and integer rows (`f(r(3, 10))`, `m(f(1))`, the `iRatio` form).
+
 | expression | double today | pure expected |
 |---|---|---|
 | `f(0.1).add(f(0.2))` | `0.30000000000000004` | `0.3` |
 | `f(0.3).divide(f(0.1))` | `2.9999999999999996` | `3` |
 | `f(0.1).multiply(i(3))` | `0.30000000000000004` | `0.3` |
 | `iRatio(i(1), i(3)).multiply(i(3))` | `0.999…` | `1` |
-| `m(i(10)).divide(i(3)).multiply(i(3))` | `9.999…` | `10` (symbolic through the chain) |
+| `m(f(1)).divide(i(10)).multiply(i(3))` | `0.30000000000000004` | `0.3` (symbolic chain; `f` not `i` — an embedded `i` rejects the `0.1` step) |
 | `f(0.5).multiply(f(0.5)).multiply(i(4))` | `1` | `1` (`1/4 * 4`) |
 
 ### 3. Tainting: pure composed with impure -> impure
@@ -209,7 +219,7 @@ only (no type tier). No cell skipped as "unreachable".
 | case | expected |
 |---|---|
 | `clone()` a pure value | preserves the rational + tier |
-| `modifier` (`floor` / `round`) on a pure value | result re-classified from the modified value **[OPEN: floor(`10/3`) -> pure `3/1`?]** |
+| `modifier` (`floor` / `round`) on a pure value | S-pv3: DROP the rational (impure); re-deriving one from the modified value stays **[OPEN: floor(`10/3`) -> pure `3/1`?]** |
 | pure `f` + `{ min, max }` + `snap` | bound / snap operate on the rational (magnitude-layer reuse) |
 | `m` embeds a pure `f` | `m` inherits the purity + rational |
 | type-pure `iRatio` composed with runtime-pure decimal (`f(iRatio(i(1), i(2))).add(f(0.25))`) | exact `3/4` (runtime-pure); NO type squiggle (the decimal side has no type-level rational) |

@@ -183,3 +183,81 @@ describe('f accepts an r value', () => {
     expect(() => f(r(3, 2), { min: 0, max: 1 })).toThrow(/maximum/i); // 1.5 > 1
   });
 });
+
+// Exact rational arithmetic (see docs/pure-values.md): when a float carries an exact rational (built from
+// an integer r) and its operand is pure too (a rational-carrying scalar or an integer, trivially n/1),
+// `+ - * /` stay symbolic, so the result is the exact value, not a drifted double. One impure operand
+// taints the result back to the plain double. Only the ENGINE ships here; the decimal-literal spelling
+// (f(0.1)) becomes pure at the auto-detect slice, so these drive purity from r-sourced floats + integers.
+describe('exact rational arithmetic (see docs/pure-values.md)', () => {
+  it('divides two r-sourced floats exactly (no 0.3 / 0.1 artifact)', () => {
+    // 3/10 / 1/10 = 3, where the naive double is 2.9999999999999996
+    expect(
+      f(r(3, 10))
+        .divide(f(r(1, 10)))
+        .value(),
+    ).toBe(3);
+    expect(0.3 / 0.1).not.toBe(3); // the artifact this fixes
+  });
+
+  it('adds two r-sourced floats exactly (no 0.1 + 0.2 drift)', () => {
+    // 1/10 + 2/10 = 3/10 = 0.3, where 0.1 + 0.2 = 0.30000000000000004
+    expect(
+      f(r(1, 10))
+        .add(f(r(2, 10)))
+        .value(),
+    ).toBe(0.3);
+    expect(0.1 + 0.2).not.toBe(0.3); // the drift this fixes
+  });
+
+  it('subtracts two r-sourced floats exactly (no 0.3 - 0.1 drift)', () => {
+    // 3/10 - 1/10 = 2/10 = 0.2, where 0.3 - 0.1 = 0.19999999999999998
+    expect(
+      f(r(3, 10))
+        .subtract(f(r(1, 10)))
+        .value(),
+    ).toBe(0.2);
+    expect(0.3 - 0.1).not.toBe(0.2); // the drift this fixes
+  });
+
+  it('multiplies exactly, an integer operand trivially n/1 (no 0.1 * 3 drift)', () => {
+    // 1/10 * 3 = 3/10 = 0.3, where 0.1 * 3 = 0.30000000000000004
+    expect(f(r(1, 10)).multiply(i(3)).value()).toBe(0.3);
+    expect(0.1 * 3).not.toBe(0.3); // the drift this fixes
+    // 1/10 * 1/10 = 1/100 = 0.01, where 0.1 * 0.1 = 0.010000000000000002
+    expect(
+      f(r(1, 10))
+        .multiply(f(r(1, 10)))
+        .value(),
+    ).toBe(0.01);
+  });
+
+  it('taints back to the plain double when an operand is impure', () => {
+    // f(0.2) is an impure double (no auto-detect yet, see docs/pure-values.md), so it taints: the result
+    // is the drifted 0.1-style double, NOT the exact 0.3.
+    expect(f(r(1, 10)).add(f(0.2)).value()).toBe(0.1 + 0.2);
+    expect(f(r(1, 10)).add(f(0.2)).value()).not.toBe(0.3);
+    // a multiply that WOULD be exact if pure (1/3 * 3/10 = 1/10) drifts because f(0.3) stays impure
+    expect(f(r(1, 3)).multiply(f(0.3)).value()).not.toBe(0.1);
+    // an irrational operand taints too
+    expect(f(r(1, 2)).add(f(Math.PI)).value()).toBe(0.5 + Math.PI);
+  });
+
+  it('does not throw when a rational chain overflows safe-integer range', () => {
+    // a denominator blow-up past 2^53 cannot be trusted, so it falls back to the double (no throw, no
+    // false-exact claim).
+    const huge = f(r(1, 9007199254740991)); // denominator at the safe-integer edge
+    expect(() => huge.multiply(huge)).not.toThrow();
+    expect(Number.isFinite(huge.multiply(huge).value())).toBe(true);
+  });
+
+  it('a clone of a pure value keeps arithmetic exact', () => {
+    // clone preserves the rational (see docs/pure-values.md), so the copy is still exact.
+    expect(
+      f(r(1, 10))
+        .clone()
+        .add(f(r(2, 10)))
+        .value(),
+    ).toBe(0.3);
+  });
+});

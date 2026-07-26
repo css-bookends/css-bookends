@@ -6,6 +6,12 @@ import {
   type ErrorCode,
   type ErrorConfigStore,
 } from './errors';
+import {
+  addParts,
+  divideParts,
+  multiplyParts,
+  subtractParts,
+} from './rational-arithmetic';
 import { toPlainDecimal } from './toPlainDecimal';
 
 // The `Min extends number = number` idiom does two distinct jobs, one per `number`:
@@ -179,10 +185,11 @@ const coerce = (value: Scalar): number => toNumber(value);
  */
 export abstract class ScalarBase {
   #value: number;
-  // The exact rational this value was built from, when it is PURE (currently: an integer `r`; see
-  // docs/pure-values.md); `undefined` for a plain number. INTERNAL storage, no public accessor: purity is not
-  // something the scalar surface (or `m`) exposes; the exact-arithmetic ops read it directly. Value-adjacent, NOT
-  // config: `clone` preserves it, but arithmetic DROPS it (the value changed, so the fraction is stale).
+  // The exact rational this value carries when it is PURE (built from an integer `r`, or the trivial `n/1`
+  // of a whole number; see docs/pure-values.md); `undefined` for an impure double. INTERNAL storage, no
+  // public accessor: purity is not something the scalar surface (or `m`) exposes; the exact-arithmetic ops
+  // read it directly. Value-adjacent, NOT config: `clone` / `embedUnder` preserve it (same value), and
+  // `+ - * /` RECOMPUTE it from the operands (dropping to `undefined` when a side is impure or it overflows).
   #rational?: RatioParts;
   // The SINGLE source of truth for everything about this value EXCEPT the value itself: bound,
   // context, error store, and any config prop added later. `clone` / `rebuildWith`
@@ -356,16 +363,71 @@ export abstract class ScalarBase {
     return this.rebuildWith(value);
   }
 
+  // The exact rational for symbolic arithmetic: the stored fraction if PURE, else the trivial `n/1` of a
+  // whole number (an integer IS exactly `n/1`, so integer chains stay exact with no stored rational), else
+  // `undefined` for an impure double.
+  #rationalParts(): RatioParts | undefined {
+    if (this.#rational) return this.#rational;
+    return Number.isInteger(this.#value)
+      ? { numerator: this.#value, denominator: 1 }
+      : undefined;
+  }
+
+  // Apply one arithmetic op. When BOTH sides are pure, `combine` recomputes the exact rational and the
+  // result adopts it (so the value is `num/den`, not a drifted double); otherwise, or on overflow
+  // (`combine` returns null), the result is the plain-double `fallback`. The recomputed rational is
+  // attached only if it SURVIVED construction unchanged: a bound-snap or modifier that moved the value
+  // would leave the fraction stale, so we drop it in that case.
+  #deriveArith(
+    operand: Scalar,
+    numeric: number,
+    combine: (a: RatioParts, b: RatioParts) => RatioParts | null,
+    fallback: number,
+  ): this {
+    const left = this.#rationalParts();
+    const right =
+      operand instanceof ScalarBase
+        ? operand.#rationalParts()
+        : Number.isInteger(numeric)
+          ? { numerator: numeric, denominator: 1 }
+          : undefined;
+    const parts = left && right ? combine(left, right) : null;
+    const value = parts
+      ? parts.numerator / parts.denominator
+      : fallback;
+    const result = this.rebuildWith(value);
+    if (parts && result.value() === value) result.#rational = parts;
+    return result;
+  }
+
   add(delta: Scalar): this {
-    return this.rebuildWith(this.#value + coerce(delta));
+    const numeric = coerce(delta);
+    return this.#deriveArith(
+      delta,
+      numeric,
+      addParts,
+      this.#value + numeric,
+    );
   }
 
   subtract(delta: Scalar): this {
-    return this.rebuildWith(this.#value - coerce(delta));
+    const numeric = coerce(delta);
+    return this.#deriveArith(
+      delta,
+      numeric,
+      subtractParts,
+      this.#value - numeric,
+    );
   }
 
   multiply(factor: Scalar): this {
-    return this.rebuildWith(this.#value * coerce(factor));
+    const numeric = coerce(factor);
+    return this.#deriveArith(
+      factor,
+      numeric,
+      multiplyParts,
+      this.#value * numeric,
+    );
   }
 
   divide(divisor: Scalar): this {
@@ -377,14 +439,14 @@ export abstract class ScalarBase {
         'CALIPERS_E_DIVIDE_BY_ZERO',
       );
     }
-    const result = this.#value / numeric;
-    if (!Number.isFinite(result)) {
+    const fallback = this.#value / numeric;
+    if (!Number.isFinite(fallback)) {
       this.throwScalar(
         `${label}: non-finite result dividing ${this.#value} by ${numeric}${suffix(this.#config.context)}`,
         'CALIPERS_E_NONFINITE_RESULT',
       );
     }
-    return this.rebuildWith(result);
+    return this.#deriveArith(divisor, numeric, divideParts, fallback);
   }
 
   // The clamp MATH lives here; the public, brand-returning `clamp` is defined on each subclass
@@ -427,10 +489,14 @@ export abstract class ScalarBase {
       ]
         .filter((c): c is string => c !== undefined && c !== '')
         .join(' > ') || undefined;
-    return this.rebuildWith(this.#value, {
+    // Same value, new wrapper label / context: the exact rational still holds, so carry it (as `clone`
+    // does). This is what lets an `m` that ingests a pure `f` (or `r`) keep exact arithmetic.
+    const copy = this.rebuildWith(this.#value, {
       ...this.options(),
       wrapperLabel,
       context,
     });
+    copy.#rational = this.#rational;
+    return copy;
   }
 }

@@ -7,6 +7,7 @@ import {
   type ErrorConfig,
   type ErrorConfigStore,
 } from './internal/errors';
+import { gcd } from './internal/rational-arithmetic';
 import { ScalarBase } from './internal/scalarBase';
 import { type IUnspecified, u } from './internal/unspecified';
 import { type Scalar } from './scalar';
@@ -337,17 +338,6 @@ export const normalizeRatio = (ratio: IRatio): IRatio => {
     numerator = -numerator;
     denominator = Math.abs(denominator);
   }
-
-  const gcd = (a: number, b: number): number => {
-    let x = Math.abs(a);
-    let y = Math.abs(b);
-    while (y !== 0) {
-      const next = x % y;
-      x = y;
-      y = next;
-    }
-    return x === 0 ? 1 : x;
-  };
 
   const divisor = gcd(numerator, denominator);
   return new RatioImpl(numerator / divisor, denominator / divisor);
