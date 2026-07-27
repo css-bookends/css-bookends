@@ -87,20 +87,23 @@ Each slice is one commit boundary; forks resolve just-in-time per slice.
   an `r`-sourced float (`f(r(3, 10)).divide(f(r(1, 10)))` -> `3`) and integers
   (`m(f(10)).divide(i(3)).multiply(i(3))` -> `10`). The decimal-literal spelling (`f(0.1).add(f(0.2))` ->
   `0.3`) lights up at S-pv4, when auto-detect makes `f(0.1)` pure `1/10`.
-- **S-pv4 — auto-detect clean decimal literals** (PV3 conservative): `f(0.5)` -> `1/2` at runtime.
+- **S-pv4 — auto-detect clean decimal literals** (PV3 conservative): `f(0.5)` -> `1/2` at runtime, gated by
+  the config-driven `cleanDecimalDigits` (default 6; float-scoped, cascades like `snap`). `f` only; `m`/`u` later.
 - **S-pv5 — output precision** for a non-terminating rational (`10/3` -> rounded `.css()`).
 - **S-pv6 — type-level squiggle (needs Phase C).** `r` generic `IRatio<N, D>` -> harden to `IntRatio` when
   `i/i` (PV6) -> a pure `f` squiggles on overflow (the D6 revision; shallow-only within tuple limits).
 
 ## OPEN FORKS (work top-to-bottom)
 
-- [ ] **"How clean is clean" — the exact bound (direction SET by PV3: conservative).** Mechanism: read the
-  double's shortest round-trip decimal (`.toString()`) and take it LITERALLY as its exact rational (`0.333`
-  -> `333/1000`, honouring what was typed). NO fraction-RECOGNITION: we never look at `0.3333333333333333`
-  and guess `1/3` (a double cannot even hold 30 threes; it rounds to `0.3333333333333333`, a 16-digit string).
-  Promote only when the string is SHORT (`<= K` fractional digits); a long / repeating string
-  (`0.333…` -> the double above, `0.3/0.1` -> `2.9999999999999996`, `pi`) stays impure. Remaining: fix `K`,
-  plus belt-and-suspenders (cap the reduced denominator). Distinct from the tuple limit (type squiggle only).
+- [x] **"How clean is clean" — RESOLVED (S-pv4): a config-driven digit bound `cleanDecimalDigits`, default 6.**
+  Mechanism: read the double's shortest round-trip decimal (`.toString()`) and take it LITERALLY as its exact
+  rational (`0.333` -> `333/1000`, honouring what was typed). NO fraction-RECOGNITION: we never look at
+  `0.3333333333333333` and guess `1/3`. Promote only when it is a plain terminating decimal with
+  `<= cleanDecimalDigits` fractional digits; a longer / noisier string (`0.1+0.2` -> `0.30000000000000004`,
+  `0.3/0.1` -> `2.9999999999999996`, `pi`) stays impure. `cleanDecimalDigits` is float-scoped and cascades
+  `own float key -> scalar/codex global -> default 6`, exactly like `snap` (see docs/config-flow.md). Default 6
+  catches every realistic CSS decimal (<= 3 places) with margin below the 16-17-digit noise floor, and keeps
+  the denominator <= 10^6 (under 2^53). Distinct from the tuple limit (type squiggle only).
 - [x] **Constructs that carry purity** — `f` (yes), `m` (embeds a scalar -> inherits), `i` (trivially `n/1` —
   YES, resolved S-pv3: an integer-VALUED operand is treated as `n/1`, so integer math and `m(10)` are exact
   with no auto-detect; an integer scalar need not STORE a `#rational` for this).

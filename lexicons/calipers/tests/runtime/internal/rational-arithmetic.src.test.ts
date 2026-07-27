@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 
 import {
   addParts,
+  detectCleanRational,
   divideParts,
   multiplyParts,
   reduceParts,
@@ -174,5 +175,72 @@ describe('safe-integer overflow guard (honest impurity)', () => {
         { numerator: 9, denominator: 16 },
       ),
     ).toEqual({ numerator: 1, denominator: 1 });
+  });
+});
+
+// The conservative clean-decimal auto-detect (see docs/pure-values.md, PV3): read a double's shortest
+// round-trip string and take a SHORT terminating decimal literally as its exact rational; leave float-noise
+// and irrationals as impure doubles (no fraction-guessing). `maxDigits` is the config-driven cutoff.
+describe('detectCleanRational', () => {
+  it('promotes a short terminating decimal to its exact rational', () => {
+    expect(detectCleanRational(0.5, 6)).toEqual({
+      numerator: 1,
+      denominator: 2,
+    });
+    expect(detectCleanRational(0.1, 6)).toEqual({
+      numerator: 1,
+      denominator: 10,
+    });
+    expect(detectCleanRational(0.333, 6)).toEqual({
+      numerator: 333,
+      denominator: 1000,
+    });
+    expect(detectCleanRational(1.5, 6)).toEqual({
+      numerator: 3,
+      denominator: 2,
+    });
+    expect(detectCleanRational(0.125, 6)).toEqual({
+      numerator: 1,
+      denominator: 8,
+    });
+  });
+
+  it('handles sign, zero, and whole numbers', () => {
+    expect(detectCleanRational(-0.5, 6)).toEqual({
+      numerator: -1,
+      denominator: 2,
+    });
+    expect(detectCleanRational(0, 6)).toEqual({
+      numerator: 0,
+      denominator: 1,
+    });
+    expect(detectCleanRational(2, 6)).toEqual({
+      numerator: 2,
+      denominator: 1,
+    });
+  });
+
+  it('rejects float-noise and irrationals (no fraction-guessing)', () => {
+    expect(detectCleanRational(0.1 + 0.2, 6)).toBeUndefined(); // 0.30000000000000004
+    expect(detectCleanRational(0.3 / 0.1, 6)).toBeUndefined(); // 2.9999999999999996
+    expect(detectCleanRational(1 / 3, 6)).toBeUndefined(); // 0.3333333333333333
+    expect(detectCleanRational(Math.PI, 6)).toBeUndefined();
+  });
+
+  it('honours the maxDigits cutoff', () => {
+    expect(detectCleanRational(0.333, 2)).toBeUndefined(); // 3 digits > 2
+    expect(detectCleanRational(0.333, 3)).toEqual({
+      numerator: 333,
+      denominator: 1000,
+    }); // 3 <= 3
+    expect(detectCleanRational(0.5, 2)).toEqual({
+      numerator: 1,
+      denominator: 2,
+    }); // 1 <= 2
+  });
+
+  it('rejects scientific-notation strings (not a plain decimal)', () => {
+    expect(detectCleanRational(1e-7, 6)).toBeUndefined(); // "1e-7"
+    expect(detectCleanRational(1e21, 6)).toBeUndefined(); // "1e+21"
   });
 });

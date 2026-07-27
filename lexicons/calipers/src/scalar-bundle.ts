@@ -34,6 +34,8 @@ export interface ScalarBundleConfig {
     /** The blanket snap policy shared across integer / float; a unit's own `snap` (or a per-edge
      *  `snap` on its `min` / `max`) overrides it. Policy only, no bound value. */
     snap?: boolean;
+    /** The float clean-decimal auto-promote cutoff (float-only; integer / ratio ignore it). Default 6. */
+    cleanDecimalDigits?: number;
   };
   /** forwarded to `createIntegerFactory` (the integer surface). */
   integer?: IntegerFactoryConfig;
@@ -77,9 +79,17 @@ export const createScalarBundleFactory = (
     ...own,
     errorConfig: own?.errorConfig ?? config.global?.errorConfig,
   });
+  // Float adds the clean-decimal cutoff on top of the shared cascade (float-only; integer ignores it).
+  const cascadeFloat = (
+    own?: FloatFactoryConfig,
+  ): FloatFactoryConfig => ({
+    ...cascade(own),
+    cleanDecimalDigits:
+      own?.cleanDecimalDigits ?? config.global?.cleanDecimalDigits,
+  });
   return {
     ...createIntegerFactory(cascade(config.integer)),
-    ...createFloatFactory(cascade(config.float)),
+    ...createFloatFactory(cascadeFloat(config.float)),
     ...createRatioFactory(cascadeRatio(config.ratio)),
   };
 };

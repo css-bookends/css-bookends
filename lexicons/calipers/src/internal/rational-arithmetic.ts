@@ -76,3 +76,35 @@ export const divideParts = (
   b: RatioParts,
 ): RatioParts | null =>
   build(a.numerator * b.denominator, a.denominator * b.numerator);
+
+/**
+ * Auto-detect a clean decimal literal as its exact rational (see docs/pure-values.md, PV3): read the
+ * value's shortest round-trip string and, when it is a plain terminating decimal (no exponent) with at
+ * most `maxDigits` fractional digits, return `digits / 10^k` reduced. Otherwise `undefined` — float-noise
+ * and irrationals stay impure doubles, with NO fraction-guessing (`0.3333333333333333` never becomes
+ * `1/3`). The safe-integer guard is a backstop: a numerator/denominator past 2^53 cannot be trusted, so it
+ * stays impure even if `maxDigits` was set high.
+ */
+export const detectCleanRational = (
+  value: number,
+  maxDigits: number,
+): RatioParts | undefined => {
+  const match = /^(-?)(\d+)(?:\.(\d+))?$/.exec(value.toString());
+  if (!match) return undefined; // scientific notation, NaN, Infinity: not a plain decimal
+  const [
+    ,
+    sign,
+    whole,
+    frac = '',
+  ] = match;
+  if (frac.length > maxDigits) return undefined;
+  const denominator = 10 ** frac.length;
+  const numerator = Number(`${sign}${whole}${frac}`);
+  if (
+    !Number.isSafeInteger(numerator) ||
+    !Number.isSafeInteger(denominator)
+  ) {
+    return undefined;
+  }
+  return reduceParts({ numerator, denominator });
+};

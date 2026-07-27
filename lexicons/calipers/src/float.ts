@@ -15,6 +15,7 @@ import {
   createErrorHelpers,
   type ErrorConfig,
 } from './internal/errors';
+import { detectCleanRational } from './internal/rational-arithmetic';
 import {
   makeRefinement,
   type Refinement,
@@ -37,7 +38,12 @@ export type FloatOptions<
   Min extends number = number,
   Max extends number = number,
 > = SnapBound<Min, Max> &
-  Omit<ScalarOptions<Min, Max>, 'min' | 'max' | 'snap'>;
+  Omit<ScalarOptions<Min, Max>, 'min' | 'max' | 'snap'> & {
+    /** Max fractional digits for a decimal literal to auto-promote to an EXACT rational (see
+     *  docs/pure-values.md); default 6, must be an integer in [0, 15]. Float-only; per-call overrides
+     *  the factory. */
+    cleanDecimalDigits?: number;
+  };
 
 export interface IFloat {
   css: () => string;
@@ -195,6 +201,12 @@ class FloatImpl
   }
 }
 
+// The auto-detect cutoff (max fractional digits) defaults to 6 and is capped at 15: 10^15 is the largest
+// power of ten that stays a safe integer, so a larger denominator could not be represented exactly (see
+// docs/pure-values.md).
+const DEFAULT_CLEAN_DECIMAL_DIGITS = 6;
+const MAX_CLEAN_DECIMAL_DIGITS = 15;
+
 /**
  * Create a typed float (a finite, unitless real number) with optional range
  * constraints. Operations re-validate against the same constraints, so a
@@ -218,17 +230,37 @@ export function f<
   value: number | IRatio,
   options: FloatOptions<Min, Max> = {},
 ): ResolveFloatBrand<Min, Max> {
-  // Accept an `r` as the value (see docs/pure-values.md): coerce via its `.valueOf()` (= n/d), and when it is an
-  // INTEGER ratio, carry its exact rational INTERNALLY (no public accessor; the exact-arithmetic ops read it),
-  // so the float remembers it is exact without exposing purity on its surface.
-  const numeric = typeof value === 'number' ? value : value.valueOf();
+  const cleanDigits =
+    options.cleanDecimalDigits ?? DEFAULT_CLEAN_DECIMAL_DIGITS;
+  if (
+    !Number.isInteger(cleanDigits) ||
+    cleanDigits < 0 ||
+    cleanDigits > MAX_CLEAN_DECIMAL_DIGITS
+  ) {
+    createErrorHelpers(
+      options.errorStore ?? createErrorConfigStore(),
+    ).throwScalarError(
+      `f: cleanDecimalDigits must be an integer in [0, ${MAX_CLEAN_DECIMAL_DIGITS}] (got ${cleanDigits})`,
+      'CALIPERS_E_INVALID_CONFIG',
+    );
+  }
+  // A plain `number` auto-detects a clean decimal literal as its exact rational (PV3); an `r` carries its
+  // rational when it is an integer ratio. Either way, when a rational is found the STORED value is `num/den`
+  // (the clean double), so `.value()` matches the rational the exact-arithmetic ops read (docs/pure-values.md).
   const rational =
-    typeof value === 'number' || !value.isIntRatio()
-      ? undefined
-      : {
-          numerator: value.numerator(),
-          denominator: value.denominator(),
-        };
+    typeof value === 'number'
+      ? detectCleanRational(value, cleanDigits)
+      : value.isIntRatio()
+        ? {
+            numerator: value.numerator(),
+            denominator: value.denominator(),
+          }
+        : undefined;
+  const numeric = rational
+    ? rational.numerator / rational.denominator
+    : typeof value === 'number'
+      ? value
+      : value.valueOf();
   return new FloatImpl(
     numeric,
     options,
@@ -312,6 +344,9 @@ export type FloatFactoryConfig<
    * overrides it. Floats accept whatever the modifier returns (no integer check).
    */
   modifier?: Modifier;
+  /** Max fractional digits for a decimal literal to auto-promote to an EXACT rational (see
+   *  docs/pure-values.md); default 6, an integer in [0, 15]. Cascades own float key -> bundle global. */
+  cleanDecimalDigits?: number;
 };
 
 /**
@@ -365,7 +400,7 @@ export const createFloatFactory = <
 >(
   config: FloatFactoryConfig<Min, Max> = {},
 ): FloatApi<Min, Max> => {
-  const { min, max, snap, modifier } = config;
+  const { min, max, snap, modifier, cleanDecimalDigits } = config;
   const factoryBounded = min !== undefined || max !== undefined;
   // One per-instance error store, shared by every value this factory binds, so
   // the resolved `stackHints` config reaches `f`.
@@ -411,6 +446,7 @@ export const createFloatFactory = <
       max,
       snap,
       modifier,
+      cleanDecimalDigits,
       ...options,
       // Internal composition of an already-validated factory bound + per-value options; the strict
       // `SnapBound` union guards USER input, so cast past it here.

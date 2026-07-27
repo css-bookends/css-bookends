@@ -249,3 +249,40 @@ describe('codex errorConfig cascade (global -> unit key -> factory default)', ()
     expect(() => c.i(50)).toThrow(/minimum/);
   });
 });
+
+describe('codex cleanDecimalDigits cascade (float key -> global -> factory default)', () => {
+  // Observable: f(0.1) auto-promotes to 1/10 iff the resolved cutoff >= 1, so * 3 is exactly 0.3; an
+  // un-promoted 0.1 * 3 drifts to 0.30000000000000004 (a reliable IEEE drift). cutoff 0 = integers only.
+  // RED until the bundle threads cleanDecimalDigits.
+  const promotesTenth = (c: CalipersBundle): boolean =>
+    c.f(0.1).multiply(3).value() === 0.3;
+
+  it('factory default promotes a clean decimal when nothing is set', () => {
+    expect(promotesTenth(createCalipersBundleFactory())).toBe(true);
+  });
+
+  it('global.cleanDecimalDigits applies to f when there is no float key', () => {
+    expect(
+      promotesTenth(
+        createCalipersBundleFactory({
+          global: { cleanDecimalDigits: 0 },
+        }),
+      ),
+    ).toBe(false); // 0.1 has 1 fractional digit > cutoff 0 (integers only)
+    expect(
+      promotesTenth(
+        createCalipersBundleFactory({
+          global: { cleanDecimalDigits: 3 },
+        }),
+      ),
+    ).toBe(true); // 1 <= 3
+  });
+
+  it('the float key overrides global.cleanDecimalDigits (unit key wins)', () => {
+    const c = createCalipersBundleFactory({
+      global: { cleanDecimalDigits: 0 },
+      float: { cleanDecimalDigits: 3 },
+    });
+    expect(promotesTenth(c)).toBe(true); // float key 3 wins over global 0
+  });
+});

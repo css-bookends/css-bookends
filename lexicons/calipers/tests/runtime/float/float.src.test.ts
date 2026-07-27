@@ -232,15 +232,15 @@ describe('exact rational arithmetic (see docs/pure-values.md)', () => {
     ).toBe(0.01);
   });
 
-  it('taints back to the plain double when an operand is impure', () => {
-    // f(0.2) is an impure double (no auto-detect yet, see docs/pure-values.md), so it taints: the result
-    // is the drifted 0.1-style double, NOT the exact 0.3.
-    expect(f(r(1, 10)).add(f(0.2)).value()).toBe(0.1 + 0.2);
-    expect(f(r(1, 10)).add(f(0.2)).value()).not.toBe(0.3);
-    // a multiply that WOULD be exact if pure (1/3 * 3/10 = 1/10) drifts because f(0.3) stays impure
-    expect(f(r(1, 3)).multiply(f(0.3)).value()).not.toBe(0.1);
-    // an irrational operand taints too
+  it('taints back to the plain double when an operand is genuinely impure', () => {
+    // an irrational operand cannot be promoted, so it taints: a pure receiver + impure operand -> double.
     expect(f(r(1, 2)).add(f(Math.PI)).value()).toBe(0.5 + Math.PI);
+    // 17-digit float-noise (0.1 + 0.2) is not promoted either, so it taints a pure receiver too.
+    expect(
+      f(r(1, 10))
+        .add(f(0.1 + 0.2))
+        .value(),
+    ).toBe(0.1 + (0.1 + 0.2));
   });
 
   it('does not throw when a rational chain overflows safe-integer range', () => {
@@ -259,5 +259,45 @@ describe('exact rational arithmetic (see docs/pure-values.md)', () => {
         .add(f(r(2, 10)))
         .value(),
     ).toBe(0.3);
+  });
+});
+
+// Auto-detect clean decimal literals (see docs/pure-values.md): a short terminating decimal like f(0.1) is
+// promoted to its exact rational, so plain-decimal arithmetic is exact. Float-noise and irrationals stay
+// impure doubles (no fabricated fraction). The digit cutoff is config-driven (cleanDecimalDigits, default 6).
+describe('auto-detects clean decimal literals (see docs/pure-values.md)', () => {
+  it('makes plain-decimal arithmetic exact (the 0.1 + 0.2 payoff)', () => {
+    expect(f(0.1).add(f(0.2)).value()).toBe(0.3);
+    expect(f(0.3).divide(f(0.1)).value()).toBe(3);
+    expect(f(0.1).multiply(i(3)).value()).toBe(0.3);
+    // a mixed r-sourced + auto-detected chain: 1/3 * 3/10 = 1/10
+    expect(f(r(1, 3)).multiply(f(0.3)).value()).toBe(0.1);
+  });
+
+  it('leaves float-noise and irrationals impure (no fabricated fraction)', () => {
+    // 0.1 + 0.2 is 17-digit noise, so it is NOT promoted: subtracting the pure 0.2 drifts instead of
+    // landing on the 0.1 that a wrongly-promoted 3/10 would give.
+    expect(
+      f(0.1 + 0.2)
+        .subtract(f(0.2))
+        .value(),
+    ).not.toBe(0.1);
+    expect(f(Math.PI).multiply(i(2)).value()).toBe(Math.PI * 2);
+  });
+
+  it('rejects a cleanDecimalDigits outside [0, 15]', () => {
+    // fail-fast on a nonsensical cutoff: negative, past the safe-integer power-of-ten limit (15), or fractional.
+    expect(() => f(0.5, { cleanDecimalDigits: -1 })).toThrow(
+      /cleanDecimalDigits/,
+    );
+    expect(() => f(0.5, { cleanDecimalDigits: 16 })).toThrow(
+      /cleanDecimalDigits/,
+    );
+    expect(() => f(0.5, { cleanDecimalDigits: 1.5 })).toThrow(
+      /cleanDecimalDigits/,
+    );
+    // the edges are allowed (0 = integers only, 15 = the safe-integer limit)
+    expect(f(0.5, { cleanDecimalDigits: 0 }).value()).toBe(0.5);
+    expect(f(0.5, { cleanDecimalDigits: 15 }).value()).toBe(0.5);
   });
 });

@@ -83,13 +83,15 @@ own unit key  →  this level's global  →  the outer level's global  →  fact
 | constraint bound (`min`, `max`) | a `number` | — (the scalar's own key `integer` / `float`, or per value) | `i`, `f`: a bounded builder brands the value `InRange<min,max>` (System A) and stores the bound (System B). `m` / `r` are containers with no bound of their own: a measurement's bound rides on the `i` / `f` it embeds (`m(i(v, {min,max}))`), surfaced via `.constraints()`; ratio has no bound. Set once at construction, then immutable; mint a fresh scalar to change it | unbounded |
 | input `modifier` | `(n: number) => number` | — (the scalar's own key `integer` / `float`, or per value) | `i`, `f`: transforms the raw value at intake, before validate/store (modify-then-validate). A measurement gets it via the `i` / `f` it embeds. Generic mechanism; specific normalization (e.g. cyclic-angle modulo) lives on a purpose-built scalar or helper | none |
 | `snap` (per-edge + blanket) | per edge via `min`/`max: { snap: boolean }`, or blanket `snap: boolean` | compendium, codex, scalar — POLICY only, the globals carry no bound `value` | `i`, `f`: makes a breach on that edge ABSORB to the limit (silent) instead of throwing; per-edge, cascades most-specific-wins, blanket governs both edges. A dead blanket (both edges override it) is a COMPILE error. `m` gets it via the embedded `i` / `f` | `false` (throws) |
+| `cleanDecimalDigits` | a non-negative integer | codex, scalar — POLICY, float-scoped | `f`: the max fractional digits in a decimal literal's shortest round-trip string for it to auto-promote to an EXACT rational (`f(0.5)` -> `1/2`, so exact arithmetic has no `0.1 + 0.2` drift); a longer / noisier decimal stays an impure double. `i` / `r` have no decimals; `m` inherits it through an embedded `f` (`m(f(0.5))`), but a plain-number `m(0.5)` wraps a `u` and does not auto-detect yet | `6` |
 
 `errorConfig` reaches every error-producing unit and is carried in every level's `global`. A broken
 bound THROWS by default; the per-edge `snap` policy (above) is the shared scalar option that makes it
 ABSORB to the limit instead, and it cascades through every level's `global` (policy only, never a bound
-`value`). `defaultUnit`, `formats`, `format`, the constraint bound (`min` / `max`),
-and the scalar `modifier` are unit-local or per-value (set through a unit's own key or a per-value
-option, never a shared global).
+`value`). The float `cleanDecimalDigits` (auto-promote precision, default 6) is the other cascading scalar
+policy, carried in the codex / scalar `global` (float-only). `defaultUnit`, `formats`, `format`, the
+constraint bound (`min` / `max`), and the scalar `modifier` are unit-local or per-value (set through a
+unit's own key or a per-value option, never a shared global).
 
 ## Worked example, top to bottom
 

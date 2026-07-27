@@ -13,7 +13,9 @@ export type ErrorCode =
   | 'CALIPERS_E_NONFINITE'
   | 'CALIPERS_E_NONFINITE_RESULT'
   | 'CALIPERS_E_DIVIDE_BY_ZERO'
-  | 'CALIPERS_E_NON_INTEGER_RATIO';
+  | 'CALIPERS_E_NON_INTEGER_RATIO'
+  // A config option was given a value outside its allowed range (e.g. `cleanDecimalDigits` not in [0, 15]).
+  | 'CALIPERS_E_INVALID_CONFIG';
 
 export interface ErrorDetails {
   code?: ErrorCode;
