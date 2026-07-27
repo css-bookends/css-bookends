@@ -88,22 +88,40 @@ Each slice is one commit boundary; forks resolve just-in-time per slice.
   (`m(f(10)).divide(i(3)).multiply(i(3))` -> `10`). The decimal-literal spelling (`f(0.1).add(f(0.2))` ->
   `0.3`) lights up at S-pv4, when auto-detect makes `f(0.1)` pure `1/10`.
 - **S-pv4 — auto-detect clean decimal literals** (PV3 conservative): `f(0.5)` -> `1/2` at runtime, gated by
-  the config-driven `cleanDecimalDigits` (default 6; float-scoped, cascades like `snap`). `f` only; `m`/`u` later.
+  the config-driven `cleanDecimalDigits` (default 3; float-scoped, cascades like `snap`). `f` only; `m`/`u` later.
 - **S-pv5 — output precision** for a non-terminating rational (`10/3` -> rounded `.css()`).
 - **S-pv6 — type-level squiggle (needs Phase C).** `r` generic `IRatio<N, D>` -> harden to `IntRatio` when
   `i/i` (PV6) -> a pure `f` squiggles on overflow (the D6 revision; shallow-only within tuple limits).
+  REVISIT here: `cleanDecimalDigits` default is 3 = the max squiggle-able digits (tuple limit); if this tier
+  can squiggle MORE digits, RAISE that default to match (the maximize-squiggles principle).
 
 ## OPEN FORKS (work top-to-bottom)
 
-- [x] **"How clean is clean" — RESOLVED (S-pv4): a config-driven digit bound `cleanDecimalDigits`, default 6.**
+- [x] **"How clean is clean" — RESOLVED (S-pv4): a config-driven digit bound `cleanDecimalDigits`, default 3.**
   Mechanism: read the double's shortest round-trip decimal (`.toString()`) and take it LITERALLY as its exact
   rational (`0.333` -> `333/1000`, honouring what was typed). NO fraction-RECOGNITION: we never look at
   `0.3333333333333333` and guess `1/3`. Promote only when it is a plain terminating decimal with
   `<= cleanDecimalDigits` fractional digits; a longer / noisier string (`0.1+0.2` -> `0.30000000000000004`,
   `0.3/0.1` -> `2.9999999999999996`, `pi`) stays impure. `cleanDecimalDigits` is float-scoped and cascades
-  `own float key -> scalar/codex global -> default 6`, exactly like `snap` (see docs/config-flow.md). Default 6
-  catches every realistic CSS decimal (<= 3 places) with margin below the 16-17-digit noise floor, and keeps
-  the denominator <= 10^6 (under 2^53). Distinct from the tuple limit (type squiggle only).
+  `own float key -> scalar/codex global -> default 3`, exactly like `snap` (see docs/config-flow.md).
+  - **Why 3 (the MAX squiggle-able cutoff).** The lexicon's goal is MAXIMUM author-time squiggles. A pure
+    float can only ever type-squiggle when its denominator fits the type-level tuple arithmetic, which dies at
+    TS's ~1000 recursion limit: `IsNativelyCheckable` caps at **3** fractional digits (denominator <= 1000,
+    the tuple edge; matrix row `f(0.333)` -> `333/1000`). So 3 is the most a pure float could EVER squiggle,
+    and the runtime auto-detect default is aligned to it: a runtime-promoted pure float never exceeds what
+    could eventually get a squiggle (S-pv6, the type-level pure-float tier, is not built yet, but the default
+    is set for it). The cap stays 15: a consumer who wants broader RUNTIME exactness and does not care about
+    squiggle alignment can opt into a higher cutoff per factory. **FUTURE (revisit at S-pv6): if a type
+    encoding ever squiggles past 3 digits, RAISE this default to match — the maximize-squiggles principle.**
+  - **The 3-digit cap is a TypeScript LIMIT; the ESLint script (magnitude Phase D) is the planned bridge.**
+    The type-level check is unary tuple arithmetic, which hits TS's ~1000 recursion limit (TS2589): `tsc`
+    cannot build a tuple past ~1000, so it can only squiggle a magnitude up to ~1000 / 3 fractional digits.
+    That is a `tsc` limitation, NOT a limit on author-time feedback. The planned author-time ESLint magnitude
+    script (magnitude ladder Phase D, "the biggest lever") RUNS THE REAL JS MATH at lint time, so it flags an
+    out-of-range value for ANY magnitude — floats, 4+ digit decimals, non-literals, deep chains — with no
+    tuple ceiling. So author-time feedback is TWO rungs: `tsc` squiggles the shallow (<= 3 digit) slice live
+    per keystroke, and the ESLint script covers the rest. When that script lands, revisit raising
+    `cleanDecimalDigits` past 3 (the linter, not `tsc`, would then supply the feedback).
 - [x] **Constructs that carry purity** — `f` (yes), `m` (embeds a scalar -> inherits), `i` (trivially `n/1` —
   YES, resolved S-pv3: an integer-VALUED operand is treated as `n/1`, so integer math and `m(10)` are exact
   with no auto-detect; an integer scalar need not STORE a `#rational` for this).

@@ -40,8 +40,8 @@ export type FloatOptions<
 > = SnapBound<Min, Max> &
   Omit<ScalarOptions<Min, Max>, 'min' | 'max' | 'snap'> & {
     /** Max fractional digits for a decimal literal to auto-promote to an EXACT rational (see
-     *  docs/pure-values.md); default 6, must be an integer in [0, 15]. Float-only; per-call overrides
-     *  the factory. */
+     *  docs/pure-values.md); default 3 (the max squiggle-able cutoff), an integer in [0, 15]. Float-only;
+     *  per-call overrides the factory. */
     cleanDecimalDigits?: number;
   };
 
@@ -201,10 +201,13 @@ class FloatImpl
   }
 }
 
-// The auto-detect cutoff (max fractional digits) defaults to 6 and is capped at 15: 10^15 is the largest
-// power of ten that stays a safe integer, so a larger denominator could not be represented exactly (see
-// docs/pure-values.md).
-const DEFAULT_CLEAN_DECIMAL_DIGITS = 6;
+// The auto-detect cutoff (max fractional digits) defaults to 3 = the MOST a pure float could ever type-
+// squiggle (the type-level tuple arithmetic caps at 3 digits, denominator ~1000). The goal is maximum
+// author-time squiggles, so the runtime default is aligned to that squiggle ceiling: never promote a float
+// beyond what could eventually squiggle. Capped at 15 (largest safe-integer power of ten) for a consumer who
+// opts into broader RUNTIME exactness. If a future encoding squiggles more digits, raise this then (see
+// docs/pure-values.md "Why 3").
+const DEFAULT_CLEAN_DECIMAL_DIGITS = 3;
 const MAX_CLEAN_DECIMAL_DIGITS = 15;
 
 /**
@@ -345,7 +348,8 @@ export type FloatFactoryConfig<
    */
   modifier?: Modifier;
   /** Max fractional digits for a decimal literal to auto-promote to an EXACT rational (see
-   *  docs/pure-values.md); default 6, an integer in [0, 15]. Cascades own float key -> bundle global. */
+   *  docs/pure-values.md); default 3 (the max squiggle-able cutoff), an integer in [0, 15]. Cascades own
+   *  float key -> bundle global. */
   cleanDecimalDigits?: number;
 };
 

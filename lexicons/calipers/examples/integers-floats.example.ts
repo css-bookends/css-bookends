@@ -9,6 +9,8 @@
  * (`createIntegerFactory({ min, max })`) sets range constraints.
  */
 
+import { createFloatFactory } from '@css-bookends/css-calipers';
+
 import { f, i } from './calipers_examples.ts';
 
 // --- construction and render ----------------------------------------------------
@@ -102,6 +104,43 @@ export const opacityThrows = (): string => {
     return 'no throw';
   } catch (error) {
     // 'f: 1.5 is above the maximum 1'
+    return error instanceof Error ? error.message : 'unknown';
+  }
+};
+
+// --- exact arithmetic on clean decimal literals (see docs/pure-values.md) --------
+
+// A short decimal literal is auto-detected as its exact rational, so plain-decimal
+// arithmetic has no floating-point drift: 1/10 + 2/10 = 3/10, exactly 0.3.
+export const exactSum = f(0.1).add(f(0.2)).value(); // 0.3 (not 0.30000000000000004)
+export const exactQuotient = f(0.3).divide(f(0.1)).value(); // 3 (not 2.9999999999999996)
+
+// Float-noise is NOT promoted (no fabricated fraction): the drifted double stays impure.
+export const noiseStaysImpure = f(0.1 + 0.2).value(); // 0.30000000000000004, unchanged
+
+// --- cleanDecimalDigits: the auto-detect cutoff (config-driven, default 3) --------
+
+// cleanDecimalDigits = the max fractional digits a decimal may have to auto-promote.
+// Default 3 = the most a pure float could ever type-squiggle (the tuple ceiling), so
+// runtime detection stays aligned with author-time feedback (see docs/pure-values.md).
+// It cascades own float key -> bundle global -> default, like `snap`. Here a factory
+// sets it to 0 (integers only), so 0.1 stays impure.
+const integersOnly = createFloatFactory({ cleanDecimalDigits: 0 });
+export const cutoffZeroDrifts = integersOnly
+  .f(0.1)
+  .multiply(3)
+  .value(); // 0.30000000000000004
+// at the default cutoff of 3, 0.1 (1 digit) promotes to 1/10, so * 3 is exactly 0.3.
+export const defaultExact = f(0.1).multiply(3).value(); // 0.3
+
+// The cutoff is validated to [0, 15] (10^16 would make the denominator inexact); out
+// of range fails fast.
+export const badCutoffThrows = (): string => {
+  try {
+    f(0.5, { cleanDecimalDigits: 16 });
+    return 'no throw';
+  } catch (error) {
+    // 'f: cleanDecimalDigits must be an integer in [0, 15] (got 16)'
     return error instanceof Error ? error.message : 'unknown';
   }
 };

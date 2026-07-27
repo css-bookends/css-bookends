@@ -264,7 +264,7 @@ describe('exact rational arithmetic (see docs/pure-values.md)', () => {
 
 // Auto-detect clean decimal literals (see docs/pure-values.md): a short terminating decimal like f(0.1) is
 // promoted to its exact rational, so plain-decimal arithmetic is exact. Float-noise and irrationals stay
-// impure doubles (no fabricated fraction). The digit cutoff is config-driven (cleanDecimalDigits, default 6).
+// impure doubles (no fabricated fraction). The digit cutoff is config-driven (cleanDecimalDigits, default 3).
 describe('auto-detects clean decimal literals (see docs/pure-values.md)', () => {
   it('makes plain-decimal arithmetic exact (the 0.1 + 0.2 payoff)', () => {
     expect(f(0.1).add(f(0.2)).value()).toBe(0.3);

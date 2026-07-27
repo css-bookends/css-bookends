@@ -55,7 +55,7 @@ export interface CalipersBundleConfig<
      *  bundle's `global.snap`. A unit's own `snap` (or a per-edge `snap` on `min` / `max`) overrides
      *  it. Policy only, no bound value; `m` / units / ratio have no bound, so it does not reach them. */
     snap?: boolean;
-    /** The float clean-decimal auto-promote cutoff; forwarded to the scalar bundle's global (float-only). Default 6. */
+    /** The float clean-decimal auto-promote cutoff; forwarded to the scalar bundle's global (float-only). Default 3. */
     cleanDecimalDigits?: number;
   };
   /** forwarded to `createCalipersFactory` (the measurement / scalar surface + units). */

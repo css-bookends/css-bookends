@@ -34,7 +34,7 @@ export interface ScalarBundleConfig {
     /** The blanket snap policy shared across integer / float; a unit's own `snap` (or a per-edge
      *  `snap` on its `min` / `max`) overrides it. Policy only, no bound value. */
     snap?: boolean;
-    /** The float clean-decimal auto-promote cutoff (float-only; integer / ratio ignore it). Default 6. */
+    /** The float clean-decimal auto-promote cutoff (float-only; integer / ratio ignore it). Default 3. */
     cleanDecimalDigits?: number;
   };
   /** forwarded to `createIntegerFactory` (the integer surface). */
